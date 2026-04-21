@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# CTO OS pre-commit hook — runs the skill-reviewer subagent against
+# staged SKILL.md / CLAUDE.md changes.
+#
+# Enabled by: git config core.hooksPath hooks (done by install.sh).
+# Bypass (not recommended): git commit --no-verify
+
+set -euo pipefail
+
+staged="$(git diff --cached --name-only --diff-filter=ACMR | grep -E '(SKILL|CLAUDE)\.md$' || true)"
+
+if [[ -z "$staged" ]]; then
+  exit 0
+fi
+
+if ! command -v claude >/dev/null 2>&1; then
+  echo "pre-commit: claude CLI not in PATH; skipping skill review" >&2
+  exit 0
+fi
+
+echo "pre-commit: running skill-reviewer on:"
+echo "$staged" | sed 's/^/  /'
+
+# Build a space-separated file list for the prompt.
+files_inline="$(echo "$staged" | tr '\n' ' ')"
+
+prompt="Use the skill-reviewer subagent to review these staged files against the checklist at tests/claude-review.md:
+
+$files_inline
+
+Return exactly what the subagent reports. The subagent must end with one final line: REVIEW: PASS or REVIEW: FAIL."
+
+output="$(claude -p "$prompt" 2>&1)" || {
+  echo "pre-commit: claude invocation failed" >&2
+  echo "$output" >&2
+  exit 1
+}
+
+echo "$output"
+
+if echo "$output" | grep -qE '^REVIEW:[[:space:]]+PASS'; then
+  exit 0
+fi
+
+echo "" >&2
+echo "pre-commit: skill review reported issues. Fix the FAILs above or bypass with --no-verify." >&2
+exit 1

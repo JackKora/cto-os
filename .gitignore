@@ -1,0 +1,19 @@
+# Claude Code — per-user settings
+.claude/settings.local.json
+
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Editor scratch
+*.swp
+*.swo
+
+# Secrets (belt-and-braces; secrets shouldn't land here at all)
+.env
+.env.*
