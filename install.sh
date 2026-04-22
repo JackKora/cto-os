@@ -68,11 +68,25 @@ confirm() {
 # ---------- preflight ----------
 info "Preflight checks"
 command -v git >/dev/null || die "git not found"
-command -v python3 >/dev/null || die "python3 not found (need >= 3.10)"
+# python3 is needed for the MCP config merge step below; any version works for that.
+# The venv Python (installed by uv sync) is what runs the MCP server and must meet
+# requires-python in pyproject.toml. uv resolves or installs the right version on its own.
+command -v python3 >/dev/null || die "python3 not found (needed by install.sh to merge MCP config)"
 
-PY_OK="$(python3 -c 'import sys; print("yes" if sys.version_info >= (3,10) else "no")')"
-[[ "$PY_OK" == "yes" ]] || die "python3 is older than 3.10"
+if ! command -v uv >/dev/null 2>&1; then
+  cat >&2 <<'EOF'
+Error: uv not found on PATH.
 
+Python deps are managed via uv. Install it:
+
+     curl -LsSf https://astral.sh/uv/install.sh | sh
+
+Then re-run this script.
+EOF
+  exit 1
+fi
+
+[[ -f "$REPO_DIR/pyproject.toml" ]] || die "pyproject.toml not found at repo root"
 [[ -d "$TEMPLATES_DIR" ]] || die "templates/ not found at $TEMPLATES_DIR"
 for f in CLAUDE.md README.md gitignore; do
   [[ -f "$TEMPLATES_DIR/$f" ]] || die "missing template: $TEMPLATES_DIR/$f"
@@ -85,6 +99,13 @@ if git -C "$REPO_DIR" rev-parse --git-dir >/dev/null 2>&1; then
     git -C "$REPO_DIR" config core.hooksPath hooks
   fi
 fi
+
+# ---------- create/refresh venv via uv ----------
+info "Syncing Python deps via uv (creates .venv at repo root if needed)"
+(cd "$REPO_DIR" && uv sync)
+
+VENV_PYTHON="$REPO_DIR/.venv/bin/python"
+[[ -x "$VENV_PYTHON" ]] || die "uv sync completed but $VENV_PYTHON is missing or not executable"
 
 # ---------- resolve data dir ----------
 DEFAULT_DATA_DIR="$HOME/cto-os-data"
@@ -162,13 +183,14 @@ fi
 info "MCP config: $MCP_CONFIG"
 mkdir -p "$(dirname "$MCP_CONFIG")"
 
-MCP_CONFIG="$MCP_CONFIG" REPO_DIR="$REPO_DIR" DATA_DIR="$DATA_DIR" python3 <<'PY'
+MCP_CONFIG="$MCP_CONFIG" REPO_DIR="$REPO_DIR" DATA_DIR="$DATA_DIR" VENV_PYTHON="$VENV_PYTHON" python3 <<'PY'
 import json, os, sys
 from pathlib import Path
 
 path = Path(os.environ["MCP_CONFIG"])
 repo = os.environ["REPO_DIR"]
 data = os.environ["DATA_DIR"]
+venv_python = os.environ["VENV_PYTHON"]
 
 if path.exists():
     try:
@@ -180,13 +202,13 @@ else:
 
 cfg.setdefault("mcpServers", {})
 cfg["mcpServers"]["cto-os"] = {
-    "command": "python3",
+    "command": venv_python,
     "args": [f"{repo}/mcp-server/server.py"],
     "env": {"CTO_OS_DATA": data},
 }
 
 path.write_text(json.dumps(cfg, indent=2) + "\n")
-print(f"  updated mcpServers.cto-os")
+print(f"  updated mcpServers.cto-os (python={venv_python})")
 PY
 
 # ---------- shell rc hint (no auto-append) ----------
@@ -222,5 +244,10 @@ Next steps (manual):
      $DATA_DIR
 
 4. Claude Code: \`cd "$DATA_DIR" && claude\` to use the skill.
+
+For dev / direct script invocation, run from the repo root via uv:
+     uv run python scripts/scan.py --args '{...}'
+
+Add a dep: \`uv add <package>\` (runtime) or \`uv add --dev <package>\` (dev).
 --------------------------------------------------------------------
 EOF

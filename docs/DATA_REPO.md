@@ -12,14 +12,21 @@ The data repo holds your **personal state**. Private git repo, backed up to a pr
 cto-os-data/                           # git repo — your private data, backed up to private remote
 ├── CLAUDE.md                          # project constitution for Claude Code
 ├── README.md                          # short orientation
-├── .gitignore                         # excludes integrations-cache/, secrets
+├── .gitignore                         # excludes integrations-cache/, logs/, secrets
 ├── modules/                           # slugs must match cto-os/modules/
 │   ├── personal-os/
 │   │   ├── _module.md                 # activation state, schema_version
 │   │   └── state/
-│   │       ├── goals.md
+│   │       ├── altitude.md
 │   │       ├── show-up.md
-│   │       └── retros/2026-Q1.md
+│   │       ├── goals/                 # one file per horizon
+│   │       │   ├── annual.md
+│   │       │   ├── quarterly.md
+│   │       │   └── weekly.md
+│   │       ├── voice/                 # one file per sample
+│   │       │   └── 2026-03-15.md
+│   │       └── retros/                # one file per retro
+│   │           └── 2026-04-21.md
 │   ├── managing-down/
 │   │   ├── _module.md
 │   │   └── state/
@@ -29,10 +36,11 @@ cto-os-data/                           # git repo — your private data, backed 
 │   │   └── state/
 │   │       └── teams/platform.md
 │   └── …
-└── integrations-cache/                # gitignored, regenerable
-    ├── slack/
-    ├── linear/
-    └── gmail/
+├── integrations-cache/                # gitignored, regenerable
+│   ├── slack/
+│   ├── linear/
+│   └── gmail/
+└── logs/                              # gitignored; MCP server writes mcp.log here (rotated daily, last 24h+)
 ```
 
 **Key properties:**
@@ -88,6 +96,33 @@ From the PRD: modules store history, not just current state. The pattern:
 - "How has team platform trended" → scan returns the path, then skill reads the body. Two tool calls, predictable cost.
 
 **One file per subject, not split current/history.** Keeping current + history in one file means there's one canonical place for a subject, and the scan tool doesn't need to know about the current/history split. Less surface area. Files get longer over time — when one exceeds ~500 lines, the module's `SKILL.md` includes an archival rule: oldest history moves to `state/archive/{year}/`.
+
+## File granularity — one file per independently-changing unit
+
+How do you decide what a "subject" is? The rule:
+
+> **One file per independently-changing unit of state.** A unit is whatever has its own update cadence, its own historical lineage, or its own access pattern. Scan assembles multi-unit views at read time; write-time co-location should only happen when the things truly co-evolve.
+
+Examples of unit choices across modules:
+
+| Module | Unit | File layout |
+| --- | --- | --- |
+| Managing Down | 1:1 per (person, date) | `state/people/{person-slug}/{date}.md` |
+| Managing Up / Sideways | one profile per stakeholder | `state/people/{slug}.md` |
+| Team Management | one health record per team | `state/teams/{slug}.md` |
+| Performance & Development | one track per person | `state/people/{slug}.md` |
+| Hiring | one per (req, candidate) | `state/reqs/{req}/{candidate-slug}.md` |
+| Tech Ops | one per incident | `state/incidents/{id}.md` |
+| Board Comms | one per meeting | `state/meetings/{date}.md` |
+| Personal OS | one per horizon | `state/goals/{horizon}.md` |
+
+**When NOT to split:**
+
+- **Singletons.** User altitude, show-up definition — one logical unit (the user), one file.
+- **Attributes that only make sense together.** A team's `(name, lead, charter)` tuple doesn't benefit from three files.
+- **Churn-ratio test.** If you'd rewrite the same file on 80%+ of any given update regardless, splitting isn't buying anything.
+
+**Design-time question for any new module:** *"What's the thing that changes on its own?"* That's your unit. Make a file per unit.
 
 ## Sensitive modules
 
@@ -150,5 +185,6 @@ Rules for Claude Code working in the data repo:
 - After a schema migration completes: confirm `schema_version` in `_module.md` matches the canonical version in the skill repo.
 - Never hand-edit `_module.md`'s `active` flag or `schema_version` — those are managed by the skill's activation flow and migration scripts.
 - `integrations-cache/` is never committed. If something there looks valuable, copy it into `modules/{slug}/state/` with proper frontmatter.
+- `logs/` is never committed. MCP server writes rotated logs here; safe to delete any time.
 
-**What the system does *not* try to maintain automatically:** state file contents. The skill writes state only when you explicitly ask or when it's the obvious next step of a flow you initiated. No background rewriting of your own data.
+**What the system does *not* try to maintain automatically:** state file contents. Every write surfaces in the transcript via the underlying tool call — no silent background rewriting. The skill saves without blocking when the target and content are clear and asks only when genuinely ambiguous. Full rule: see the [Persistence model](./ARCHITECTURE.md#persistence-model) section in the architecture doc.

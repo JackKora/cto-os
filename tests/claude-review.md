@@ -22,7 +22,12 @@ Each item: **What** to check, **How** to check, **Fail when**.
 
 **How:** Extract every relative-path reference. For each, check the target exists via `Read` or `Glob`.
 
-**Fail when:** Any reference points to a non-existent path. External links (http://, https://) are out of scope.
+**Fail when:** Any reference points to a non-existent path. External links (`http://`, `https://`) are out of scope.
+
+**Exempt:**
+
+- References sitting under a heading whose text contains "planned," "not yet implemented," "forward-looking," or "TODO" (case-insensitive). These are placeholders for files that will land later; don't fail on them. The exemption applies until the nearest following `---` divider, a heading of equal or higher rank, or end of file.
+- Paths starting with `cto-os-data/` — these are data-repo paths described in prose, not files that should resolve inside the skill repo. See [docs/MCP_TOOLS.md → Path handling](../docs/MCP_TOOLS.md#path-handling-applies-to-every-path-taking-tool).
 
 ---
 
@@ -83,6 +88,77 @@ Each item: **What** to check, **How** to check, **Fail when**.
 **How:** Parse the tree in `CLAUDE.md`. For each named directory or file, check it exists.
 
 **Fail when:** An entry is listed but missing from disk. (An entry exists but isn't listed is a warning; flag it in the report but don't fail.)
+
+---
+
+---
+
+## 9. Every module SKILL.md declares Persistence
+
+**What:** Every per-module `SKILL.md` (files at `modules/{slug}/SKILL.md`) contains a `Persistence` section (any heading level) that covers paths written, semantics (append / overwrite / upsert), path templates, and required frontmatter.
+
+**How:** For each module `SKILL.md`, grep for a heading line matching `Persistence`. If found, read the section and check all four sub-points are present.
+
+**Fail when:** A module `SKILL.md` exists but is missing the Persistence section, or the section is present but missing any of the four sub-points. `N/A` if there are no module `SKILL.md` files yet. Does not apply to root `SKILL.md`.
+
+---
+
+## 11. Per-module SKILL.md frontmatter
+
+**What:** Every per-module `SKILL.md` has valid frontmatter with `name`, `description`, `requires`, and `optional` fields per `docs/SKILL_REPO.md` → "Per-module SKILL.md format."
+
+**How:** For each module `SKILL.md`, parse YAML frontmatter. Check: `name` matches the directory slug exactly; `description` is non-empty; `requires` and `optional` are present and are lists (may be empty); list entries are plain slugs (no link syntax, no descriptions).
+
+**Fail when:** Any required field is missing, `name` doesn't match the directory, `description` is empty, or `requires` / `optional` contain non-slug entries. `N/A` if no module SKILL.md files exist.
+
+---
+
+## 12. Per-module SKILL.md required sections
+
+**What:** Every per-module `SKILL.md` contains the required body sections in the required order: `Scope`, `Out of scope`, `Frameworks`, `Triggers`, `Activation flow`, `Skills`, `Persistence`, `State location`.
+
+**How:** For each module `SKILL.md`, extract all `## ` headings. Verify all eight required headings appear and in the specified order. Additional sections are allowed after `State location`.
+
+**Fail when:** A required heading is missing, or the required headings appear out of order. `N/A` if no module SKILL.md files exist.
+
+---
+
+## 13. Activation flow steps have required fields
+
+**What:** Each numbered step under `## Activation flow` in a per-module `SKILL.md` contains `Ask`, `Writes`, and `Expects` fields per the format in `docs/SKILL_REPO.md` → "Activation flow format."
+
+**How:** For each module, parse the `## Activation flow` section. For each numbered step (`### N. ...` heading), check that `**Ask:**`, `**Writes:**`, and `**Expects:**` lines are present. `**Skip if:**` is optional.
+
+**Fail when:** A step is missing any of Ask / Writes / Expects. `N/A` if no module SKILL.md files or no activation steps exist.
+
+---
+
+## 14. Skills ↔ Persistence ↔ Activation consistency (bidirectional)
+
+**What:** The set of write paths declared in a module's `## Skills` section *plus* its `## Activation flow` section must equal the set of paths declared in `## Persistence`.
+
+**How:** For each module `SKILL.md`:
+
+1. Collect all paths from `**Writes:**` lines under `## Skills` (ignore entries marked `—`).
+2. Collect all paths from `**Writes:**` lines under `## Activation flow`.
+3. Collect all paths declared in `## Persistence`.
+4. Compare the sets:
+   - Every skill/activation write path must appear in Persistence (otherwise a write is happening without declared semantics).
+   - Every Persistence path must appear in at least one skill or activation write (otherwise Persistence declares a dead path — documentation drift).
+
+Paths with templated segments (e.g., `{YYYY-MM-DD}`, `{horizon}`) are compared structurally; an exact substitution match is not required.
+
+**Fail when:** Either direction has a mismatch. Cite the offending path and which side it's missing from. `N/A` if no module SKILL.md files exist.
+
+---
+
+## 10. README inventory matches reality
+
+**What:** If `README.md` exists and is non-empty, its module index and scripts inventory (if present) match what's in the repo on disk.
+
+**How:** Read `README.md`. Extract listed modules from its module index section (headings or a bulleted list under a "Modules" heading). Extract listed scripts from its scripts section (bulleted list under "Scripts" or similar). Glob `modules/*/` and `scripts/*.py`. Compare.
+
+**Fail when:** A module or script exists on disk but isn't in `README.md`, or is listed in `README.md` but doesn't exist on disk. `N/A` if `README.md` is empty or missing. Files explicitly marked as placeholders / not-yet-implemented in `README.md` count as "listed" — the point is presence, not implementation status.
 
 ---
 

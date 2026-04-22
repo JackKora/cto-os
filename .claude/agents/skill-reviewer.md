@@ -10,8 +10,9 @@ You review skill and CLAUDE.md files in the cto-os repo for correctness and cons
 
 1. Read `tests/claude-review.md`. That is the authoritative checklist. Apply every item that applies to the files under review.
 2. If the caller passed a list of files, scope the review to those files and their direct references (e.g., a module `SKILL.md` pulls in its `README.md` and `meta/schema.md`). Otherwise review all `SKILL.md`, `CLAUDE.md`, and `docs/*.md` files in the repo.
-3. For each checklist item: report `PASS`, `FAIL`, or `N/A` on one line, followed by one sentence explaining why. Cite specific files and line ranges for FAILs.
-4. End your entire response with exactly one final line:
+3. **Exclude files under `templates/`** from review. Those are skeletons with placeholder tokens (e.g., `{{MODULE_SLUG}}`, `state/{{path}}.md`) — their broken references and incomplete prose are intentional.
+4. For each checklist item: report `PASS`, `FAIL`, or `N/A` on one line, followed by one sentence explaining why. Cite specific files and line ranges for FAILs.
+5. End your entire response with exactly one final line:
    - `REVIEW: PASS` — every applicable item passed.
    - `REVIEW: FAIL` — at least one item failed.
 

@@ -131,7 +131,7 @@ Why not consolidate? `CLAUDE.md` can't be `SKILL.md` because they have different
 From the PRD: "A module's framework serves as the activation spine." Architectural implications:
 
 - Each module's `SKILL.md` (in `cto-os/modules/{slug}/`) contains an **activation flow** section: a sequence of questions, framework-derived, that populate the module's baseline state.
-- Activation creates `cto-os-data/modules/{slug}/` if it doesn't exist, writes the baseline state files (e.g., `state/goals.md`, `state/show-up.md` for Personal OS), and creates a `_module.md` with `active: true` and an `activated_at` timestamp.
+- Activation creates `cto-os-data/modules/{slug}/` if it doesn't exist, writes the baseline state files (e.g., `state/altitude.md`, `state/goals/annual.md`, `state/show-up.md` for Personal OS), and creates a `_module.md` with `active: true` and an `activated_at` timestamp.
 - Activation can be **resumed**. If interrupted, `_module.md` tracks which activation questions are complete vs pending. Next invocation picks up where it left off.
 - Activation **checks dependencies** first. If a required dependency is inactive, activation offers to activate it first (and explains what gets unlocked).
 
@@ -151,9 +151,52 @@ From the PRD: "A module's framework serves as the activation spine." Architectur
 - **Optional dependencies may be bidirectional** and can form cycles. Not validated.
 - When a module is **inactive**, its state files still exist on disk but scan excludes them by default (filter on `active: true` in the module's `_module.md`). This preserves history when a module is deactivated.
 
-**Personal OS as intent/identity layer:** A handful of modules read `cto-os-data/modules/personal-os/state/show-up.md` and `cto-os-data/modules/personal-os/state/voice.md` to tune their outputs. This is an optional dependency declared in each consuming module's `SKILL.md`. When Personal OS is inactive, those modules fall back to generic-professional voice.
+**Personal OS as intent/identity layer:** A handful of modules read `cto-os-data/modules/personal-os/state/show-up.md` and the voice samples in `cto-os-data/modules/personal-os/state/voice/` to tune their outputs. This is an optional dependency declared in each consuming module's `SKILL.md`. When Personal OS is inactive, those modules fall back to generic-professional voice.
 
 **No global event bus, no pub/sub.** State is pulled on demand. Simpler, cheaper, and fits the single-user model.
+
+---
+
+# Persistence model
+
+When and how the skill writes state to `cto-os-data`. One cross-cutting rule for every module.
+
+## The rule
+
+- **Every write is transparent.** Claude uses the first-class `write_file` / `append_to_file` tools (via MCP in Chat, directly in Code/Cowork). Every save appears in the transcript with its target path. No wrapping helpers, no background writes, no saves the user can't see.
+- **Default is just save.** When the target file and content are clear from context, Claude saves without blocking for confirmation. "Clear" means one of:
+  - The user issued an explicit save command ("save this," "remember," "log," "add to my notes").
+  - The user narrated a flow-ending event a specific module owns ("I just had a 1:1 with Jane" → managing-down).
+  - Claude is inside an activation flow, where writing answers is the point.
+  - The module has a scheduled checkpoint (periodic retro, weekly review) and the user reached it.
+- **Ask only when genuinely ambiguous.** Claude pauses for confirmation when:
+  - Two modules plausibly own the content and the wrong choice would misfile it.
+  - A write would overwrite existing material with different facts (losing content matters).
+  - The user's phrasing was exploratory ("I'm wondering whether…") rather than declarative.
+  - Claude would have to fabricate required frontmatter fields it can't ground in what the user said.
+- **Never silent, never speculative.** No writes that don't surface in the transcript. No writes that present inference as fact — if Claude had to guess, frame the guess in the body ("Inferred from:") or don't write.
+
+## What each write carries
+
+- **Path.** Derived from the module's convention. The module's `SKILL.md` declares path templates (e.g., `state/people/{person-slug}/{date}.md`).
+- **Semantics.** One of **append** (1:1 notes, journal, retros), **overwrite** (current goals — with history in the body), or **upsert** (stakeholder-profile fields). Declared per-path in each module's `SKILL.md`.
+- **Frontmatter.** Required fields per `meta/schema.md`. Populated before the write; the data-repo pre-commit hook validates on save and rejects incomplete frontmatter.
+
+## Undo
+
+Every write is a git-tracked change in `cto-os-data`. Claude doesn't build a custom undo — `git checkout -- <path>` restores a file, `git reset --hard HEAD` drops a not-yet-committed batch, and reverts work for anything already committed. If the user asks to undo, Claude names the git command rather than re-editing the file back.
+
+## Module responsibility
+
+Every `SKILL.md` in `modules/{slug}/` must include a **Persistence** section that declares:
+
+- Paths this module writes to.
+- Per-path semantics (append / overwrite / upsert).
+- Path templates (how Claude constructs the filename).
+- Required frontmatter.
+- Any module-specific override to the cross-cutting "ambiguous → ask" rule (rare; modules should inherit the default).
+
+A module without a Persistence section fails the skill-review checklist.
 
 ---
 

@@ -1,4 +1,5 @@
 integrations-cache/
+logs/
 .env
 .env.*
 .DS_Store

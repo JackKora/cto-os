@@ -90,18 +90,110 @@ Each `SKILL.md`:
 - **Purpose:** Defines *when* this module's capabilities should trigger and *how* to execute them. Includes activation flow (see [CTO OS — Architecture](./ARCHITECTURE.md)), the module's frameworks, and its skill list.
 - **Trigger specificity:** Has a clear description section that distinguishes it from sibling modules — this is what the router uses to pick the right one. Vague triggers cause wrong-module selection. The root description in particular needs to be specific enough to avoid false positives ("write me a haiku" should not match) and broad enough to catch oblique phrasings ("I had a weird convo with Mike yesterday" should match, since 1:1 content is in scope).
 - **References, not duplicates:** Points to state files in `cto-os-data`, scripts in `cto-os/scripts/`, and schemas rather than inlining them. Inlined state goes stale.
+- **Persistence section required on every per-module `SKILL.md`.** Declares the paths this module writes to, their semantics (append / overwrite / upsert), filename templates, required frontmatter, and any module-specific overrides to the cross-cutting save rule. See the [Persistence model](./ARCHITECTURE.md#persistence-model) in the architecture doc. The skill-reviewer fails a module that's missing this section.
+
+## Per-module SKILL.md format
+
+Every file at `modules/{slug}/SKILL.md` follows this structure. The skill-reviewer fails a module that's missing required frontmatter fields or required body sections.
+
+### Frontmatter
+
+```yaml
+---
+name: {module-slug}      # required; matches the directory name exactly
+description: string      # required; activation trigger for the skill router
+requires:                # required; may be empty list
+  - {module-slug}
+  - ...
+optional:                # required; may be empty list
+  - {module-slug}
+  - ...
+---
+```
+
+Rules:
+
+- `name` must match the directory slug. Mismatch fails review.
+- `description` is the activation trigger. Specific enough to not false-match unrelated topics, broad enough to catch oblique phrasings. See trigger-specificity guidance above.
+- `requires` lists modules whose activation this module strictly depends on. Parsed by `scripts/validate_deps.py` to build the DAG and detect cycles. Cycles fail the pre-commit.
+- `optional` lists modules this one *can* read from but doesn't require. Cycles are permitted here — they're not validated.
+- Both lists hold slugs only (no descriptions, no link syntax).
+
+### Required body sections
+
+In this order, using these exact headings:
+
+1. `## Scope` — one paragraph. What this module does.
+2. `## Out of scope` — one paragraph. What it doesn't do and which module owns it instead.
+3. `## Frameworks` — bulleted list. Each item has two parts:
+   - Top bullet: `[Framework name](canonical-link)` + one sentence on what the module uses it for.
+   - Indented sub-bullet labeled *"How this module applies it:"* — 2–5 lines specifying which flavor / variant is in use, what's skipped, how it maps to the module's state. This disambiguates the framework for runtime; without it, Claude's interpretation can drift.
+
+   **Framework-familiarity check when authoring.** For each framework:
+   - If it's well-known (OKRs, DORA, SPACE, Radical Candor, Andy Grove / *High Output Management*, *Working Backwards*, Reinertsen's Flow Principles, 4Ls retro, *How to Measure Anything*, etc.), the name + link + application note is sufficient. Claude's training covers the details.
+   - If it's **not** well-known (internal framework, niche method, bespoke model), also create `frameworks/{slug}.md` at the skill repo root with a canonical summary (definition, how to apply it, common pitfalls), and reference it from the SKILL.md bullet as `See [frameworks/{slug}.md](../../frameworks/{slug}.md)`.
+
+   When in doubt, create the dedicated note. Interpretation drift is cheaper to prevent than to debug.
+4. `## Triggers` — bulleted list of example user phrasings that should activate this module. Used by the skill router and the skill-reviewer's trigger-overlap check.
+5. `## Activation flow` — numbered list of steps; see format below.
+6. `## Skills` — the named runtime tasks this module performs; see format below.
+7. `## Persistence` — paths, semantics, templates, required frontmatter; see the Persistence model.
+8. `## State location` — one line: `cto-os-data/modules/{slug}/state/`.
+
+Modules may add additional sections after `## State location` (e.g., examples, escalation paths). Required sections must appear in the order above.
+
+### Activation flow format
+
+A numbered list of steps. Each step should capture at least one concrete artifact in `cto-os-data` — no step produces "answers" that aren't saved somewhere. Preferred pattern: one file per step.
+
+**Resumption** is tracked by `activation_completed: list[int]` in the module's `_module.md`. When a step finishes (writes succeed, user confirms), its number is appended. On re-entering activation, Claude checks this list and skips completed steps. File-presence is a useful secondary signal — if an earlier step's target file is missing while its number is in the list, something drifted and Claude should flag it — but `activation_completed` is the source of truth.
+
+```markdown
+### 1. {Short step title}
+
+**Ask:** "Verbatim question Claude asks the user."
+**Writes:** `state/{path}.md` with `type: {type-slug}` frontmatter.
+**Expects:** one sentence describing what a complete output looks like (used to judge resumption).
+**Skip if:** optional — condition under which the step is skipped (e.g., "required dependency `personal-os` already supplies this").
+```
+
+Rules:
+
+- Every step must have **Ask**, **Writes**, and **Expects**.
+- **Skip if** is optional and only appears when the step has a genuine skip condition.
+- Resumption: on re-entering activation, Claude reads each target file; if it exists and matches **Expects**, the step is done. Otherwise, run it.
+- Branching questions (e.g., "are you hands-on-tech or P&L-oriented?") still have a **Writes** — the answer is saved to a file so later steps can read it. Prefer `state/activation.md` or a per-decision file.
+
+### Skills list format
+
+Each skill is a named runtime task the module performs once activated. Format per skill:
+
+```markdown
+### `skill-slug`
+
+**Purpose:** one sentence describing what this skill does.
+**Triggers:** bulleted list of user phrasings that should invoke it.
+**Reads:** bulleted list of file paths or scan queries the skill pulls from.
+**Writes:** file path(s) and the Persistence semantics (append / overwrite / upsert). Use `—` if this skill doesn't write.
+```
+
+Rules:
+
+- Skill slugs are `lowercase-kebab-case` and unique within the module.
+- `**Writes**` must be consistent with the module's `## Persistence` section; if a path appears here but not there, review fails.
+- Skills that only read (e.g., "summarize quarterly 1:1 trend for a person") are fine; mark **Writes** as `—`.
 
 ---
 
 # MCP server
 
-**MCP is Chat-only.** Chat (Desktop) has no direct bash, so the MCP server is the mechanism Claude uses to reach disk and run scripts. Code and Cowork have native bash/file tools — Claude just runs `python ~/cto-os/scripts/scan.py --args '...'` directly, no MCP involved.
+**MCP is Chat-only.** Chat (Desktop) has no direct bash, so the MCP server is the mechanism Claude uses to reach disk and run scripts. Code and Cowork have native bash/file tools — Claude runs scripts directly via `uv run python scripts/scan.py --args '...'` from the repo root. No MCP involved.
 
 You never manually start the MCP server. Claude Desktop launches it via stdio per session based on `claude_desktop_config.json`.
 
 **Scope:** A thin Python MCP server living in `cto-os/mcp-server/`. No auth (local, stdio, single user). No domain logic — the skill owns all judgment; MCP just bridges Claude to the filesystem of `cto-os-data` and to the scripts in `cto-os/scripts/`.
 
-**Tool surface (minimum viable):**
+**Tool surface (minimum viable).** Canonical contracts — signatures, response shapes, errors, path handling, whitelist — live in [docs/MCP_TOOLS.md](./MCP_TOOLS.md). Summary below.
 
 | Tool | Purpose |
 | --- | --- |
@@ -161,7 +253,14 @@ All scripts live in `cto-os/scripts/` and are surface-agnostic. In Chat they're 
 - Read `CTO_OS_DATA` from the environment; never hardcode data paths.
 - Idempotent where possible (safe to re-run).
 
-The MCP's `run_script` tool is whitelisted — only names present in `cto-os/scripts/` can be invoked. No arbitrary code execution.
+**Invocation:**
+
+- **From Code / Cowork:** `uv run python scripts/{name}.py --args '{...}'` from the repo root. `uv run` handles venv resolution, no activation dance.
+- **From the MCP server:** `subprocess.run([sys.executable, ...])` — the server already runs under the venv Python, so `sys.executable` is the venv Python. See `docs/MCP_TOOLS.md`.
+
+The MCP's `run_script` tool is whitelisted — only names present in `cto-os/scripts/` can be invoked, and side-effect-bearing scripts are excluded from the whitelist. No arbitrary code execution.
+
+**Dependencies** are managed via `uv` in `pyproject.toml` at repo root. `uv.lock` is committed for reproducible installs. Add a runtime dep with `uv add <package>`; add a dev dep with `uv add --dev <package>`.
 
 **External integrations — MCP vs local script:**
 
