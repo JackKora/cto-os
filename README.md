@@ -102,6 +102,7 @@ Recommended sequence when first adopting.
 #### Personal
 
 - [Personal Operating System](modules/personal-os/README.md) — foundational; canonical source for altitude, goals, show-up, voice, personal retros.
+- [External Network & Thought Leadership](modules/external-network/README.md) — external contacts, touchpoints, public commitments, delivered artifacts, public-presence posture.
 
 #### Operations
 
@@ -125,23 +126,14 @@ Recommended sequence when first adopting.
 
 - [Hiring](modules/hiring/README.md) — workforce planning, interview process, reqs, candidates, debriefs, offers, ramp plans.
 - [Performance & Development](modules/performance-development/README.md) — review cycles, leveling ladder, development plans, calibration, promotion cases, PIPs, succession notes.
+- [Code Contribution Opportunities](modules/code-contribution/README.md) — scan repos/tickets for hands-on opportunities, log actual contributions, track against target cadence.
 
 #### Governance
 
 - [Security & Compliance](modules/security-compliance/README.md) — risk register, controls, compliance regime tracking (SOC 2 / ISO 27001), ISO SoA, audit events, risk briefings.
 - [Budget](modules/budget/README.md) — budget structure, plan / actual / forecast per category, variance analysis, budget-narrative authoring.
 
-### Planned — not yet implemented
-
-Scope, frameworks, and dependencies for each planned module live in [docs/BACKLOG.md](docs/BACKLOG.md). Links below jump to the entry.
-
-#### Personal
-
-- [External Network & Thought Leadership](docs/BACKLOG.md#external-network)
-
-#### People & execution
-
-- [Code Contribution Opportunities](docs/BACKLOG.md#code-contribution)
+All PRD-defined modules are implemented. See [docs/BACKLOG.md](docs/BACKLOG.md) if you're adding a new module.
 
 ---
 

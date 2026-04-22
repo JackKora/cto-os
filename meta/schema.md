@@ -1378,6 +1378,167 @@ Invariants:
 
 ---
 
+## `external-contact`
+
+A record of an external-to-the-company person the user maintains a professional relationship with. Owned by `external-network`. Parallel in purpose to `stakeholder-profile` but structurally distinct — different fields, different lifecycle (no tenure, no departure-from-team), different sensitivity defaults.
+
+```yaml
+active: bool                     # optional; defaults true. false marks retired / lost-touch / ended
+name: string                     # required
+role: string                     # required; role or title
+company: string                  # required; current employer
+relationship_type: enum          # required; one of: peer-cto, advisor, mentor, mentee, industry-peer, former-colleague, other
+relationship_context: string     # required; one-line "how I know them"
+last_touchpoint_date: date       # optional
+departed_date: date              # optional; set when active flips to false
+communication_preferences: string # optional
+mutual_interests: list           # optional
+notes: string                    # optional
+```
+
+Invariants:
+- Files live at `state/contacts/{person-slug}.md`.
+- `slug` equals the person slug.
+- Scan excludes `active: false` files by default.
+- Prior profile versions preserved under `## History`.
+
+**Current version:** 1.
+
+---
+
+## `external-touchpoint`
+
+A captured interaction with an external contact — meeting, call, coffee, conference run-in, substantial email. Owned by `external-network`. Append-new-file per touchpoint.
+
+```yaml
+person: string               # required; contact slug
+touchpoint_type: enum        # required; one of: coffee, call, video, email, conference, other
+duration_minutes: int        # optional
+```
+
+Invariants:
+- Files live at `state/touchpoints/{person-slug}/{YYYY-MM-DD}.md`.
+- `slug` equals `<person-slug>-<YYYY-MM-DD>`.
+- Logging a touchpoint should also update the contact's `last_touchpoint_date`.
+
+**Current version:** 1.
+
+---
+
+## `public-commitment`
+
+A public-presence commitment — accepted talk, scheduled podcast, article due, invited keynote, community engagement. Owned by `external-network`. One file per commitment; status transitions tracked in same file.
+
+```yaml
+commitment_type: enum    # required; one of: talk, article, podcast, keynote, panel, other
+venue: string            # required
+title: string            # required
+scheduled_date: date     # required
+status: enum             # required; one of: proposed, confirmed, preparing, delivered, cancelled, postponed, withdrawn
+theme: string            # optional; which declared public theme this serves
+```
+
+Invariants:
+- Files live at `state/commitments/{YYYY-MM-DD}-{commitment-slug}.md`.
+- `slug` equals the filename stem.
+- Status transitions preserved under `## History`.
+
+**Current version:** 1.
+
+---
+
+## `public-artifact`
+
+A delivered public output — talk given, post published, podcast appearance aired. Owned by `external-network`. Append-new-file per artifact; builds the body-of-work archive.
+
+```yaml
+artifact_type: enum          # required; one of: talk, article, podcast, keynote, panel, other
+venue: string                # required
+title: string                # required
+delivered_date: date         # required
+link: string                 # optional; URL to the delivered artifact
+fulfills_commitment: string  # optional; commitment slug if this fulfills a tracked commitment
+```
+
+Invariants:
+- Files live at `state/artifacts/{YYYY-MM-DD}-{artifact-slug}.md`.
+- `slug` equals the filename stem.
+- Body: summary + reception notes + "what would change next time."
+
+**Current version:** 1.
+
+---
+
+## `public-posture`
+
+Singleton declaration of the user's public-presence posture — themes, venues, cadence, target audiences. Owned by `external-network`.
+
+```yaml
+active: bool            # required; false = explicitly low-profile / reactive-only mode
+themes: list            # required; 1–3 themes the user is trying to be known for
+venues: list            # required; where they show up (conferences, publications, podcasts, blog)
+cadence: string         # required; target frequency of public output
+target_audience: list   # required; who they're trying to reach
+```
+
+Invariants: singleton at `state/public-posture.md` with `slug: current`. Prior versions preserved under `## History`. When `active: false`, `themes` / `venues` / `cadence` / `target_audience` can be minimal — the rationale in body matters more.
+
+**Current version:** 1.
+
+---
+
+## `contribution-preferences`
+
+Singleton declaration of the user's hands-on contribution preferences. Owned by `code-contribution`.
+
+```yaml
+target_cadence: string   # required; e.g., "1 PR per quarter", "5 hours/week hands-on"
+preferred_types: list    # required; 1–3 of: architectural, bug-fix, learning, reliability, platform, other
+anti_patterns: list      # optional; explicitly-not-doing types
+```
+
+Invariants: singleton at `state/preferences.md` with `slug: current`. Prior versions preserved under `## History`.
+
+**Current version:** 1.
+
+---
+
+## `contribution-sources`
+
+Singleton declaration of which repos and sources `scan-for-opportunities` pulls from. Owned by `code-contribution`.
+
+```yaml
+sources: list    # required; each {source_type: github|linear|other, identifier: string, scope: string}
+```
+
+Invariants: singleton at `state/sources.md` with `slug: current`. `sources` has ≥ 1 entry. Prior versions preserved under `## History`.
+
+**Current version:** 1.
+
+---
+
+## `contribution-log-entry`
+
+A contribution the user actually picked up — PR, bug fix, architectural doc, etc. Owned by `code-contribution`. Append-new-file per contribution.
+
+```yaml
+contribution_type: enum   # required; one of: architectural, bug-fix, learning, reliability, platform, other
+artifact_link: string     # optional; URL to the PR / doc / commit
+delivered_date: date      # required
+effort_hours: number      # optional; rough estimate of time spent
+fit_preference: bool      # required; whether this matched declared preferred_types
+value_notes: string       # optional; user's judgment on what value it created
+```
+
+Invariants:
+- Files live at `state/log/{YYYY-MM-DD}-{contribution-slug}.md`.
+- `slug` equals the filename stem.
+- Body: what was done, why, follow-ups.
+
+**Current version:** 1.
+
+---
+
 ## `retro-personal`
 
 A personal retrospective in 4Ls format (Liked / Learned / Lacked / Longed for). Owned by `personal-os`.
@@ -1473,5 +1634,13 @@ Current canonical version per type.
 | `control` | 1 | `security-compliance` |
 | `statement-of-applicability` | 1 | `security-compliance` |
 | `audit-event` | 1 | `security-compliance` |
+| `external-contact` | 1 | `external-network` |
+| `external-touchpoint` | 1 | `external-network` |
+| `public-commitment` | 1 | `external-network` |
+| `public-artifact` | 1 | `external-network` |
+| `public-posture` | 1 | `external-network` |
+| `contribution-preferences` | 1 | `code-contribution` |
+| `contribution-sources` | 1 | `code-contribution` |
+| `contribution-log-entry` | 1 | `code-contribution` |
 
 Version bumps ship with a migration at `scripts/migrate_{type}_v{N}_to_v{N+1}.py`. The migration runs automatically the next time a surface loads and detects drift; it commits a pre-migration snapshot to git so rollback is `git revert`.
