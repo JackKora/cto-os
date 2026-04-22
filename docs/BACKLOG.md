@@ -16,8 +16,8 @@ Scope, frameworks, and dependencies for modules not yet implemented. Each entry 
 
 Recommended sequence when adopting. Per-module tier is also noted in each entry below.
 
-- **Foundations** (zero outbound dependencies; unlock most downstream capability): Process Management, Business Alignment. *(Personal OS is already implemented.)*
-- **Daily drivers** (high operational value, low dependency cost): Team Management, Managing Up, Managing Down, Managing Sideways. *(Attention & Operations is already implemented.)*
+- **Foundations** (zero outbound dependencies; unlock most downstream capability): *(all three — Personal OS, Process Management, Business Alignment — are implemented.)*
+- **Daily drivers** (high operational value, low dependency cost): Managing Up, Managing Down, Managing Sideways. *(Attention & Operations and Team Management are already implemented.)*
 - **Role-shape** (match the shape of the specific job): Tech Ops, Technical Strategy, Hiring, Budget.
 - **Strategic and periodic** (low-frequency, high-leverage): Org Design, Performance & Development, Board Comms, Organizational Communications.
 - **Optional by role**: External Network & Thought Leadership, Code Contribution Opportunities, Security & Compliance.
@@ -115,26 +115,6 @@ Recommended sequence when adopting. Per-module tier is also noted in each entry 
 
 ## Operations
 
-<a id="team-management"></a>
-### Team Management
-
-- **Slug:** `team-management`
-- **Activation priority:** Daily driver.
-- **Scope:** The ongoing health and performance of the teams in your org, at the team-aggregate level. How teams are doing against their goals, how they're staffed, how they're evolving.
-- **Out of scope:** Individual-level performance and development (Performance & Development); strategic team structure changes (Org Design makes the decisions, Team Management tracks the current reality); 1:1 notes and direct-report work (Managing Down).
-- **Frameworks:**
-  - [Matthew Skelton & Manuel Pais — *Team Topologies*](https://teamtopologies.com/) — four team types (stream-aligned, enabling, complicated-subsystem, platform); team cognitive load.
-  - [Patrick Lencioni — *The Five Dysfunctions of a Team*](https://www.tablegroup.com/product/dysfunctions/) — trust, conflict, commitment, accountability, results. Diagnostic lens for team health.
-- **Depends on:**
-  - Required: none
-  - Optional: `hiring` (headcount changes, incoming ramps), `performance-development` (individual trends roll up to team view)
-- **Example tasks:**
-  - "How is the platform team trending over the last two quarters?"
-  - "Log a team retro for the growth squad's Q2."
-  - "We need to rebalance headcount — show me current team composition."
-  - "Run the team-health rubric on infra-ops."
-- **Target state location:** `cto-os-data/modules/team-management/state/`
-
 <a id="tech-ops"></a>
 ### Tech Ops
 
@@ -180,50 +160,6 @@ Recommended sequence when adopting. Per-module tier is also noted in each entry 
   - "Re-allocate 20% of engineering capacity from product to platform — walk through the tradeoffs."
   - "Capture the decision: we're adopting a stream-aligned model."
 - **Target state location:** `cto-os-data/modules/org-design/state/`
-
-<a id="process-management"></a>
-### Process Management
-
-- **Slug:** `process-management`
-- **Activation priority:** Foundation.
-- **Scope:** How work moves through your organization from idea to customer. The operating flows that deliver value. Owns measurement and continuous improvement of these flows. Includes Product Management, SDLC, and Data Science as sub-flows.
-- **Out of scope:** Specific project execution (happens inside the flows, owned by teams doing the work); reliability and incident response (Tech Ops).
-- **Frameworks:**
-  - [Donald Reinertsen — *The Principles of Product Development Flow*](https://www.amazon.com/Principles-Product-Development-Flow-Generation/dp/1935401009) — queues, batch sizes, WIP constraints, variability, cost of delay. Explicitly cited in the PRD as the foundational framework.
-- **Depends on:**
-  - Required: none (foundational)
-  - Optional: none
-- **Example tasks:**
-  - "What's our current cycle-time trend across PM, SDLC, and DS?"
-  - "Run a flow retro on the PM sub-flow for Q2."
-  - "We have WIP creeping up in SDLC — help me identify the bottleneck."
-  - "Decide whether to adopt a two-tier PR review."
-- **Target state location:** `cto-os-data/modules/process-management/state/`
-
-<a id="business-alignment"></a>
-### Business Alignment
-
-- **Slug:** `business-alignment`
-- **Activation priority:** Foundation.
-- **Scope:** The connection between what your organization does and what the business needs. Tracks company goals, pulls external signal from customer-facing teams, drives CTO-level customer engagement, and makes work-to-goals ties visible.
-- **Out of scope:** Board-level strategic communication (Board Comms consumes this module's data); internal comms that report on goals progress (Org Comms consumes this module's data).
-- **Frameworks:**
-  - [Colin Bryar & Bill Carr — *Working Backwards*](https://www.amazon.com/Working-Backwards-Insights-Stories-Secrets/dp/1250267595) — customer-backwards thinking, press-release-first product definition, input/output metrics.
-  - [Clayton Christensen — Jobs to be Done](https://hbr.org/2016/09/know-your-customers-jobs-to-be-done) — customer-need framing; the "job" the customer is hiring your product to do.
-- **Depends on:**
-  - Required: none (foundational)
-  - Optional: none
-- **Sub-areas:**
-  - Company goals (tracked)
-  - External signal inbound (from sales / marketing / support / onboarding)
-  - Customer engagement outbound (CTO-level customer interactions — advisory boards, sales calls, exec sponsor relationships, customer escalations, industry events; cadence set at activation)
-  - Work-to-goals ties (making alignment visible)
-- **Example tasks:**
-  - "Capture Q2 company goals and tie them to our engineering priorities."
-  - "I had a customer advisory call — capture the signal."
-  - "Show me the work-to-goals heatmap for this quarter."
-  - "Draft the engineering update for the CEO's all-hands."
-- **Target state location:** `cto-os-data/modules/business-alignment/state/`
 
 <a id="technical-strategy"></a>
 ### Technical Strategy

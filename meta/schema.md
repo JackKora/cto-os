@@ -242,6 +242,227 @@ Invariants:
 
 ---
 
+## `company-goal-horizon`
+
+Company goals at annual or quarterly horizon. Owned by `business-alignment`. One file per horizon.
+
+```yaml
+horizon: enum           # required; one of: annual, quarterly
+period: string          # required; "2026" for annual, "2026-Q2" for quarterly
+items: list[string]     # required; the goals themselves
+owner: string           # optional; typically "CEO" or the company-level owner
+```
+
+Invariants:
+- Files live at `state/company-goals/{annual|quarterly}.md`.
+- `slug` equals `horizon`.
+- Prior versions preserved under `## History` in body.
+
+**Current version:** 1.
+
+---
+
+## `signal-sources`
+
+Declared sources of external customer signal (which customer-facing teams/channels to watch). Owned by `business-alignment`.
+
+```yaml
+sources: list    # required; each entry is {source_type: sales|marketing|support|onboarding|other, identifier: string, scope: string}
+```
+
+Invariants: singleton at `state/signal-sources.md` with `slug: current`. `sources` has ≥ 1 entry after activation. Prior versions preserved under `## History` in body.
+
+**Current version:** 1.
+
+---
+
+## `customer-signal`
+
+A single piece of external signal captured from a customer-facing team or direct customer interaction. Owned by `business-alignment`.
+
+```yaml
+source: string            # required; slug of the source (sales/support/marketing/etc.)
+channel: string           # required; free-text — "conversation with CS lead", "support ticket trend", etc.
+job_to_be_done: string    # optional; JTBD tag when identifiable
+implication: string       # required; one-sentence summary of what the signal means for us
+```
+
+Invariants:
+- Files live at `state/signals/{YYYY-MM-DD}-{source-slug}.md`.
+- `slug` equals the filename stem.
+
+**Current version:** 1.
+
+---
+
+## `customer-engagement`
+
+A single CTO-level customer engagement event. Owned by `business-alignment`.
+
+```yaml
+engagement_type: enum     # required; one of: advisory-board, sales-call, exec-sponsor, escalation, industry-event, other
+customer: string          # required; customer identifier (slug-style)
+outcomes: list[string]    # required; what came out of the engagement — commitments, follow-ups, decisions
+```
+
+Invariants:
+- Files live at `state/engagements/{YYYY-MM-DD}-{customer-slug}.md`.
+- `slug` equals the filename stem.
+
+**Current version:** 1.
+
+---
+
+## `engagement-cadence`
+
+Declared CTO customer-engagement cadence per engagement type. Owned by `business-alignment`.
+
+```yaml
+cadences: list    # required; each entry is {engagement_type: enum, target_frequency: string}
+```
+
+Invariants: singleton at `state/engagement-cadence.md` with `slug: current`. Prior versions preserved under `## History` in body.
+
+**Current version:** 1.
+
+---
+
+## `work-mapping`
+
+Mapping of current engineering initiatives to the company goals they ladder to. Owned by `business-alignment`.
+
+```yaml
+mappings: list    # required; each entry is {initiative: string, goal: string, confidence: low|medium|high}
+```
+
+Invariants: singleton at `state/work-mapping.md` with `slug: current`. `mappings` has ≥ 1 entry after activation. Prior versions preserved under `## History` in body.
+
+**Current version:** 1.
+
+---
+
+## `flow`
+
+A declared operating flow (PM, SDLC, DS, or custom) with definition, measurement sources, and current metrics. Owned by `process-management`. One file per flow.
+
+```yaml
+flow_type: enum               # required; one of: pm, sdlc, ds, custom
+owner: string                 # required; which team or role owns this flow
+sources: list                 # required; each entry {source_type: string, identifier: string, mode: automated|manual}
+cycle_time_days: number       # optional; current measurement
+lead_time_days: number        # optional
+wip: number                   # optional; units in progress
+throughput_per_week: number   # optional
+last_measured: date           # optional
+```
+
+Invariants:
+- Files live at `state/flows/{flow-slug}.md`.
+- `slug` equals the flow slug.
+- Prior definitions + measurements preserved under `## History` in body.
+
+**Current version:** 1.
+
+---
+
+## `flow-retro`
+
+A retrospective on a specific flow. Owned by `process-management`.
+
+```yaml
+flow: string      # required; the flow slug this retro is about
+period: string    # required; human description of what the retro covers (e.g., "Q2 2026")
+```
+
+Invariants:
+- Files live at `state/retros/{flow-slug}/{YYYY-MM-DD}.md`.
+- `slug` equals `<flow-slug>-<YYYY-MM-DD>`.
+- Body sections: `## Went well`, `## Impeded flow`, `## Reinertsen categories`, `## To try next`.
+
+**Current version:** 1.
+
+---
+
+## `bottleneck`
+
+A bottleneck observation in a named flow, classified per Reinertsen. Owned by `process-management`. One file per bottleneck — status transitions live in the same file's history.
+
+```yaml
+flow: string          # required; flow slug this bottleneck is in
+status: enum          # required; one of: open, mitigated, resolved
+category: enum        # required; one of: queue, batch-size, wip, variability, cadence, other
+opened: date          # required; when the bottleneck was first logged
+resolved: date        # optional; when marked resolved (or mitigated)
+```
+
+Invariants:
+- Files live at `state/bottlenecks/{bottleneck-slug}.md`.
+- `slug` equals the filename stem.
+- Prior statuses and resolution notes preserved under `## History` in body.
+
+**Current version:** 1.
+
+---
+
+## `team`
+
+A team record — metadata plus current health-rubric scores. Owned by `team-management`. One file per team.
+
+```yaml
+active: bool                # required; false when deprecated/disbanded
+lead: string                # required
+mission: string             # required; one-line team mission
+size: int                   # required; current headcount
+topology: enum              # required; one of: stream-aligned, enabling, complicated-subsystem, platform
+retro_cadence: string       # required; e.g., "weekly", "monthly", "quarterly"
+scores: dict                # optional; keys match rubric dimensions; values are ints 1–5
+```
+
+Invariants:
+- Files live at `state/teams/{team-slug}.md`.
+- `slug` equals the team slug.
+- Body holds `## History` with dated metadata changes *and* scoring snapshots.
+- Scan excludes `active: false` teams by default.
+
+**Current version:** 1.
+
+---
+
+## `team-retro`
+
+A team retrospective in 4Ls format (Liked / Learned / Lacked / Longed for). Owned by `team-management`. Same body structure as `retro-personal`; different subject and scope.
+
+```yaml
+team: string      # required; team slug
+period: string    # required; human description of what the retro covers
+```
+
+Invariants:
+- Files live at `state/retros/{team-slug}/{YYYY-MM-DD}.md`.
+- `slug` equals `<team-slug>-<YYYY-MM-DD>`.
+- Body sections: `## Liked`, `## Learned`, `## Lacked`, `## Longed for`.
+
+Kept module-scoped alongside `retro-personal` and `flow-retro`. If all retros converge on identical structure, consolidate into a shared `retro` type via migration later.
+
+**Current version:** 1.
+
+---
+
+## `team-rubric`
+
+Singleton rubric definition used to score all teams on the same dimensions. Owned by `team-management`.
+
+```yaml
+scale: string       # required; always "1-5" in v1 (per the cross-cutting rubric pattern)
+dimensions: list    # required; each entry {name: string, description: string}
+```
+
+Invariants: singleton at `state/rubric.md` with `slug: current`. `dimensions` has ≥ 3 entries. Prior versions preserved under `## History` in body.
+
+**Current version:** 1.
+
+---
+
 ## `retro-personal`
 
 A personal retrospective in 4Ls format (Liked / Learned / Lacked / Longed for). Owned by `personal-os`.
@@ -279,5 +500,17 @@ Current canonical version per type.
 | `rhythm` | 1 | `attention-operations` |
 | `triage-rules` | 1 | `attention-operations` |
 | `attention-sources` | 1 | `attention-operations` |
+| `company-goal-horizon` | 1 | `business-alignment` |
+| `signal-sources` | 1 | `business-alignment` |
+| `customer-signal` | 1 | `business-alignment` |
+| `customer-engagement` | 1 | `business-alignment` |
+| `engagement-cadence` | 1 | `business-alignment` |
+| `work-mapping` | 1 | `business-alignment` |
+| `flow` | 1 | `process-management` |
+| `flow-retro` | 1 | `process-management` |
+| `bottleneck` | 1 | `process-management` |
+| `team` | 1 | `team-management` |
+| `team-retro` | 1 | `team-management` |
+| `team-rubric` | 1 | `team-management` |
 
 Version bumps ship with a migration at `scripts/migrate_{type}_v{N}_to_v{N+1}.py`. The migration runs automatically the next time a surface loads and detects drift; it commits a pre-migration snapshot to git so rollback is `git revert`.

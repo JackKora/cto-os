@@ -100,6 +100,12 @@ Recommended sequence when first adopting.
 #### Operations
 
 - [Attention & Operations](modules/attention-operations/README.md) — daily/weekly operational rhythm, inbox triage, morning briefings, week-starter and week-wrap.
+- [Team Management](modules/team-management/README.md) — team-aggregate health, team rubric, team retros, composition tracking.
+
+#### Strategic
+
+- [Process Management](modules/process-management/README.md) — foundational; flow measurement, bottlenecks, flow retros across PM / SDLC / DS / custom flows.
+- [Business Alignment](modules/business-alignment/README.md) — foundational; company goals, external signal, CTO customer engagement, work-to-goals mapping.
 
 ### Planned — not yet implemented
 
@@ -117,14 +123,11 @@ Scope, frameworks, and dependencies for each planned module live in [docs/BACKLO
 
 #### Operations
 
-- [Team Management](docs/BACKLOG.md#team-management)
 - [Tech Ops](docs/BACKLOG.md#tech-ops)
 
 #### Strategic
 
 - [Org Design](docs/BACKLOG.md#org-design)
-- [Process Management](docs/BACKLOG.md#process-management)
-- [Business Alignment](docs/BACKLOG.md#business-alignment)
 - [Technical Strategy](docs/BACKLOG.md#technical-strategy)
 
 #### Communication
