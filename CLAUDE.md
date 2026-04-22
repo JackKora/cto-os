@@ -11,6 +11,8 @@ You are working on the **logic** side of CTO OS. This repo holds the MCP server,
 - `docs/SKILL_REPO.md` — deep dive on this repo (layout, MCP server, scripts, schema, patterns).
 - `docs/DATA_REPO.md` — deep dive on the data repo (layout, module state, integrations cache).
 - `docs/MCP_TOOLS.md` — canonical contracts for the Chat-facing MCP server (signatures, response shapes, errors, whitelist).
+- `docs/SCRIPTS.md` — inventory and contract for the deterministic scripts in `scripts/`.
+- `docs/BACKLOG.md` — scope, frameworks, and dependencies for every module not yet implemented. Entries graduate out of this file into `modules/{slug}/` when a module lands.
 
 ## Layout
 
@@ -23,7 +25,7 @@ cto-os/
 ├── pyproject.toml         # Python deps (managed via uv); requires-python = ">=3.13"
 ├── uv.lock                # uv lockfile; committed for reproducible installs
 ├── .venv/                 # gitignored; created by `uv sync` on install
-├── docs/                  # mirrors of the Notion architecture pages
+├── docs/                  # mirrors of the Notion architecture pages + module backlog
 ├── modules/               # one directory per PRD module — SKILL.md + README.md each
 ├── scripts/               # deterministic Python helpers (see Scripts below)
 ├── mcp-server/server.py   # MCP bridge for Claude Desktop
@@ -127,6 +129,7 @@ When evolving this repo — apply these yourself, including when Claude Code is 
 **Specific rules:**
 
 - After **adding a module directory** under `modules/`: create its `SKILL.md` + `README.md`, add it to the module index in `README.md`.
+- After **graduating a module from `docs/BACKLOG.md`** (i.e., creating `modules/{slug}/` with SKILL.md + README.md): remove the entry from `docs/BACKLOG.md`, and move the module from "Planned" to "Implemented" in root `README.md`. Seed the new `README.md` from the BACKLOG entry.
 - After **adding a script** to `scripts/`: add a one-line entry to the Scripts inventory above, add a one-line entry to `README.md`, and add a pytest in `tests/` (once the pytest suite exists).
 - After **renaming a convention or field** in `meta/schema.md`: bump the schema version, ship a migration (see invariants), update `docs/SKILL_REPO.md` if the convention is documented there.
 - After **any architectural change**: update `docs/ARCHITECTURE.md` / `SKILL_REPO.md` / `DATA_REPO.md` in the same PR. Update this file's Layout section if directories changed.

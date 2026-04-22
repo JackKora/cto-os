@@ -142,6 +142,106 @@ Invariants:
 
 ---
 
+## `daily-briefing`
+
+A morning briefing produced by `attention-operations`. One file per calendar day.
+
+No required fields beyond baseline. Body has three sections: `## Since last` (delta from the previous briefing), `## Today` (agenda, key meetings, open decisions), `## Open threads` (carry-overs).
+
+Invariants:
+- Files live at `state/briefings/{YYYY-MM-DD}.md`.
+- `slug` equals the filename stem.
+
+**Current version:** 1.
+
+---
+
+## `weekly-starter`
+
+Monday look-forward produced by `attention-operations`. One per ISO week.
+
+```yaml
+period: string     # required; ISO week in "YYYY-W##" form (e.g., "2026-W16")
+```
+
+Body sections: `## Priorities`, `## Key meetings`, `## Decisions coming up`, `## Carry-over`.
+
+Invariants:
+- Files live at `state/weekly/{YYYY-W##}-starter.md`.
+- `slug` equals the filename stem (`<YYYY-W##>-starter`).
+
+**Current version:** 1.
+
+---
+
+## `weekly-wrap`
+
+Friday look-back produced by `attention-operations`. One per ISO week.
+
+```yaml
+period: string     # required; ISO week in "YYYY-W##" form
+```
+
+Body sections: `## Shipped`, `## Decisions made`, `## Carry-over to next week`, `## Open items`.
+
+Invariants:
+- Files live at `state/weekly/{YYYY-W##}-wrap.md`.
+- `slug` equals the filename stem (`<YYYY-W##>-wrap`).
+
+**Current version:** 1.
+
+---
+
+## `rhythm`
+
+User's declared daily and weekly operational cadence. Owned by `attention-operations`.
+
+```yaml
+daily_mode: enum         # required; one of: async (Cowork-delivered), on-demand
+weekly_events: list      # required; subset of ["starter", "wrap"]; may be empty to skip both
+priority_order: list     # required; ranked source surfaces (e.g., ["slack-dms", "email", "linear-prs", "slack-channels"])
+```
+
+Invariant: exactly one file per user at `state/rhythm.md` with `slug: current`. Prior versions preserved under `## History` in body.
+
+**Current version:** 1.
+
+---
+
+## `triage-rules`
+
+Ruleset for classifying incoming signal as attention-needed vs FYI. Owned by `attention-operations`.
+
+```yaml
+rules: list        # required; each entry is {pattern: string, category: enum(attention-needed|fyi), condition?: string}
+```
+
+Invariants:
+- Exactly one file per user at `state/triage-rules.md` with `slug: current`.
+- `rules` has ≥ 3 entries after activation.
+- Prior versions preserved under `## History` in body.
+
+**Current version:** 1.
+
+---
+
+## `attention-sources`
+
+Declared integration sources (Slack workspaces, Gmail scopes, Linear workspaces) this module reads from. Owned by `attention-operations`.
+
+```yaml
+sources: list      # required; each entry is {kind: enum(slack|gmail|linear|other), identifier: string, scope: string}
+```
+
+Invariants:
+- Exactly one file per user at `state/sources.md` with `slug: current`.
+- `sources` has ≥ 1 entry after activation.
+- Prior versions preserved under `## History` in body.
+
+**Current version:** 1.
+
+---
+
 ## `retro-personal`
 
 A personal retrospective in 4Ls format (Liked / Learned / Lacked / Longed for). Owned by `personal-os`.
@@ -173,5 +273,11 @@ Current canonical version per type.
 | `show-up` | 1 | `personal-os` |
 | `voice-sample` | 1 | `personal-os` |
 | `retro-personal` | 1 | `personal-os` |
+| `daily-briefing` | 1 | `attention-operations` |
+| `weekly-starter` | 1 | `attention-operations` |
+| `weekly-wrap` | 1 | `attention-operations` |
+| `rhythm` | 1 | `attention-operations` |
+| `triage-rules` | 1 | `attention-operations` |
+| `attention-sources` | 1 | `attention-operations` |
 
 Version bumps ship with a migration at `scripts/migrate_{type}_v{N}_to_v{N+1}.py`. The migration runs automatically the next time a surface loads and detects drift; it commits a pre-migration snapshot to git so rollback is `git revert`.

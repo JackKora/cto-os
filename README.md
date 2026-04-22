@@ -59,12 +59,12 @@ The system surfaces value tensions explicitly rather than smoothing them over. E
 
 Applied across all modules.
 
-- **Metrics everywhere, altitude-cadenced.** Individual-level weekly, team monthly, department quarterly, outcomes semi-annual or annual. Modules override when subject matter demands (Tech Ops SLOs are continuous). Metric design follows [DORA](https://dora.dev/), [SPACE](https://queue.acm.org/detail.cfm?id=3454124), and [*Working Backwards*](https://www.amazon.com/Working-Backwards-Insights-Stories-Secrets/dp/1250267595): measure what matters to the user; pick a balanced basket, not a single metric; distinguish inputs from outputs; pair quantitative with qualitative; watch for [watermelon metrics](https://www.callcentrehelper.com/beware-of-watermelon-metrics-205604.htm) and gaming. See [*How to Measure Anything*](https://www.amazon.com/How-Measure-Anything-Intangibles-Business/dp/1118539273) (Hubbard) on measuring intangibles.
+- **Metrics everywhere, altitude-cadenced.** Individual weekly, team monthly, department quarterly, outcomes semi-annual or annual. Modules override when subject matter demands (Tech Ops SLOs are continuous). Each module picks the frameworks it applies; the universal principles are: measure what matters to the user, balance inputs and outputs, pair quantitative with qualitative, watch for metrics that look green while the underlying thing rots.
 - **Rubric-based scoring.** For topics without clean quantitative metrics (architecture quality, team health, decision quality), modules use 5-point qualitative rubrics. Format standardized; criteria per-module. Scored as time series.
 - **Feedback format.** Actionable, grounded in specific observed behavior, explicit about impact, suggesting what to do differently. Applied everywhere feedback is captured — 1:1s, peer feedback, incident learnings, retros.
 - **Stakeholder profile format.** People-facing modules build lightweight profiles of the people they track. Observable preferences and behaviors only — no personality typologies. Fields: communication preferences, what they want first (numbers / stories / risks / options), typical concerns, context needs, known sensitivities, relationship status. Fields can be empty. Profiles evolve as observations accumulate.
 - **Capture historic data.** Modules store history, not just current state — past goals, past decisions, past retros, past performance cycles, past board updates. Longitudinal questions stay answerable.
-- **Story format.** Borrowed from [interview-coach-skill](https://github.com/JackKora/interview-coach-skill). Used to capture events, goals, decisions.
+- **Story format.** A standard narrative template (context → action → outcome) used across every module that captures events, goals, or decisions. Lets state stay reusable across modules — a story captured in a 1:1 can feed a performance review; a decision captured once can be revisited later.
 - **Decision capture.** Context, options considered, choice made, rationale, review date. Applied per module to its own decisions — no standalone decision log.
 - **Retrospective format.** Shared structure across modules (team retros, incident retros, project retros, personal retros).
 - **Writing voice.** User-provided samples. Owned by Personal OS; read by comms-generating modules via optional dependency.
@@ -93,68 +93,110 @@ Recommended sequence when first adopting.
 
 ### Implemented
 
-- [Personal Operating System](modules/personal-os/README.md) — foundational; canonical source for altitude, goals, show-up, voice, personal retros.
-
-### Planned — not yet implemented
-
-Links resolve as each module lands.
-
-#### Stakeholder management
-
-- [Managing Up](modules/managing-up/README.md)
-- [Managing Down](modules/managing-down/README.md)
-- [Managing Sideways](modules/managing-sideways/README.md)
-
 #### Personal
 
-- [External Network & Thought Leadership](modules/external-network/README.md)
+- [Personal Operating System](modules/personal-os/README.md) — foundational; canonical source for altitude, goals, show-up, voice, personal retros.
 
 #### Operations
 
-- [Attention & Operations](modules/attention-operations/README.md)
-- [Team Management](modules/team-management/README.md)
-- [Tech Ops](modules/tech-ops/README.md)
+- [Attention & Operations](modules/attention-operations/README.md) — daily/weekly operational rhythm, inbox triage, morning briefings, week-starter and week-wrap.
+
+### Planned — not yet implemented
+
+Scope, frameworks, and dependencies for each planned module live in [docs/BACKLOG.md](docs/BACKLOG.md). Links below jump to the entry.
+
+#### Stakeholder management
+
+- [Managing Up](docs/BACKLOG.md#managing-up)
+- [Managing Down](docs/BACKLOG.md#managing-down)
+- [Managing Sideways](docs/BACKLOG.md#managing-sideways)
+
+#### Personal
+
+- [External Network & Thought Leadership](docs/BACKLOG.md#external-network)
+
+#### Operations
+
+- [Team Management](docs/BACKLOG.md#team-management)
+- [Tech Ops](docs/BACKLOG.md#tech-ops)
 
 #### Strategic
 
-- [Org Design](modules/org-design/README.md)
-- [Process Management](modules/process-management/README.md)
-- [Business Alignment](modules/business-alignment/README.md)
-- [Technical Strategy](modules/technical-strategy/README.md)
+- [Org Design](docs/BACKLOG.md#org-design)
+- [Process Management](docs/BACKLOG.md#process-management)
+- [Business Alignment](docs/BACKLOG.md#business-alignment)
+- [Technical Strategy](docs/BACKLOG.md#technical-strategy)
 
 #### Communication
 
-- [Organizational Communications](modules/org-comms/README.md)
-- [Board Comms](modules/board-comms/README.md)
+- [Organizational Communications](docs/BACKLOG.md#org-comms)
+- [Board Comms](docs/BACKLOG.md#board-comms)
 
 #### People & execution
 
-- [Hiring](modules/hiring/README.md)
-- [Performance & Development](modules/performance-development/README.md)
-- [Code Contribution Opportunities](modules/code-contribution/README.md)
+- [Hiring](docs/BACKLOG.md#hiring)
+- [Performance & Development](docs/BACKLOG.md#performance-development)
+- [Code Contribution Opportunities](docs/BACKLOG.md#code-contribution)
 
 #### Governance
 
-- [Security & Compliance](modules/security-compliance/README.md)
-- [Budget](modules/budget/README.md)
-
-### Authoring a new module
-
-Start from the skeletons at [`templates/module-SKILL.md`](templates/module-SKILL.md) and [`templates/module-README.md`](templates/module-README.md). Format spec: [docs/SKILL_REPO.md → Per-module SKILL.md format](docs/SKILL_REPO.md#per-module-skillmd-format). Schema to validate against: [meta/schema.md](meta/schema.md).
+- [Security & Compliance](docs/BACKLOG.md#security-compliance)
+- [Budget](docs/BACKLOG.md#budget)
 
 ---
 
-## Scripts
+## Surfaces
 
-All scripts live in `scripts/`. **Currently stubs** (empty placeholders); contracts and guardrails documented in [docs/SKILL_REPO.md](docs/SKILL_REPO.md).
+CTO OS runs on three different Claude surfaces. You use them for different things.
 
-- `scan.py` — frontmatter scan + filter over all of `cto-os-data` in one call. Supports `include_body` for narrow lookups.
-- `roll_up.py` — on-demand rollups (teams, projects, people).
-- `pull_slack.py` — Slack API → integrations cache.
-- `pull_linear.py` — Linear GraphQL → integrations cache.
-- `validate_deps.py` — build required-dependency DAG; fail on cycles.
-- `rename_module.py` — rename slug in lockstep across skill + data repos.
-- `migrate_{slug}_v{N}_to_v{N+1}.py` — per-module schema migrations.
+**Chat (Claude Desktop).** The interactive app. Best for ad-hoc questions — "what's on my plate today," "help me think through this reorg," "draft a note to my boss" — quick triage, weekly reviews, and anything that benefits from back-and-forth conversation.
+
+**Code (Claude Code CLI).** The command-line tool, launched from a terminal. Good for two kinds of work.
+
+- Bulk changes to the skill itself — authoring new modules, restructuring existing ones, schema migrations, or anything that involves editing many files at once.
+- Day-to-day use of the skill when you want a longer, more focused session. **Launch Code from your `cto-os-data` directory, not the `cto-os` source repo** — that's what tells Claude to activate the skill for managing your state rather than working on the system itself (`cd ~/cto-os-data && claude`). Advantages over Chat: unlimited conversation length (no running out of context mid-flow), direct file access (no MCP roundtrip), the ability to work with git / grep / your editor alongside Claude, and easier handling of multi-step work that persists across days. Worth reaching for when you're doing reflective work (weekly review, quarter planning), drafting longer artifacts (board update, strategy memo), or want uninterrupted time to think through a problem.
+
+**Cowork.** Runs tasks on a schedule, in the background, without you watching. Best for morning briefings, pre-meeting prep that lands in your inbox, overnight digests, weekly wraps — anything that benefits from arriving before you ask for it.
+
+All three read and write the same state on your laptop — your `cto-os-data` directory. There's no copying between surfaces; same disk, same files. Edits made in one surface are immediately visible in the others.
+
+Under the hood, Chat reaches your files through a local MCP server (a small translation layer that starts with Claude Desktop). Code and Cowork access the filesystem directly. Same state, same results — just two different mechanisms. You don't need to think about this day-to-day.
+
+---
+
+## Your data
+
+Your state lives in a single directory on your laptop — `~/cto-os-data` by default, configurable via the `CTO_OS_DATA` environment variable at install time. Every module writes there, and nothing outside CTO OS touches it.
+
+**Completely separate from the app.** The `cto-os` repo (this one) is code — same for every user, public or shared. Your data repo is yours only. You upgrade the app with `git pull` on `cto-os`; your data stays untouched. You can delete the app entirely and your data is still a complete, human-readable record — just without the tooling to query it efficiently.
+
+### Backup
+
+**Daily git commits are the baseline.**
+
+`cto-os-data` is already a git repo (install does `git init`). Set up a Cowork task or cron job that runs the following in that directory once a day:
+
+```bash
+git add -A && git commit -m "auto" || true
+```
+
+This gives you per-change history as a side effect of using the system: every state write becomes a commit you can inspect, diff, or roll back. Without it, a fat-fingered `rm` or a bad write can't be recovered.
+
+**Then pick an offsite strategy on top of that.** The daily commit buys versioning; offsite is about surviving laptop loss.
+
+- **Push to a private git remote.** Extend the daily task: `git add -A && git commit -m "auto" && git push`. Private repo only (GitHub, GitLab, Bitbucket), 2FA enforced. Versioning + offsite in one command.
+- **Sync the directory to a cloud drive.** Put `cto-os-data` inside a Google Drive / iCloud / Dropbox synced folder, or symlink it there. The `.git/` directory comes along automatically, so you keep local versioning; the provider gives you offsite. Simpler than managing a git remote — but read the sensitivity note below first.
+
+You can do both; they don't conflict.
+
+### ⚠️ This directory likely contains highly sensitive material
+
+> **Treat `cto-os-data` like your most sensitive work document.** 1:1 notes, performance records, board-level material, candid peer feedback, strategic decisions, commentary on stakeholders.
+>
+> - **Never push to a public repo.** Ever. Private remote with 2FA enforced is the minimum bar for git-based backup.
+> - **Be thoughtful with cloud sync.** Providers can be subpoenaed, accounts can be compromised, shared folders can leak. If you're uncomfortable with the offsite options for a particular category of content, keeping `cto-os-data` local-only (daily commits without push or cloud sync) is a legitimate choice — you lose laptop-failure resilience but you gain total isolation.
+> - **Modules flag their own sensitive subtrees** with `sensitivity: high`. Scan excludes those by default — a query has to opt in to see them. Defense in depth, not encryption.
+> - **No secrets in the data repo either.** API keys, tokens, passwords live in macOS Keychain or a gitignored `.env`, never in a module's state.
 
 ---
 
@@ -164,4 +206,6 @@ All scripts live in `scripts/`. **Currently stubs** (empty placeholders); contra
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — system-wide architecture.
 - [docs/SKILL_REPO.md](docs/SKILL_REPO.md) — this repo deep dive (MCP, scripts, scan, schema).
 - [docs/MCP_TOOLS.md](docs/MCP_TOOLS.md) — canonical MCP tool contracts.
+- [docs/SCRIPTS.md](docs/SCRIPTS.md) — deterministic-script inventory and contract.
 - [docs/DATA_REPO.md](docs/DATA_REPO.md) — data repo deep dive.
+- [docs/BACKLOG.md](docs/BACKLOG.md) — scope for modules not yet implemented.
