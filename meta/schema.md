@@ -1161,6 +1161,223 @@ Invariants:
 
 ---
 
+## `design-principles`
+
+Singleton declaration of the org-design principles — the user's stated criteria for evaluating any structural proposal. Owned by `org-design`.
+
+```yaml
+principles: list    # required; each entry is a prose principle
+```
+
+Invariants: singleton at `state/design-principles.md` with `slug: current`. `principles` has ≥ 3 entries. Prior versions preserved under `## History`.
+
+**Current version:** 1.
+
+---
+
+## `design-proposal`
+
+A reorg / org-design proposal at some point in its lifecycle (draft → review → approved → implemented, or rejected / superseded). Owned by `org-design`. One file per proposal.
+
+```yaml
+proposal_type: enum    # required; one of: reorg, new-team, merge, split, snapshot
+status: enum           # required; one of: draft, review, approved, implemented, rejected, superseded
+proposed_date: date    # required
+decided_date: date     # optional
+supersedes: string     # optional; proposal slug this supersedes
+superseded_by: string  # optional; proposal slug that supersedes this one
+```
+
+Invariants:
+- Files live at `state/proposals/{YYYY-MM-DD}-{proposal-slug}.md`.
+- `slug` equals the filename stem.
+- Body sections: `## Diagnosis`, `## Proposed structure`, `## Tradeoffs`, `## Rollout plan`, `## Principles invoked`.
+- The `snapshot` variant is the current-state capture produced at activation (status: implemented, proposal_type: snapshot).
+
+**Current version:** 1.
+
+---
+
+## `design-decision`
+
+A structural decision that's been made and recorded — often from an approved proposal, sometimes lightweight / reactive. Owned by `org-design`. Append-new-file per decision.
+
+```yaml
+decision_summary: string   # required; one-line statement of what was decided
+linked_proposal: string    # optional; proposal slug if this decision originates from one
+```
+
+Invariants:
+- Files live at `state/decisions/{YYYY-MM-DD}-{decision-slug}.md`.
+- `slug` equals the filename stem.
+- Body: context + decision + rationale + review-date + principles invoked.
+
+**Current version:** 1.
+
+---
+
+## `bottleneck-analysis`
+
+A written diagnosis of a specific org bottleneck using the Reinertsen + Conway's Law lens. Owned by `org-design`. Append-new-file per analysis.
+
+```yaml
+bottleneck_reference: string   # optional; slug of a corresponding `bottleneck` record in process-management, if one exists
+diagnosis_lens: enum           # required; one of: reinertsen, conway, both
+```
+
+Invariants:
+- Files live at `state/bottleneck-analyses/{YYYY-MM-DD}-{bottleneck-slug}.md`.
+- `slug` equals the filename stem.
+- Body sections: `## Symptoms`, `## Reinertsen view`, `## Conway view`, `## Recommended intervention`.
+
+**Current version:** 1.
+
+---
+
+## `budget-structure`
+
+Singleton declaration of the budget category taxonomy. Owned by `budget`.
+
+```yaml
+categories: list            # required; each {name, slug, capex_opex, description}
+currency: string            # required; ISO 4217 code (USD, EUR, etc.)
+period_granularity: enum    # required; one of: monthly, quarterly, annual
+```
+
+Invariants: singleton at `state/budget-structure.md` with `slug: current`. `categories` has ≥ 3 entries. Prior versions preserved under `## History`.
+
+**Current version:** 1.
+
+---
+
+## `budget-category`
+
+A single budget category with current-period plan / actual / forecast in frontmatter and period history in body. Owned by `budget`. One file per category.
+
+```yaml
+category_name: string              # required
+capex_opex: enum                   # required; one of: capex, opex
+currency: string                   # required; ISO 4217 code
+current_period: string             # required; e.g., "2026-Q2", "2026-03", "2026"
+current_plan_amount: number        # required
+current_actual_amount: number      # required; defaults to 0 at period start
+current_forecast_amount: number    # optional; revised estimate for end-of-period
+ytd_plan: number                   # optional; year-to-date plan if applicable
+ytd_actual: number                 # optional; year-to-date actual if applicable
+```
+
+Invariants:
+- Files live at `state/categories/{category-slug}.md`.
+- `slug` equals the category slug.
+- Body holds notes + `## Period history` with dated snapshots of prior periods' plan / actual / forecast.
+- `close-period` skill is the only writer of history entries; manual edits to `## Period history` discouraged.
+
+**Current version:** 1.
+
+---
+
+## `compliance-posture`
+
+Singleton declaration of compliance-regime commitments, statuses, and target maturity. Owned by `security-compliance`.
+
+```yaml
+regimes: list           # required; each {name, status, owner, target_date, scope_statement}
+target_cis_ig: string   # optional; e.g., "IG2"
+nist_csf_notes: string  # optional; target-profile notes
+```
+
+Invariants: singleton at `state/compliance-posture.md` with `slug: current`. Prior versions preserved under `## History`. `regimes` can be empty only if the org is pre-commitment.
+
+**Current version:** 1.
+
+---
+
+## `risk-register-entry`
+
+A single entry in the risk register, with severity / likelihood / mitigation / status. Owned by `security-compliance`. One file per risk.
+
+```yaml
+category: enum            # required; one of: data, access, availability, compliance, vendor, other
+severity: enum            # required; one of: low, medium, high, critical
+likelihood: enum          # required; one of: low, medium, high
+status: enum              # required; one of: open, mitigating, monitored, resolved, accepted
+owner: string             # required
+opened: date              # required
+closed_date: date         # optional
+related_controls: list    # optional; slugs of controls that mitigate this risk
+```
+
+Invariants:
+- Files live at `state/risks/{risk-slug}.md`.
+- `slug` equals the risk slug.
+- Prior status transitions preserved under `## History`.
+
+**Current version:** 1.
+
+---
+
+## `control`
+
+A security or compliance control with ownership, regime mapping, and implementation status. Owned by `security-compliance`. One file per control.
+
+```yaml
+name: string                    # required
+cis_control_id: string          # optional; CIS Control catalog ID
+nist_csf_functions: list        # optional; one or more of: identify, protect, detect, respond, recover
+soc2_criteria: list             # optional; SOC 2 Trust Services Criteria this control supports
+iso_annex_a: list               # optional; ISO 27001 Annex A references
+owner: string                   # required
+implementation_status: enum     # required; one of: not-implemented, partial, implemented, needs-remediation
+```
+
+Invariants:
+- Files live at `state/controls/{control-slug}.md`.
+- `slug` equals the control slug.
+- Body: description + evidence references + `## History` of status transitions.
+
+**Current version:** 1.
+
+---
+
+## `statement-of-applicability`
+
+Singleton ISO 27001 Statement of Applicability — which Annex A controls are in scope / excluded, with justifications. Owned by `security-compliance`.
+
+```yaml
+iso_version: string    # required; e.g., "ISO/IEC 27001:2022"
+annex_a_scope: list    # required; each {control_id, status: applicable|excluded, justification, implementing_control: <control-slug>}
+```
+
+Invariants: singleton at `state/statement-of-applicability.md` with `slug: current`. Prior versions preserved under `## History`.
+
+**Current version:** 1.
+
+---
+
+## `audit-event`
+
+An audit event — SOC 2 Type 1/2, ISO surveillance or recertification, pentest engagement, customer security assessment, internal audit. Owned by `security-compliance`. Append-new-file per audit.
+
+```yaml
+audit_type: enum           # required; one of: soc2-type1, soc2-type2, soc2-bridge, iso-surveillance, iso-recertification, pentest, customer-assessment, internal
+regime: string             # optional; which regime this audit is against (e.g., "SOC 2", "ISO 27001")
+scope: string              # required
+started_date: date         # required
+completed_date: date       # optional
+status: enum               # required; one of: in-progress, completed, findings-open
+findings_open_count: int   # required
+findings_total_count: int  # required
+```
+
+Invariants:
+- Files live at `state/audits/{YYYY-MM-DD}-{audit-slug}.md`.
+- `slug` equals the filename stem.
+- Body sections: `## Scope`, `## Findings`, `## Remediation plan`, `## Status updates`.
+
+**Current version:** 1.
+
+---
+
 ## `retro-personal`
 
 A personal retrospective in 4Ls format (Liked / Learned / Lacked / Longed for). Owned by `personal-os`.
@@ -1245,5 +1462,16 @@ Current canonical version per type.
 | `promotion-case` | 1 | `performance-development` |
 | `pip` | 1 | `performance-development` |
 | `succession-note` | 1 | `performance-development` |
+| `design-principles` | 1 | `org-design` |
+| `design-proposal` | 1 | `org-design` |
+| `design-decision` | 1 | `org-design` |
+| `bottleneck-analysis` | 1 | `org-design` |
+| `budget-structure` | 1 | `budget` |
+| `budget-category` | 1 | `budget` |
+| `compliance-posture` | 1 | `security-compliance` |
+| `risk-register-entry` | 1 | `security-compliance` |
+| `control` | 1 | `security-compliance` |
+| `statement-of-applicability` | 1 | `security-compliance` |
+| `audit-event` | 1 | `security-compliance` |
 
 Version bumps ship with a migration at `scripts/migrate_{type}_v{N}_to_v{N+1}.py`. The migration runs automatically the next time a surface loads and detects drift; it commits a pre-migration snapshot to git so rollback is `git revert`.

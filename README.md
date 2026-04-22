@@ -114,6 +114,7 @@ Recommended sequence when first adopting.
 - [Process Management](modules/process-management/README.md) — foundational; flow measurement, bottlenecks, flow retros across PM / SDLC / DS / custom flows.
 - [Business Alignment](modules/business-alignment/README.md) — foundational; company goals, external signal, CTO customer engagement, work-to-goals mapping.
 - [Technical Strategy](modules/technical-strategy/README.md) — strategy documents (Larson-style), ADRs (Nygard), tech-debt tracking.
+- [Org Design](modules/org-design/README.md) — reorg proposals, structural decisions, bottleneck analysis through Reinertsen + Conway.
 
 #### Communication
 
@@ -125,6 +126,11 @@ Recommended sequence when first adopting.
 - [Hiring](modules/hiring/README.md) — workforce planning, interview process, reqs, candidates, debriefs, offers, ramp plans.
 - [Performance & Development](modules/performance-development/README.md) — review cycles, leveling ladder, development plans, calibration, promotion cases, PIPs, succession notes.
 
+#### Governance
+
+- [Security & Compliance](modules/security-compliance/README.md) — risk register, controls, compliance regime tracking (SOC 2 / ISO 27001), ISO SoA, audit events, risk briefings.
+- [Budget](modules/budget/README.md) — budget structure, plan / actual / forecast per category, variance analysis, budget-narrative authoring.
+
 ### Planned — not yet implemented
 
 Scope, frameworks, and dependencies for each planned module live in [docs/BACKLOG.md](docs/BACKLOG.md). Links below jump to the entry.
@@ -133,18 +139,9 @@ Scope, frameworks, and dependencies for each planned module live in [docs/BACKLO
 
 - [External Network & Thought Leadership](docs/BACKLOG.md#external-network)
 
-#### Strategic
-
-- [Org Design](docs/BACKLOG.md#org-design)
-
 #### People & execution
 
 - [Code Contribution Opportunities](docs/BACKLOG.md#code-contribution)
-
-#### Governance
-
-- [Security & Compliance](docs/BACKLOG.md#security-compliance)
-- [Budget](docs/BACKLOG.md#budget)
 
 ---
 
