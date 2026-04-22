@@ -569,6 +569,273 @@ Invariants:
 
 ---
 
+## `reliability-posture`
+
+Singleton declaration of the org's reliability philosophy and policy. Owned by `tech-ops`.
+
+```yaml
+slo_coverage_target: string    # required; e.g., "all tier-1 services" or "top 10 user journeys"
+severity_scale: list           # required; entries like ["S1", "S2", "S3", "S4"] with thresholds
+postmortem_triggers: list      # required; which severities require postmortems
+on_call_tool: string           # required; PagerDuty, Opsgenie, Incident.io, etc.
+error_budget_policy: string    # required; prose describing what happens when a budget burns
+toil_target: string            # optional; e.g., "<30% of eng time is toil"
+```
+
+Invariants: singleton at `state/reliability-posture.md` with `slug: current`. Prior versions preserved under `## History`.
+
+**Current version:** 1.
+
+---
+
+## `slo`
+
+A service-level objective with target, current reading, and error-budget state. Owned by `tech-ops`. One file per SLO.
+
+```yaml
+service: string              # required; the service or user journey this SLO covers
+target: string               # required; e.g., "99.9% over 30 days"
+current: string              # optional; current observed reading
+error_budget_remaining: string  # optional; e.g., "62%"
+measurement_source: string   # required; Datadog, Prometheus, custom, manual
+last_measured: date          # optional
+```
+
+Invariants:
+- Files live at `state/slos/{slo-slug}.md`.
+- `slug` equals the SLO slug.
+- Prior measurements preserved under `## History` in body.
+
+**Current version:** 1.
+
+---
+
+## `incident`
+
+An incident record tracking the lifecycle from detection through resolution. Owned by `tech-ops`. One file per incident. Lifecycle transitions preserved as history in the same file.
+
+```yaml
+severity: string                # required; matches posture's severity scale
+opened: datetime                # required
+resolved: datetime              # optional; set when status flips to resolved
+status: enum                    # required; one of: open, mitigated, resolved
+postmortem_required: bool       # required
+slos_impacted: list             # optional; slugs of SLOs affected
+on_call_responder: string       # optional; who was on call
+```
+
+Invariants:
+- Files live at `state/incidents/{YYYY-MM-DD}-{incident-slug}.md`.
+- `slug` equals the filename stem.
+- Body sections: `## Timeline`, `## Mitigation`, `## History`.
+
+**Current version:** 1.
+
+---
+
+## `postmortem`
+
+A blameless postmortem in the Allspaw structure. Owned by `tech-ops`. Append-new-file per postmortem; links to exactly one incident.
+
+```yaml
+incident: string                  # required; incident slug
+action_items_open_count: int      # required; tracked for rollups
+action_items_total_count: int     # required
+```
+
+Invariants:
+- Files live at `state/postmortems/{YYYY-MM-DD}-{incident-slug}.md`.
+- `slug` equals the filename stem.
+- Body sections: `## Timeline`, `## Contributing factors`, `## What went well`, `## What we'd do differently`, `## Action items`.
+- No individual names in `## Contributing factors` — blameless by construction.
+
+**Current version:** 1.
+
+---
+
+## `technical-strategy-doc`
+
+A written technical strategy document following Larson's diagnosis / guiding policy / coherent actions structure. Owned by `technical-strategy`. One file per strategy area (platform, data, infra, security, etc.).
+
+```yaml
+area: string           # required; e.g., "platform", "data", "infrastructure", "security"
+horizon: string        # required; e.g., "18 months", "2026"
+status: enum           # required; one of: draft, active, archived
+owner: string          # optional
+```
+
+Invariants:
+- Files live at `state/strategies/{strategy-slug}.md`.
+- `slug` equals the strategy slug.
+- Body sections: `## Diagnosis`, `## Guiding policy`, `## Coherent actions`, `## History`.
+- Prior versions preserved under `## History`.
+
+**Current version:** 1.
+
+---
+
+## `adr`
+
+An architecture decision record in Nygard's format. Owned by `technical-strategy`. Append-new-file per decision; **immutable once status is `accepted`** — body never changes after that, only frontmatter status transitions.
+
+```yaml
+title: string             # required
+status: enum              # required; one of: proposed, accepted, superseded, deprecated
+decision_type: enum       # required; one of: build-vs-buy, stack-choice, platform, architecture, other
+superseded_by: string     # optional; adr slug that supersedes this one
+```
+
+Invariants:
+- Files live at `state/adrs/{adr-slug}.md`.
+- `slug` equals the ADR slug.
+- Body sections: `## Context`, `## Decision`, `## Consequences`.
+- Body is immutable once status is `accepted`. Only frontmatter status / superseded_by may change afterward.
+
+**Current version:** 1.
+
+---
+
+## `tech-debt-item`
+
+A tracked tech-debt item with lifecycle (open → scheduled → resolved). Owned by `technical-strategy`. One file per debt item.
+
+```yaml
+area: string              # required; service or subsystem the debt lives in
+severity: enum            # required; one of: low, medium, high
+status: enum              # required; one of: open, scheduled, resolved
+priority: int             # optional; ranking among open items
+effort: string            # optional; rough estimate
+scheduled_for: string     # optional; e.g., "Q3 2026"
+opened: date              # required
+resolved: date            # optional
+```
+
+Invariants:
+- Files live at `state/tech-debt/{debt-slug}.md`.
+- `slug` equals the debt slug.
+- Prior priorities and status transitions preserved under `## History`.
+
+**Current version:** 1.
+
+---
+
+## `workforce-plan`
+
+Singleton workforce plan — headcount targets by team with rationale. Owned by `hiring`.
+
+```yaml
+period: string      # required; e.g., "2026", "2026-Q2"
+targets: list       # required; each entry {team: string, target_headcount: int, rationale: string}
+```
+
+Invariants: singleton at `state/workforce-plan.md` with `slug: current`. `targets` has ≥ 1 entry. Prior versions preserved under `## History`.
+
+**Current version:** 1.
+
+---
+
+## `interview-process`
+
+Singleton playbook for the interview loop. Owned by `hiring`.
+
+```yaml
+rounds: list                # required; each entry {name: string, purpose: string, interviewer_role: string}
+rubric_dimensions: list     # required; the dimensions every debrief scores
+scorecard_template: string  # required; prose description or reference to the template
+authority: string           # required; who has hire/no-hire authority
+level_variants: list        # optional; per-level variations on the default loop
+```
+
+Invariants: singleton at `state/interview-process.md` with `slug: current`. `rounds` has ≥ 1 entry. `rubric_dimensions` has ≥ 3 entries. Prior versions preserved under `## History`.
+
+**Current version:** 1.
+
+---
+
+## `requisition`
+
+An open hiring requisition with its scorecard and pipeline status. Owned by `hiring`. One file per req.
+
+```yaml
+role: string         # required; role title
+team: string         # required; team the hire lands on
+level: string        # required; e.g., "senior", "staff", "VP"
+scorecard: dict      # required; {mission: string, outcomes: list, competencies: list}
+status: enum         # required; one of: sourcing, interviewing, offer-out, on-hold, filled, cancelled
+owner: string        # required; who owns this req
+opened: date         # required
+closed_date: date    # optional; set when status flips to filled/cancelled
+```
+
+Invariants:
+- Files live at `state/reqs/{req-slug}.md`.
+- `slug` equals the req slug.
+- A req can't be `sourcing` / `interviewing` without a non-empty scorecard.
+
+**Current version:** 1.
+
+---
+
+## `candidate`
+
+A candidate in a requisition's pipeline. Owned by `hiring`. One file per candidate per req; stage transitions tracked in the same file.
+
+```yaml
+name: string     # required
+req: string      # required; req slug this candidate is interviewing for
+stage: enum      # required; one of: applied, screening, onsite, offer, accepted, declined, rejected, withdrew
+source: string   # required; where they came from (referral, inbound, recruiter, etc.)
+```
+
+Invariants:
+- Files live at `state/candidates/{req-slug}/{candidate-slug}.md`.
+- `slug` equals the candidate slug.
+- Stage transitions preserved under `## History` in body.
+
+**Current version:** 1.
+
+---
+
+## `interview-debrief`
+
+A structured debrief for a single interview round with a candidate. Owned by `hiring`. Append-new-file per interview event.
+
+```yaml
+candidate: string    # required; candidate slug
+req: string          # required; req slug
+round: string        # required; which round this is (matches interview-process.rounds entries)
+interviewer: string  # required
+scores: dict         # required; keys match interview-process.rubric_dimensions
+```
+
+Invariants:
+- Files live at `state/debriefs/{req-slug}/{candidate-slug}/{YYYY-MM-DD}-{round}.md`.
+- `slug` equals `<candidate-slug>-<YYYY-MM-DD>-<round>`.
+- Body ends with a recommendation (hire / no hire / hire with caveats).
+
+**Current version:** 1.
+
+---
+
+## `ramp-plan`
+
+A first-30/60/90 day ramp plan for a new hire. Owned by `hiring`. Append-new-file per new hire; handoff to `performance-development` at end of ramp.
+
+```yaml
+person: string        # required; the new hire's slug
+start_date: date      # required
+ramp_status: enum     # required; one of: active, complete, interrupted
+```
+
+Invariants:
+- Files live at `state/ramp-plans/{person-slug}.md`.
+- `slug` equals the person slug.
+- Body sections: `## First 30 days`, `## First 60 days`, `## First 90 days`, `## Success criteria`.
+
+**Current version:** 1.
+
+---
+
 ## `retro-personal`
 
 A personal retrospective in 4Ls format (Liked / Learned / Lacked / Longed for). Owned by `personal-os`.
@@ -623,5 +890,18 @@ Current canonical version per type.
 | `report-1on1` | 1 | `managing-down` |
 | `peer-1on1` | 1 | `managing-sideways` |
 | `coaching-event` | 1 | `managing-down` |
+| `reliability-posture` | 1 | `tech-ops` |
+| `slo` | 1 | `tech-ops` |
+| `incident` | 1 | `tech-ops` |
+| `postmortem` | 1 | `tech-ops` |
+| `technical-strategy-doc` | 1 | `technical-strategy` |
+| `adr` | 1 | `technical-strategy` |
+| `tech-debt-item` | 1 | `technical-strategy` |
+| `workforce-plan` | 1 | `hiring` |
+| `interview-process` | 1 | `hiring` |
+| `requisition` | 1 | `hiring` |
+| `candidate` | 1 | `hiring` |
+| `interview-debrief` | 1 | `hiring` |
+| `ramp-plan` | 1 | `hiring` |
 
 Version bumps ship with a migration at `scripts/migrate_{type}_v{N}_to_v{N+1}.py`. The migration runs automatically the next time a surface loads and detects drift; it commits a pre-migration snapshot to git so rollback is `git revert`.

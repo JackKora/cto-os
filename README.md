@@ -107,11 +107,17 @@ Recommended sequence when first adopting.
 
 - [Attention & Operations](modules/attention-operations/README.md) — daily/weekly operational rhythm, inbox triage, morning briefings, week-starter and week-wrap.
 - [Team Management](modules/team-management/README.md) — team-aggregate health, team rubric, team retros, composition tracking.
+- [Tech Ops](modules/tech-ops/README.md) — SLOs and error budgets, incident lifecycle, blameless postmortems, reliability posture.
 
 #### Strategic
 
 - [Process Management](modules/process-management/README.md) — foundational; flow measurement, bottlenecks, flow retros across PM / SDLC / DS / custom flows.
 - [Business Alignment](modules/business-alignment/README.md) — foundational; company goals, external signal, CTO customer engagement, work-to-goals mapping.
+- [Technical Strategy](modules/technical-strategy/README.md) — strategy documents (Larson-style), ADRs (Nygard), tech-debt tracking.
+
+#### People & execution
+
+- [Hiring](modules/hiring/README.md) — workforce planning, interview process, reqs, candidates, debriefs, offers, ramp plans.
 
 ### Planned — not yet implemented
 
@@ -121,14 +127,9 @@ Scope, frameworks, and dependencies for each planned module live in [docs/BACKLO
 
 - [External Network & Thought Leadership](docs/BACKLOG.md#external-network)
 
-#### Operations
-
-- [Tech Ops](docs/BACKLOG.md#tech-ops)
-
 #### Strategic
 
 - [Org Design](docs/BACKLOG.md#org-design)
-- [Technical Strategy](docs/BACKLOG.md#technical-strategy)
 
 #### Communication
 
@@ -137,7 +138,6 @@ Scope, frameworks, and dependencies for each planned module live in [docs/BACKLO
 
 #### People & execution
 
-- [Hiring](docs/BACKLOG.md#hiring)
 - [Performance & Development](docs/BACKLOG.md#performance-development)
 - [Code Contribution Opportunities](docs/BACKLOG.md#code-contribution)
 

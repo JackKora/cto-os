@@ -18,7 +18,7 @@ Recommended sequence when adopting. Per-module tier is also noted in each entry 
 
 - **Foundations** (zero outbound dependencies; unlock most downstream capability): *(all three — Personal OS, Process Management, Business Alignment — are implemented.)*
 - **Daily drivers** (high operational value, low dependency cost): *(all implemented — Attention & Operations, Team Management, Managing Up / Down / Sideways.)*
-- **Role-shape** (match the shape of the specific job): Tech Ops, Technical Strategy, Hiring, Budget.
+- **Role-shape** (match the shape of the specific job): Budget. *(Tech Ops, Technical Strategy, and Hiring are already implemented.)*
 - **Strategic and periodic** (low-frequency, high-leverage): Org Design, Performance & Development, Board Comms, Organizational Communications.
 - **Optional by role**: External Network & Thought Leadership, Code Contribution Opportunities, Security & Compliance.
 
@@ -50,27 +50,6 @@ Recommended sequence when adopting. Per-module tier is also noted in each entry 
 
 ## Operations
 
-<a id="tech-ops"></a>
-### Tech Ops
-
-- **Slug:** `tech-ops`
-- **Activation priority:** Role-shape (for hands-on-tech CTOs).
-- **Scope:** Running production reliably. The operational state of systems that serve customers — availability, performance, risk, readiness. Incident management, SLOs, on-call rotations, reliability engineering, postmortems.
-- **Out of scope:** Strategic technical direction (Technical Strategy); SDLC and development flow (Process Management).
-- **Frameworks:**
-  - [Google — *Site Reliability Engineering*](https://sre.google/sre-book/table-of-contents/) — SLOs, error budgets, toil, on-call discipline.
-  - [DORA](https://dora.dev/) — continuous delivery + reliability metrics (deploy frequency, lead time, change-fail rate, MTTR).
-  - [John Allspaw — blameless postmortems](https://www.etsy.com/codeascraft/blameless-postmortems) — learning-oriented incident review.
-- **Depends on:**
-  - Required: none
-  - Optional: `team-management` (who's on-call, team capacity for incident load), `technical-strategy` (platform constraints shape what's operationally possible)
-- **Example tasks:**
-  - "Write up the postmortem for yesterday's S1."
-  - "How are we trending on our primary SLO this quarter?"
-  - "On-call load is spiking — help me think through why."
-  - "Draft the reliability section of this quarter's ops review."
-- **Target state location:** `cto-os-data/modules/tech-ops/state/`
-
 ---
 
 ## Strategic
@@ -95,26 +74,6 @@ Recommended sequence when adopting. Per-module tier is also noted in each entry 
   - "Re-allocate 20% of engineering capacity from product to platform — walk through the tradeoffs."
   - "Capture the decision: we're adopting a stream-aligned model."
 - **Target state location:** `cto-os-data/modules/org-design/state/`
-
-<a id="technical-strategy"></a>
-### Technical Strategy
-
-- **Slug:** `technical-strategy`
-- **Activation priority:** Role-shape.
-- **Scope:** Setting the technical direction of the organization. Where the technology is going, what we build vs buy, what platforms we bet on, how we invest in R&D, how we manage tech debt.
-- **Out of scope:** Process flow (Process Management); reliability and operations (Tech Ops); specific project execution.
-- **Frameworks:**
-  - [Will Larson — *An Elegant Puzzle: Systems of Engineering Management*](https://lethain.com/elegant-puzzle/) — modern CTO/VPE reference for strategy writing, platform thinking, and org-tech alignment.
-  - [Michael Nygard — ADRs (Architecture Decision Records)](https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions) — lightweight, durable format for capturing technical decisions (context, options, choice, consequences, review).
-- **Depends on:**
-  - Required: none
-  - Optional: `business-alignment` (strategy should serve company goals), `budget` (cost context for build-vs-buy), `tech-ops` (current reliability constraints shape what's feasible), `process-management` (flow implications of strategic shifts)
-- **Example tasks:**
-  - "Draft an ADR for the messaging-platform decision: Kafka vs SQS vs Pulsar."
-  - "Write up our platform strategy for the next 18 months."
-  - "Build-or-buy analysis on the internal feature-flag system."
-  - "Prioritize the tech debt backlog — what pays off now vs later?"
-- **Target state location:** `cto-os-data/modules/technical-strategy/state/`
 
 ---
 
@@ -164,26 +123,6 @@ Recommended sequence when adopting. Per-module tier is also noted in each entry 
 ---
 
 ## People & execution
-
-<a id="hiring"></a>
-### Hiring
-
-- **Slug:** `hiring`
-- **Activation priority:** Role-shape (for growth-phase orgs).
-- **Scope:** Bringing talented people into the organization. Owns the full hiring lifecycle from identifying a need through to the person being fully productive. Workforce planning, sourcing, interviewing, offer construction and negotiation, onboarding, ramp.
-- **Out of scope:** Ongoing performance after ramp (Performance & Development); team-aggregate health (Team Management).
-- **Frameworks:**
-  - [Geoff Smart & Randy Street — *Who: The A Method for Hiring*](https://www.amazon.com/Who-Geoff-Smart/dp/0345504194) — scorecard-driven, structured, outcome-focused interviewing.
-  - [Google structured interviewing (re:Work)](https://rework.withgoogle.com/guides/hiring-use-structured-interviewing/) — consistent questions, rubric scoring, reduced bias through structure.
-- **Depends on:**
-  - Required: none
-  - Optional: `business-alignment` (hiring plan ties to company goals), `budget` (headcount cost), `team-management` (where new hires land)
-- **Example tasks:**
-  - "Open the requisition for the staff SRE role — write the scorecard."
-  - "Prep the debrief for today's VP Eng candidate."
-  - "Draft the offer for Jane — here's the comp ask."
-  - "Design the first-30-days plan for Mike joining next week."
-- **Target state location:** `cto-os-data/modules/hiring/state/`
 
 <a id="performance-development"></a>
 ### Performance & Development
