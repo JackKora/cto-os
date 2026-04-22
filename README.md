@@ -93,6 +93,12 @@ Recommended sequence when first adopting.
 
 ### Implemented
 
+#### Stakeholder management
+
+- [Managing Up](modules/managing-up/README.md) — upward relationships; 1:1 prep/capture with boss and skip-levels, exec-summary translation, perception management.
+- [Managing Down](modules/managing-down/README.md) — direct reports; 1:1s, coaching moments outside 1:1s, team-wide comms, delegation.
+- [Managing Sideways](modules/managing-sideways/README.md) — peers and cross-functional leaders; 1:1s, negotiation prep, coalition-building.
+
 #### Personal
 
 - [Personal Operating System](modules/personal-os/README.md) — foundational; canonical source for altitude, goals, show-up, voice, personal retros.
@@ -110,12 +116,6 @@ Recommended sequence when first adopting.
 ### Planned — not yet implemented
 
 Scope, frameworks, and dependencies for each planned module live in [docs/BACKLOG.md](docs/BACKLOG.md). Links below jump to the entry.
-
-#### Stakeholder management
-
-- [Managing Up](docs/BACKLOG.md#managing-up)
-- [Managing Down](docs/BACKLOG.md#managing-down)
-- [Managing Sideways](docs/BACKLOG.md#managing-sideways)
 
 #### Personal
 

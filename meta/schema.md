@@ -463,6 +463,112 @@ Invariants: singleton at `state/rubric.md` with `slug: current`. `dimensions` ha
 
 ---
 
+## `stakeholder-profile`
+
+A lightweight profile of a person the user works with. **Shared type** used across `managing-up`, `managing-down`, and `managing-sideways`; each module writes its own files (module-scoped slug uniqueness applies).
+
+```yaml
+active: bool                         # optional; defaults true. false marks departed/removed stakeholders
+name: string                         # required; person's full name (free-text)
+role: string                         # required; role or title
+relationship: enum                   # required; one of: direct-manager, skip-level, dotted-line, direct-report, peer, other
+function: string                     # optional; peer's function (managing-sideways only)
+collaboration_area: string           # optional; what this peer collaborates on (managing-sideways only)
+tenure_months: int                   # optional; how long they've reported to the user (managing-down only)
+departed_date: date                  # optional; set when active flips to false
+cadence: string                      # optional; 1:1 cadence description
+agenda_owner: enum                   # optional; self | them | shared (managing-up, managing-down)
+meeting_style: enum                  # optional; scheduled | opportunistic (managing-sideways)
+
+# Cross-cutting stakeholder-profile fields (all optional; per PRD, fields can be empty):
+communication_preferences: string    # channel / cadence / format preferences
+what_they_want_first: string         # numbers / stories / risks / options
+typical_concerns: list               # recurring topics they push on
+context_needs: string                # how much background before the ask
+known_sensitivities: list            # heated topics, past incidents to avoid repeating
+relationship_status: string          # current state of trust, open threads
+currencies: list                     # Cohen/Bradford currency analysis (managing-sideways)
+```
+
+Invariants:
+- Files live at `state/people/{person-slug}.md` within the owning module.
+- `slug` equals the person slug (kebab-case).
+- Scan excludes `active: false` files by default.
+- Prior profile versions preserved under `## History` in body when fields change materially.
+
+**Current version:** 1.
+
+---
+
+## `boss-1on1`
+
+A 1:1 meeting with an upward stakeholder. Owned by `managing-up`.
+
+```yaml
+person: string       # required; stakeholder slug the 1:1 is with
+```
+
+Invariants:
+- Files live at `state/1on1s/{person-slug}/{YYYY-MM-DD}.md`.
+- `slug` equals `<person-slug>-<YYYY-MM-DD>`.
+- Body sections: `## Topics`, `## Decisions`, `## Follow-ups`, `## Signals`.
+
+**Current version:** 1.
+
+---
+
+## `report-1on1`
+
+A 1:1 meeting with a direct report. Owned by `managing-down`. Structurally identical to `boss-1on1` today; kept as a distinct type because module scope and sensitivity differ, and domain may diverge over time.
+
+```yaml
+person: string       # required; report slug the 1:1 is with
+```
+
+Invariants:
+- Files live at `state/1on1s/{person-slug}/{YYYY-MM-DD}.md`.
+- `slug` equals `<person-slug>-<YYYY-MM-DD>`.
+- Body sections: `## Topics`, `## Decisions`, `## Follow-ups`, `## Signals`.
+
+**Current version:** 1.
+
+---
+
+## `peer-1on1`
+
+A 1:1 meeting with a peer. Owned by `managing-sideways`. Same body structure as `boss-1on1` / `report-1on1`; `## Signals` tends to capture currency and coalition movement rather than coaching signals.
+
+```yaml
+person: string       # required; peer slug the 1:1 is with
+```
+
+Invariants:
+- Files live at `state/1on1s/{person-slug}/{YYYY-MM-DD}.md`.
+- `slug` equals `<person-slug>-<YYYY-MM-DD>`.
+- Body sections: `## Topics`, `## Decisions`, `## Follow-ups`, `## Signals`.
+
+**Current version:** 1.
+
+---
+
+## `coaching-event`
+
+A coaching or feedback moment with a direct report that happens *outside* a scheduled 1:1. Owned by `managing-down`. Distinct from `report-1on1` because it's bite-sized and in-the-moment, and it needs to be findable for Performance & Development roll-ups later.
+
+```yaml
+person: string       # required; report slug
+event_type: enum     # required; one of: feedback, recognition, delegation, course-correct, other
+```
+
+Invariants:
+- Files live at `state/coaching/{person-slug}/{YYYY-MM-DD}.md`.
+- `slug` equals `<person-slug>-<YYYY-MM-DD>`.
+- Body follows the Radical Candor structure: observation, impact, ask.
+
+**Current version:** 1.
+
+---
+
 ## `retro-personal`
 
 A personal retrospective in 4Ls format (Liked / Learned / Lacked / Longed for). Owned by `personal-os`.
@@ -512,5 +618,10 @@ Current canonical version per type.
 | `team` | 1 | `team-management` |
 | `team-retro` | 1 | `team-management` |
 | `team-rubric` | 1 | `team-management` |
+| `stakeholder-profile` | 1 | `managing-up` / `managing-down` / `managing-sideways` (shared) |
+| `boss-1on1` | 1 | `managing-up` |
+| `report-1on1` | 1 | `managing-down` |
+| `peer-1on1` | 1 | `managing-sideways` |
+| `coaching-event` | 1 | `managing-down` |
 
 Version bumps ship with a migration at `scripts/migrate_{type}_v{N}_to_v{N+1}.py`. The migration runs automatically the next time a surface loads and detects drift; it commits a pre-migration snapshot to git so rollback is `git revert`.
