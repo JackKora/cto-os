@@ -836,6 +836,331 @@ Invariants:
 
 ---
 
+## `board-structure`
+
+Singleton declaration of board composition and meeting cadence. Owned by `board-comms`.
+
+```yaml
+directors: list              # required; each {name, role: chair|lead-independent|investor|independent|other}
+observers: list              # optional
+cadence: string              # required; e.g., "quarterly"
+pre_read_lead_time: string   # required; e.g., "3 days"
+materials_format: string     # required; e.g., "narrative preferred", "deck + 6-pager hybrid"
+committees: list             # optional; standing committees (audit, comp, nominating, etc.)
+```
+
+Invariants: singleton at `state/board-structure.md` with `slug: current`. Prior versions preserved under `## History`.
+
+**Current version:** 1.
+
+---
+
+## `board-update-template`
+
+Singleton declaration of the standard CTO-section structure for quarterly board updates. Owned by `board-comms`.
+
+```yaml
+sections: list              # required; each {name, purpose, typical_length_words}
+target_length_words: int    # optional; total target
+tone_notes: string          # optional
+```
+
+Invariants: singleton at `state/update-template.md` with `slug: current`. `sections` has ≥ 3 entries. Prior versions preserved under `## History`.
+
+**Current version:** 1.
+
+---
+
+## `board-update`
+
+A composed board update for a specific meeting. Owned by `board-comms`. Append-new-file per meeting.
+
+```yaml
+meeting_date: date        # required
+status: enum              # required; one of: draft, final
+quarter: string           # required; e.g., "2026-Q2"
+```
+
+Invariants:
+- Files live at `state/updates/{YYYY-MM-DD}.md`.
+- `slug` equals the filename stem.
+- Body structure follows the declared update template's `sections`.
+
+**Current version:** 1.
+
+---
+
+## `board-pre-read`
+
+A topic-specific pre-read memo for a board meeting. Owned by `board-comms`. Append-new-file per pre-read.
+
+```yaml
+meeting_date: date        # required
+topic: string             # required
+pre_read_type: enum       # required; one of: risk, fundraising, m-and-a, strategic, other
+```
+
+Invariants:
+- Files live at `state/pre-reads/{YYYY-MM-DD}-{topic-slug}.md`.
+- `slug` equals the filename stem.
+- Body follows 6-pager prose discipline — argument first, then detail.
+
+**Current version:** 1.
+
+---
+
+## `board-meeting-log`
+
+A record of what happened at a board meeting — director feedback, decisions, asks, open threads. Owned by `board-comms`. Append-new-file per meeting.
+
+```yaml
+meeting_date: date       # required
+```
+
+Invariants:
+- Files live at `state/meetings/{YYYY-MM-DD}.md`.
+- `slug` equals the filename stem.
+- Body sections: `## Director feedback`, `## Decisions`, `## Asks of management`, `## Open threads`, `## Room tone`.
+
+**Current version:** 1.
+
+---
+
+## `comm-surfaces`
+
+Singleton declaration of internal comm surfaces (channels, lists, wikis, all-hands). Owned by `org-comms`.
+
+```yaml
+surfaces: list    # required; each {name, audience_scope, typical_comm_types}
+```
+
+Invariants: singleton at `state/surfaces.md` with `slug: current`. `surfaces` has ≥ 1 entry. Prior versions preserved under `## History`.
+
+**Current version:** 1.
+
+---
+
+## `comm-cadences`
+
+Singleton declaration of recurring internal-comm cadences. Owned by `org-comms`.
+
+```yaml
+cadences: list    # required; each {name, frequency, target_surfaces, structure_notes, due_relative_to_period}
+```
+
+Invariants: singleton at `state/cadences.md` with `slug: current`. `cadences` can be empty (users who communicate purely ad-hoc). Prior versions preserved under `## History`.
+
+**Current version:** 1.
+
+---
+
+## `delivered-comm`
+
+A composed internal communication — recurring update, all-hands content, incident comm, or cross-functional announcement. Owned by `org-comms`. Append-new-file per comm.
+
+```yaml
+comm_type: enum         # required; one of: recurring, all-hands, incident, announcement
+status: enum            # required; one of: draft, final
+surfaces: list          # required; where this went/will-go
+audience_scope: string  # required
+topic: string           # required
+related_source: string  # optional; e.g., incident-slug for incident comms
+```
+
+Invariants:
+- Files live at `state/delivered/{YYYY-MM-DD}-{comm-slug}.md`.
+- `slug` equals the filename stem.
+- Body structure varies by `comm_type`; recurring / announcement follow Minto prose; all-hands can include slide outlines; incident comms lead with "what happened / who's affected / what we're doing."
+
+**Current version:** 1.
+
+---
+
+## `review-cycle`
+
+Singleton declaration of the performance-review cycle — cadence, structure, rubric. Owned by `performance-development`.
+
+```yaml
+cadence: string                  # required; e.g., "semi-annual", "annual"
+structure: list                  # required; entries indicate components (self-review, peer, upward, manager, etc.)
+rubric_reference: string         # required; either inline or reference to a doc/link
+calibration_expectation: string  # required; when/whether reviews go to calibration
+cycle_dates: list                # required; period boundaries in the year
+```
+
+Invariants: singleton at `state/review-cycle.md` with `slug: current`. Prior versions preserved under `## History`.
+
+**Current version:** 1.
+
+---
+
+## `leveling-ladder`
+
+Singleton declaration of the leveling ladder — levels, expectations, variants. Owned by `performance-development`.
+
+```yaml
+levels: list                     # required; ordered list of level names
+expectations_per_level: dict     # required; each key is a level, value describes expectations
+variants: list                   # optional; per-function or per-track variants (IC/manager, specialist)
+```
+
+Invariants: singleton at `state/leveling-ladder.md` with `slug: current`. `levels` has ≥ 3 entries. Each level has expectations populated. Prior versions preserved under `## History`.
+
+**Current version:** 1.
+
+---
+
+## `performance-record`
+
+Per-report long-lived record of current level, trajectory, and pointers to active plans/PIPs. Owned by `performance-development`. One file per report. Scan-friendly rollup surface.
+
+```yaml
+active: bool                          # optional; defaults true. false when the report has left the user's org
+current_level: string                 # required
+level_tenure_months: int              # required
+last_review_date: date                # optional
+current_trajectory: enum              # required; one of: growing, steady, concerning, excelling
+active_pip: string                    # optional; pip slug if an active PIP exists
+active_development_plan: string       # optional; plan slug if an active dev plan exists
+```
+
+Invariants:
+- Files live at `state/records/{person-slug}.md`.
+- `slug` equals the person slug.
+- Body holds trajectory narrative + `## History` with dated trajectory changes.
+- Scan excludes `active: false` files by default.
+
+**Current version:** 1.
+
+---
+
+## `performance-review`
+
+A formal performance review for a specific report at a specific cycle. Owned by `performance-development`. **Immutable once status is `delivered`** — structural parallel to ADRs.
+
+```yaml
+person: string            # required; report slug
+cycle: string             # required; which cycle this review covers
+status: enum              # required; one of: draft, delivered
+level_at_review: string   # required; level at time of review
+```
+
+Invariants:
+- Files live at `state/reviews/{person-slug}/{cycle}-{YYYY-MM-DD}.md`.
+- `slug` equals `<person-slug>-<cycle>-<YYYY-MM-DD>`.
+- Body structure follows declared `review-cycle.structure`.
+- Body immutable once status is `delivered`.
+
+**Current version:** 1.
+
+---
+
+## `development-plan`
+
+A development plan for a report — goals, check-ins, outcome. Owned by `performance-development`. One file per plan (a person can have multiple plans over time, each file scoped to its lifecycle).
+
+```yaml
+person: string            # required; report slug
+status: enum              # required; one of: active, closed-succeeded, closed-abandoned
+goals: list               # required
+time_horizon: string      # required
+check_in_cadence: string  # required
+opened: date              # required
+closed_date: date         # optional
+```
+
+Invariants:
+- Files live at `state/development-plans/{person-slug}/{YYYY-MM-DD}.md`.
+- `slug` equals `<person-slug>-<YYYY-MM-DD>`.
+- Body: plan detail + `## Check-ins` with dated entries.
+
+**Current version:** 1.
+
+---
+
+## `calibration-session`
+
+A calibration session record — a cohort of reviews discussed and aligned on level/trajectory assessments. Owned by `performance-development`. Append-new-file per session.
+
+```yaml
+participants: list    # required; people in the room
+cohort: string        # required; which group was calibrated (e.g., "eng-managers", "all reports")
+```
+
+Invariants:
+- Files live at `state/calibrations/{YYYY-MM-DD}.md`.
+- `slug` equals the filename stem.
+- Body sections: `## Per-person assessments`, `## Dissent & resolution`, `## Final decisions`, `## Open threads`.
+
+**Current version:** 1.
+
+---
+
+## `promotion-case`
+
+A written case for promoting a report to the next level. Owned by `performance-development`. Append-new-file per case.
+
+```yaml
+person: string          # required; report slug
+from_level: string      # required
+to_level: string        # required
+status: enum            # required; one of: draft, submitted, approved, denied
+submitted_date: date    # optional
+decision_date: date     # optional
+```
+
+Invariants:
+- Files live at `state/promotion-cases/{person-slug}/{cycle}-{YYYY-MM-DD}.md`.
+- `slug` equals `<person-slug>-<cycle>-<YYYY-MM-DD>`.
+- Body sections: `## Case summary`, `## Evidence per dimension`, `## Trajectory`, `## Risks`.
+
+**Current version:** 1.
+
+---
+
+## `pip`
+
+A Performance Improvement Plan for a report. Owned by `performance-development`. One file per PIP lifecycle; check-ins captured in body.
+
+```yaml
+person: string           # required; report slug
+status: enum             # required; one of: active, closed-successful, closed-exit, closed-role-change
+gap_summary: string      # required; what's the performance gap being addressed
+success_criteria: list   # required; measurable criteria for closing successfully
+time_horizon: string     # required; e.g., "30 days", "60 days"
+check_in_cadence: string # required; e.g., "weekly"
+opened: date             # required
+closed_date: date        # optional
+```
+
+Invariants:
+- Files live at `state/pips/{person-slug}/{YYYY-MM-DD}.md`.
+- `slug` equals `<person-slug>-<YYYY-MM-DD>`.
+- Body: plan detail + `## Check-ins` with dated entries + outcome notes at close.
+
+**Current version:** 1.
+
+---
+
+## `succession-note`
+
+Succession-planning notes for a key role — who could succeed the current occupant, readiness, gaps. Owned by `performance-development`. One file per role (candidates listed inside).
+
+```yaml
+role: string             # required; role being planned for
+current_occupant: string # optional; person slug of current holder
+candidates: list         # required; each {person-slug, readiness: now|1-year|2-plus-years, gap_notes}
+```
+
+Invariants:
+- Files live at `state/succession/{role-slug}.md`.
+- `slug` equals the role slug.
+- Prior candidate lists preserved under `## History`.
+
+**Current version:** 1.
+
+---
+
 ## `retro-personal`
 
 A personal retrospective in 4Ls format (Liked / Learned / Lacked / Longed for). Owned by `personal-os`.
@@ -903,5 +1228,22 @@ Current canonical version per type.
 | `candidate` | 1 | `hiring` |
 | `interview-debrief` | 1 | `hiring` |
 | `ramp-plan` | 1 | `hiring` |
+| `board-structure` | 1 | `board-comms` |
+| `board-update-template` | 1 | `board-comms` |
+| `board-update` | 1 | `board-comms` |
+| `board-pre-read` | 1 | `board-comms` |
+| `board-meeting-log` | 1 | `board-comms` |
+| `comm-surfaces` | 1 | `org-comms` |
+| `comm-cadences` | 1 | `org-comms` |
+| `delivered-comm` | 1 | `org-comms` |
+| `review-cycle` | 1 | `performance-development` |
+| `leveling-ladder` | 1 | `performance-development` |
+| `performance-record` | 1 | `performance-development` |
+| `performance-review` | 1 | `performance-development` |
+| `development-plan` | 1 | `performance-development` |
+| `calibration-session` | 1 | `performance-development` |
+| `promotion-case` | 1 | `performance-development` |
+| `pip` | 1 | `performance-development` |
+| `succession-note` | 1 | `performance-development` |
 
 Version bumps ship with a migration at `scripts/migrate_{type}_v{N}_to_v{N+1}.py`. The migration runs automatically the next time a surface loads and detects drift; it commits a pre-migration snapshot to git so rollback is `git revert`.

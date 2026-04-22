@@ -115,9 +115,15 @@ Recommended sequence when first adopting.
 - [Business Alignment](modules/business-alignment/README.md) — foundational; company goals, external signal, CTO customer engagement, work-to-goals mapping.
 - [Technical Strategy](modules/technical-strategy/README.md) — strategy documents (Larson-style), ADRs (Nygard), tech-debt tracking.
 
+#### Communication
+
+- [Organizational Communications](modules/org-comms/README.md) — internal comms at scale: recurring updates, all-hands content, incident comms, cross-functional announcements.
+- [Board Comms](modules/board-comms/README.md) — quarterly board updates, topical pre-reads, board-meeting capture.
+
 #### People & execution
 
 - [Hiring](modules/hiring/README.md) — workforce planning, interview process, reqs, candidates, debriefs, offers, ramp plans.
+- [Performance & Development](modules/performance-development/README.md) — review cycles, leveling ladder, development plans, calibration, promotion cases, PIPs, succession notes.
 
 ### Planned — not yet implemented
 
@@ -131,14 +137,8 @@ Scope, frameworks, and dependencies for each planned module live in [docs/BACKLO
 
 - [Org Design](docs/BACKLOG.md#org-design)
 
-#### Communication
-
-- [Organizational Communications](docs/BACKLOG.md#org-comms)
-- [Board Comms](docs/BACKLOG.md#board-comms)
-
 #### People & execution
 
-- [Performance & Development](docs/BACKLOG.md#performance-development)
 - [Code Contribution Opportunities](docs/BACKLOG.md#code-contribution)
 
 #### Governance

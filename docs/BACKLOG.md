@@ -19,7 +19,7 @@ Recommended sequence when adopting. Per-module tier is also noted in each entry 
 - **Foundations** (zero outbound dependencies; unlock most downstream capability): *(all three — Personal OS, Process Management, Business Alignment — are implemented.)*
 - **Daily drivers** (high operational value, low dependency cost): *(all implemented — Attention & Operations, Team Management, Managing Up / Down / Sideways.)*
 - **Role-shape** (match the shape of the specific job): Budget. *(Tech Ops, Technical Strategy, and Hiring are already implemented.)*
-- **Strategic and periodic** (low-frequency, high-leverage): Org Design, Performance & Development, Board Comms, Organizational Communications.
+- **Strategic and periodic** (low-frequency, high-leverage): Org Design. *(Performance & Development, Board Comms, and Organizational Communications are already implemented.)*
 - **Optional by role**: External Network & Thought Leadership, Code Contribution Opportunities, Security & Compliance.
 
 ---
@@ -79,71 +79,9 @@ Recommended sequence when adopting. Per-module tier is also noted in each entry 
 
 ## Communication
 
-<a id="org-comms"></a>
-### Organizational Communications
-
-- **Slug:** `org-comms`
-- **Activation priority:** Strategic and periodic.
-- **Scope:** How you communicate to internal audiences at scale. The voice of leadership coming through recurring and ad-hoc updates. Maintaining clarity, consistency, and connection between the work and the broader context. Regular written/spoken updates, progress-against-goals narratives, all-hands content, internal incident comms, cross-functional announcements.
-- **Out of scope:** Board-level comms (Board Comms); external comms and thought leadership (External Network & Thought Leadership); day-to-day 1:1 or team comms (Managing Down).
-- **Frameworks:**
-  - [Amazon narrative format / 6-pager](https://www.amazon.com/Working-Backwards-Insights-Stories-Secrets/dp/1250267595) — prose over bullets; memos as argument structure.
-  - [Barbara Minto — *The Pyramid Principle*](https://www.amazon.com/Pyramid-Principle-Logic-Writing-Thinking/dp/0273710516) — top-down reasoning; lead with the answer; structured argument.
-- **Depends on:**
-  - Required: none
-  - Optional: `personal-os` (voice and show-up for tone), `business-alignment` (goals-tying), `team-management` / `tech-ops` / `process-management` (source material). Falls back to generic professional voice when Personal OS is inactive.
-- **Example tasks:**
-  - "Draft the engineering section of this month's all-hands."
-  - "Write the internal incident comms for yesterday's S1."
-  - "Announce the reorg to the eng org — audience is ICs + managers."
-  - "Quarterly progress-against-goals update — we're on track for 2 of 3."
-- **Target state location:** `cto-os-data/modules/org-comms/state/`
-
-<a id="board-comms"></a>
-### Board Comms
-
-- **Slug:** `board-comms`
-- **Activation priority:** Strategic and periodic.
-- **Scope:** How you communicate with the board. Strategic narrative at the highest altitude — where the business is, where it's going, what the risks are, what's changing. Quarterly board updates, pre-read decks, fundraising narrative, KPI reporting, risk and competitive context briefings.
-- **Out of scope:** Operational internal comms (Org Comms); peer or investor relationships outside board meetings (External Network & Thought Leadership).
-- **Frameworks:**
-  - [Brad Feld & Mahendra Ramsinghani — *Startup Boards*](https://feld.com/category/books/startup-boards/) — board-director perspective; what they actually want from a CTO update.
-  - [Amazon narrative format / 6-pager](https://www.amazon.com/Working-Backwards-Insights-Stories-Secrets/dp/1250267595) — argument-first structure for the pre-read.
-- **Depends on:**
-  - Required: `business-alignment` (goals), `process-management` (KPIs from value flow)
-  - Optional: `tech-ops` (material incidents), `security-compliance` (material risks), `hiring` (exec-level changes), `budget` (financial position), `personal-os` (voice + show-up)
-- **Example tasks:**
-  - "Draft the CTO section of the Q2 board deck."
-  - "Write the risk briefing for next week's board meeting."
-  - "Fundraising prep — narrative for the technical due-diligence session."
-  - "Capture the board's feedback from yesterday and distill follow-ups."
-- **Target state location:** `cto-os-data/modules/board-comms/state/`
-- **Sensitivity:** high (board-level material risks, financial posture, strategic shifts).
-
 ---
 
 ## People & execution
-
-<a id="performance-development"></a>
-### Performance & Development
-
-- **Slug:** `performance-development`
-- **Activation priority:** Strategic and periodic.
-- **Scope:** Developing the people you've hired over the arc of their careers. Maintaining a clear view of individual performance, growth, and trajectory. Performance tracking over time, calibration and leveling, promotion recommendations, development plans, performance concerns / PIPs, succession planning.
-- **Out of scope:** Pre-ramp hiring pipeline (Hiring); team-aggregate health (Team Management); day-to-day coaching (Managing Down).
-- **Frameworks:**
-  - [Kim Scott — *Radical Candor*](https://www.radicalcandor.com/) — feedback discipline; performance conversations grounded in specific behavior + impact.
-  - [Carol Dweck — *Mindset* (growth mindset)](https://www.amazon.com/Mindset-Psychology-Carol-S-Dweck/dp/0345472322) — development framing: ability is cultivable; feedback targets behavior and learning, not identity.
-- **Depends on:**
-  - Required: `team-management`
-  - Optional: `hiring` (ramp state transitions into ongoing performance), `managing-down` (1:1 signal feeds performance awareness)
-- **Example tasks:**
-  - "Draft a performance review for Jane — here's the cycle's input."
-  - "Prep for calibration — where does Mike sit relative to his level?"
-  - "Build a promotion case for Alex to senior staff."
-  - "Draft a performance-improvement plan for [report] — here's the context."
-- **Target state location:** `cto-os-data/modules/performance-development/state/`
-- **Sensitivity:** high (performance records, PIPs, calibration).
 
 <a id="code-contribution"></a>
 ### Code Contribution Opportunities
