@@ -276,7 +276,7 @@ Error messages include enough context to debug without needing a stack trace —
 Implemented (handler-level, not transport-level). Run via `uv run pytest tests/`.
 
 - **`tests/test_mcp_path.py`** — unit tests for `_resolve_path` and a parametrized escape-attempt battery (`/etc/passwd`, `..`, `foo/../../../etc`, escaping symlinks) run against every path-taking tool.
-- **`tests/test_mcp_files.py`** — `read_file`, `write_file`, `append_to_file`. Covers: UTF-8 and non-ASCII content, binary rejection, empty content, auto-create parents, `chars_written` counts code points not bytes, no auto-newline on append, overwrite vs create semantics.
+- **`tests/test_mcp_files.py`** — `read_file`, `write_file`, `append_to_file`. Covers: UTF-8 and non-ASCII content, binary rejection, empty content, auto-create parents, `chars_written` counts code points not bytes, no auto-newline on append, overwrite vs create semantics, `allow_create=False` on `append_to_file` (raises `PathNotFound` when file is missing), `ForbiddenPath` rejection on writes to `.git/` / `logs/` / `integrations-cache/`, reads of forbidden-write prefixes still allowed, write to root itself (`.`) rejected with `ForbiddenPath`.
 - **`tests/test_mcp_list.py`** — file/dir entries sort and structure, recursive traversal, escaping-symlink omission, dotfile inclusion, errors for file-path and missing path.
 - **`tests/test_mcp_scripts.py`** — whitelist enforcement (scan refused, unknown refused, pull_* refused), `ScriptNotFound` / `ScriptNotImplemented` / `ScriptTimeout`, non-zero exit passthrough, stdout/stderr capture, scan JSON proxy + bad-JSON handling.
 - **`tests/test_mcp_helpers.py`** — `_iso_z` format and roundtrip.

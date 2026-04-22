@@ -112,7 +112,10 @@ def test_scan_proxies_args_and_parses_json(data_root, scripts_dir):
     assert result == {"matches": [], "query": {"type": ["team"]}}
 
 
-def test_scan_nonzero_exit_raises_failed(data_root, scripts_dir):
+def test_scan_crash_raises_failed(data_root, scripts_dir):
+    # Per docs/MCP_TOOLS.md: non-zero exit from scan.py is only expected on a crash
+    # (uncaught exception, OS error). Query errors — bad spec, unknown field — must
+    # surface via exit 0 with a structured error envelope in stdout.
     _write_script(
         scripts_dir,
         "scan",

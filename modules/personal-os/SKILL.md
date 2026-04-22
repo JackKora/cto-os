@@ -129,6 +129,20 @@ Further voice samples, quarterly/weekly goal cascades, and retros are added post
 
 **Writes:** `cto-os-data/modules/personal-os/state/retros/{YYYY-MM-DD}.md`, append-new-file.
 
+### `update-altitude`
+
+**Purpose:** Revise the role altitude after activation. Triggered by promotion, role change, or a refined sense of the role's shape.
+
+**Triggers:**
+- "I was promoted — update my altitude"
+- "my role has changed"
+- "update my altitude to VP"
+- Oblique: "I'm thinking about this more like a platform CTO now" (offer update)
+
+**Reads:** `cto-os-data/modules/personal-os/state/altitude.md` (current).
+
+**Writes:** `cto-os-data/modules/personal-os/state/altitude.md`, overwrite with history in the body (append prior `level` / `context` under `## History` as a dated snapshot before writing the new frontmatter).
+
 ### `update-show-up`
 
 **Purpose:** Revise the show-up definition. Prior versions are preserved in the body.
@@ -159,7 +173,7 @@ Further voice samples, quarterly/weekly goal cascades, and retros are added post
 
 Paths this module writes to. Every `**Writes:**` path in Skills above appears here.
 
-- **`cto-os-data/modules/personal-os/state/altitude.md`** — overwrite, singleton (`slug: current`). Frontmatter: `type: altitude, slug: current, updated: <date>, level: <director|vp|svp|c-level>, context: <string>`. Body: free-form notes on what the altitude implies; not required.
+- **`cto-os-data/modules/personal-os/state/altitude.md`** — overwrite, singleton (`slug: current`), with history preserved in the body when `update-altitude` runs. Frontmatter: `type: altitude, slug: current, updated: <date>, level: <director|vp|svp|c-level>, context: <string>`. Body: optional free-form notes on what the altitude implies, followed by `## History` with dated prior `(level, context)` snapshots when the altitude has been revised.
 - **`cto-os-data/modules/personal-os/state/goals/{annual|quarterly|weekly}.md`** — three files, one per horizon. Each overwrites independently, with prior versions preserved as reverse-chronological snapshots in its own body. Frontmatter: `type: goal-horizon, slug: <horizon>, updated: <date>, horizon: <horizon>, period: <string>, items: <list>`. Body: starts with `## History`; each snapshot is a `### <YYYY-MM-DD>` sub-heading with the items at that point. One horizon's file changes don't touch the other two — that's the whole point of splitting.
 - **`cto-os-data/modules/personal-os/state/show-up.md`** — overwrite, with history in body. Frontmatter: `type: show-up, slug: current, updated: <date>`. Body: current definition (posture paragraph, behaviors list, anti-patterns list), followed by `## History` with dated prior versions.
 - **`cto-os-data/modules/personal-os/state/voice/{YYYY-MM-DD}.md`** — append-new-file per sample. Frontmatter: `type: voice-sample, slug: <YYYY-MM-DD>, updated: <date>, register: <string>, source: <string|null>`. Body: the sample text verbatim.

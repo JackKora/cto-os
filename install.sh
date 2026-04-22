@@ -68,10 +68,9 @@ confirm() {
 # ---------- preflight ----------
 info "Preflight checks"
 command -v git >/dev/null || die "git not found"
-# python3 is needed for the MCP config merge step below; any version works for that.
-# The venv Python (installed by uv sync) is what runs the MCP server and must meet
-# requires-python in pyproject.toml. uv resolves or installs the right version on its own.
-command -v python3 >/dev/null || die "python3 not found (needed by install.sh to merge MCP config)"
+# No system python3 check needed. `uv sync` creates .venv/ with a Python matching
+# requires-python in pyproject.toml (uv will install one if none is available), and
+# later steps (MCP config merge) run under that venv Python.
 
 if ! command -v uv >/dev/null 2>&1; then
   cat >&2 <<'EOF'
@@ -183,7 +182,7 @@ fi
 info "MCP config: $MCP_CONFIG"
 mkdir -p "$(dirname "$MCP_CONFIG")"
 
-MCP_CONFIG="$MCP_CONFIG" REPO_DIR="$REPO_DIR" DATA_DIR="$DATA_DIR" VENV_PYTHON="$VENV_PYTHON" python3 <<'PY'
+MCP_CONFIG="$MCP_CONFIG" REPO_DIR="$REPO_DIR" DATA_DIR="$DATA_DIR" VENV_PYTHON="$VENV_PYTHON" "$VENV_PYTHON" <<'PY'
 import json, os, sys
 from pathlib import Path
 

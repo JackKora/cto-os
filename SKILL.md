@@ -93,7 +93,7 @@ Your logic is identical across Chat, Code, and Cowork. Only the underlying tools
 | --- | --- | --- |
 | Read a file | `read_file(path)` | `Read` tool / direct filesystem |
 | Write (overwrite) | `write_file(path, content)` | `Write` tool / direct filesystem |
-| Append to a file | `append_to_file(path, content)` | `Edit` / shell append |
+| Append to a file | `append_to_file(path, content)` | `Read` + `Write` (concatenate) or shell `>>` |
 | List a directory | `list_directory(path, recursive)` | `Glob` / `ls` |
 | Scan state | `scan(query_spec)` | `uv run python scripts/scan.py --args '...'` |
 | Run a script | `run_script(name, args)` | `uv run python scripts/{name}.py --args '...'` |

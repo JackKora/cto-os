@@ -31,7 +31,7 @@ cto-os/
 ├── templates/             # files install.sh copies into a new cto-os-data
 ├── hooks/pre-commit       # git hook that runs the skill-reviewer on staged SKILL/CLAUDE changes
 ├── .claude/agents/        # Claude Code subagent definitions (skill-reviewer)
-└── tests/                 # skill-review checklist; pytest + scenarios are aspirational
+└── tests/                 # pytest suite for the MCP server + skill-review checklist; scenarios/ is aspirational
 ```
 
 ## Dev setup

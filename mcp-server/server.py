@@ -161,7 +161,8 @@ def _check_write_allowed(resolved: Path) -> None:
         # Should be unreachable — _resolve_path caught this. Defensive anyway.
         raise PathOutsideRoot(f"{resolved} is not under {DATA_ROOT}")
 
-    if not rel.parts:
+    # resolved == DATA_ROOT → rel is Path("."). Writing to the root itself is meaningless.
+    if rel == Path("."):
         raise ForbiddenPath("cannot write to the CTO_OS_DATA root itself")
 
     top = rel.parts[0]
@@ -190,12 +191,24 @@ def _invoke_script(name: str, args: dict[str, Any], log: logging.Logger) -> dict
     if script_path.stat().st_size == 0:
         raise ScriptNotImplemented(f"scripts/{name}.py is empty (not yet implemented)")
 
+    # Pass a minimal, explicit env to scripts. Don't leak CTO_OS_MCP_LOG_LEVEL or any
+    # other vars that happen to be set in the MCP server's process — scripts shouldn't
+    # read from the server's control plane. Keep PATH/HOME/LANG/LC_ALL because external
+    # tools (git inside rename_module, TLS in pulls) commonly rely on them.
+    child_env: dict[str, str] = {}
+    if DATA_ROOT is not None:
+        child_env["CTO_OS_DATA"] = str(DATA_ROOT)
+    for k in ("PATH", "HOME", "LANG", "LC_ALL", "LC_CTYPE", "SSL_CERT_FILE", "TMPDIR"):
+        v = os.environ.get(k)
+        if v is not None:
+            child_env[k] = v
+
     try:
         completed = subprocess.run(
             [sys.executable, str(script_path), "--args", json.dumps(args)],
             capture_output=True,
             timeout=SCRIPT_TIMEOUT_SECONDS,
-            env=os.environ,
+            env=child_env,
         )
     except subprocess.TimeoutExpired:
         log.error(f"ScriptTimeout: {name}.py exceeded {SCRIPT_TIMEOUT_SECONDS}s")
