@@ -1,0 +1,21 @@
+[project]
+name = "cto-os"
+version = "0.1.0"
+description = "CTO OS — logic side. Skill definitions, MCP server, deterministic scripts."
+requires-python = ">=3.13"
+dependencies = [
+    "mcp",
+    "pyyaml>=6.0.3",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+]
+
+[tool.uv]
+# Exact versions pinned in uv.lock; committed for reproducibility.
+
+[tool.pytest.ini_options]
+pythonpath = ["mcp-server"]
+testpaths = ["tests"]

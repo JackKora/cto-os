@@ -1,0 +1,17 @@
+# TTL config for pull_* scripts.
+#
+# Each entry: `ttl_minutes` — the minimum age of the most-recent cached pull
+# before `pull_<source>.py` will make another HTTP call. If within TTL, the
+# pull is skipped (unless the caller passes {"force": true}).
+#
+# Values follow the guidance in docs/DATA_REPO.md. Adjust per source if real
+# usage shows the default is too eager or too stale.
+
+slack:
+  ttl_minutes: 240    # 4h
+
+linear:
+  ttl_minutes: 30
+
+gmail:
+  ttl_minutes: 60
