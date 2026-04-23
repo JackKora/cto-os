@@ -14,7 +14,8 @@ Usage: $(basename "$0") [options]
 
 Options:
   --data-dir PATH   Path to cto-os-data directory
-                    (default: prompt, with ~/cto-os-data as suggestion)
+                    (default: prompt, suggesting \$CTO_OS_DATA if set,
+                    otherwise ~/cto-os-data)
   -y, --yes         Non-interactive; accept defaults
   -h, --help        Show this help
 EOF
@@ -107,7 +108,12 @@ VENV_PYTHON="$REPO_DIR/.venv/bin/python"
 [[ -x "$VENV_PYTHON" ]] || die "uv sync completed but $VENV_PYTHON is missing or not executable"
 
 # ---------- resolve data dir ----------
-DEFAULT_DATA_DIR="$HOME/cto-os-data"
+# Precedence: --data-dir flag > $CTO_OS_DATA env var > ~/cto-os-data default.
+if [[ -n "${CTO_OS_DATA:-}" ]]; then
+  DEFAULT_DATA_DIR="$CTO_OS_DATA"
+else
+  DEFAULT_DATA_DIR="$HOME/cto-os-data"
+fi
 if [[ -z "$DATA_DIR" ]]; then
   if (( ASSUME_YES )); then
     DATA_DIR="$DEFAULT_DATA_DIR"
