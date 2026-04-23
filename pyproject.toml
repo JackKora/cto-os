@@ -5,6 +5,7 @@ description = "CTO OS — logic side. Skill definitions, MCP server, determinist
 requires-python = ">=3.13"
 dependencies = [
     "mcp",
+    "pyyaml>=6.0.3",
 ]
 
 [dependency-groups]

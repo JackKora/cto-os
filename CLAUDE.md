@@ -65,7 +65,7 @@ This rule outranks any instinct to be helpful-by-doing.
 - **No user state in this repo.** Ever. User state = `cto-os-data`.
 - **No secrets in this repo.** Ever. Secrets = macOS Keychain or a gitignored `.env` in the data repo.
 - **Every module needs `SKILL.md` + `README.md`.** Under `modules/{slug}/`. The slug must match the slug in `cto-os-data/modules/{slug}/`.
-- **Required dependencies form a DAG.** `scripts/validate_deps.py` is the intended enforcer (not yet implemented); it will fail on cycles. Optional dependencies may be bidirectional.
+- **Required dependencies form a DAG.** `scripts/validate_deps.py` enforces this — wired into `hooks/pre-commit`, fails on cycles or unknown required deps. Optional dependencies may be bidirectional (not validated).
 - **Bump `schema_version` and ship a migration when `meta/schema.md` changes.** Migration script lives at `scripts/migrate_{slug}_v{N}_to_v{N+1}.py`. Never mutate the schema without one.
 - **Architectural changes update `docs/` in the same PR.** Notion is the discussion surface; the `docs/` mirrors are canonical.
 - **Paths in scripts are relative to `CTO_OS_DATA`.** Never hardcode a path to the data repo; read `CTO_OS_DATA` from the environment.
@@ -85,13 +85,13 @@ Surface-agnostic: Claude Desktop invokes them via the MCP `run_script` tool; Cla
 
 Current inventory:
 
-- `scan.py` — the workhorse. Frontmatter scan + filter over all of `cto-os-data` in one call. Always prefer `scan` over reading N files in sequence.
-- `roll_up.py` — on-demand rollups (teams, projects, people). Compact current-state tables.
-- `pull_slack.py` — Slack API → `cto-os-data/integrations-cache/slack/`. TTL-aware, dedups on message ID.
-- `pull_linear.py` — Linear GraphQL → `cto-os-data/integrations-cache/linear/`.
-- `validate_deps.py` — intended: build the required-dependency DAG from each module's `SKILL.md` frontmatter; fail on cycles. When implemented, should be added to `hooks/pre-commit`.
-- `rename_module.py` — renames a slug in lockstep across `cto-os/modules/` and `cto-os-data/modules/`.
-- `migrate_{slug}_v{N}_to_v{N+1}.py` — per-module schema migrations. Commits a pre-migration snapshot to git before touching state; rollback = `git revert`.
+- **`scan.py` — IMPLEMENTED.** Frontmatter scan + filter over all of `cto-os-data` in one call. Supports `type`, `where`, `module`, `fields`, `include_body`, and opt-in flags for inactive / high-sensitivity modules. Enforces the `MAX_INLINE_MATCHES=5` / `MAX_BODY_BYTES=4096` guardrails. Always prefer `scan` over reading N files in sequence. Tests: `tests/test_scan.py` (21 cases, fixture at `tests/fixtures/cto-os-data-sample/`).
+- **`validate_deps.py` — IMPLEMENTED.** Walks `modules/*/SKILL.md`, builds the required-dep graph, fails on cycles or unknown required deps. Called by `hooks/pre-commit` whenever any module `SKILL.md` is staged. Tests: `tests/test_validate_deps.py` (12 cases).
+- **`roll_up.py` — IMPLEMENTED.** On-demand cross-type aggregations. Three named rollups: `team-health` (all active teams + scores + retro counts), `per-person` (one direct report + 1:1s + coaching + perf record + dev plan + PIP), `goal-progress` (company goals × work-mapping join, flags unmapped goals). Adding a new rollup = adding a function to a dispatch dict. Tests: `tests/test_roll_up.py` (11 cases).
+- **`pull_linear.py` — IMPLEMENTED.** Incremental pull of Linear issues → `cto-os-data/integrations-cache/linear/{timestamp}.json`. TTL-aware (configured in `scripts/lib/integrations.yaml`), watermark-based incremental (`updatedAt` minus 5-min buffer), dedups on issue ID. Reads `LINEAR_API_KEY` from env. Uses `urllib.request` (stdlib, no extra dep). Issues-only in v1; comments out of scope. Tests: `tests/test_pull_linear.py` (10 cases, mocks `urlopen`).
+- **`pull_slack.py` — IMPLEMENTED.** Incremental pull of Slack messages across bot-accessible channels → `cto-os-data/integrations-cache/slack/{timestamp}.json`. TTL-aware (240m default), watermark per-channel on `ts`, dedups on `(channel_id, ts)`. Resolves user + channel IDs to names inline. Polls only channels where `is_member: true`. Reads `SLACK_BOT_TOKEN` from env (bot scopes required: `channels:history`, `groups:history`, `channels:read`, `groups:read`, `users:read`). Messages-only in v1. Tests: `tests/test_pull_slack.py` (12 cases, mocks `urlopen`).
+- **`rename_module.py` — IMPLEMENTED.** Renames a slug in lockstep across `cto-os/modules/` and `cto-os-data/modules/`. Dry-run by default — requires `"dry_run": false` to commit. Refuses on dirty git working tree on either repo. Auto-rewrites: module dir, SKILL.md `name:`, `_module.md` `module:`/`slug:`, sibling modules' `requires:`/`optional:`, README.md module-index paths, docs/BACKLOG.md anchors/slug fields. Surfaces other textual references for manual review (doesn't auto-rewrite — risk of false positives). Tests: `tests/test_rename_module.py` (9 cases).
+- `migrate_{slug}_v{N}_to_v{N+1}.py` — per-module schema migrations. None exist yet (no schema has needed a v2 bump). Commits a pre-migration snapshot to git before touching state; rollback = `git revert`.
 
 Detailed contracts, MCP tool surface, and the scripts-vs-MCP decision rule live in `docs/SKILL_REPO.md`.
 
@@ -105,20 +105,65 @@ Detailed contracts, MCP tool surface, and the scripts-vs-MCP decision rule live 
 
 ## Testing
 
-Four levels. Today only level 3 is wired up; levels 1, 2, 4 are the target.
+Four levels. Levels 1 and 3 are wired up; levels 2 and 4 are the target.
 
-**1. Script tests — pytest. Partial.** Run via `uv run pytest tests/`. MCP server has coverage (`tests/test_mcp_*.py`): path defense, file I/O, directory listing, script invocation + timeouts, whitelist enforcement, helpers. Scripts (`scan.py`, `roll_up.py`, etc.) are stubs with no tests yet. Add tests alongside each script as it lands. Fixtures in `tests/fixtures/cto-os-data-sample/` are still aspirational — current tests use pytest `tmp_path` directly.
+### 1. Script and MCP tests — pytest. Implemented.
 
-**2. Skill behavior tests — scenarios. Not implemented.** Target: `tests/scenarios/` holds sample data-repo state plus a prompt plus the expected Claude response shape, reviewed manually.
+Run the full suite:
 
-**3. AI-assisted skill review. Implemented.** The `skill-reviewer` subagent (`.claude/agents/skill-reviewer.md`) applies the checklist at `tests/claude-review.md`. Fresh context per run. Invocations:
+```bash
+uv run pytest tests/ -v          # verbose output
+uv run pytest tests/ -q          # quick summary
+uv run pytest tests/test_scan.py # single file
+```
 
-- **Pre-commit:** `hooks/pre-commit` calls `claude -p` headlessly and blocks the commit on `REVIEW: FAIL`. Triggered only when the staged diff includes `SKILL.md` or `CLAUDE.md`. Enabled by `install.sh` via `git config core.hooksPath hooks`. If the `claude` CLI isn't on PATH, the hook warns and skips.
-- **On demand:** ask Claude Code to run the `skill-reviewer` subagent. Useful when writing or refactoring a module.
+Coverage today (~155 tests):
 
-**4. Human review.** PR flow; solo review on fresh-eyes days. No CI gating today.
+- **`tests/test_mcp_*.py`** — the MCP server (path defense, file I/O, directory listing, script invocation with timeouts, whitelist enforcement, helpers).
+- **`tests/test_scan.py`** — the `scan` workhorse (type/where/fields/module filters, `include_body` with cap + truncation, sensitivity and active filtering, query-error envelope, crash paths). Uses the fixture at `tests/fixtures/cto-os-data-sample/`.
+- **`tests/test_validate_deps.py`** — the dep-graph validator (clean graphs, direct/transitive cycles, unknown deps, optional cycles permitted, malformed input crashes).
+- **`tests/test_roll_up.py`** — named rollups (team-health, per-person, goal-progress) against the fixture. Synthesizes additional fixture for goal-progress scenario.
+- **`tests/test_pull_linear.py`** — Linear pull with mocked `urlopen`: TTL skip, force override, watermark incremental, dedup, HTTP errors, GraphQL errors.
+- **`tests/test_pull_slack.py`** — Slack pull with mocked `urlopen`, dispatched across `conversations.list` / `users.list` / `conversations.history`: TTL skip, force override, watermark per-channel, dedup on (channel, ts), `ok: false` errors, HTTP errors, channel filter.
+- **`tests/test_rename_module.py`** — synthetic skill + data repos in `tmp_path`; dry-run vs. commit, dirty-tree refusal, slug collision refusal, unmodified-reference scan.
 
-**When you change something, run the matching level.** Changing `SKILL.md` / `CLAUDE.md` → pre-commit fires level 3 automatically. Changing `meta/schema.md` → also bump `schema_version` and ship a migration (see Invariants above).
+**When changing a script:**
+- Run its test file: `uv run pytest tests/test_<script>.py`.
+- If behavior changes or new cases are introduced, add tests in the same file.
+- If the change touches how scan reads module state (sensitivity, active, types), update the fixture at `tests/fixtures/cto-os-data-sample/` to cover the new behavior, and add assertions that exercise it.
+
+**When adding a new module:**
+- The fixture at `tests/fixtures/cto-os-data-sample/` does NOT need to include every real module. It exists to exercise scan behavior across a few representative shapes (one active+standard, one active+high-sensitivity, one inactive). Only update it when the new module introduces a *shape* the fixture doesn't already cover — e.g., a novel frontmatter pattern a scan filter needs to exercise.
+
+**When adding a new script:**
+- Create `tests/test_<script>.py` following the subprocess pattern in `tests/test_scan.py` (JSON args in, JSON stdout out, `CTO_OS_DATA` env). Test the contract at the process boundary, not by importing.
+- Add a one-line entry to the Scripts inventory above + `README.md`.
+- If the script has a pre-commit role, wire it into `hooks/pre-commit`.
+
+### 2. Skill behavior tests — scenarios. Not implemented.
+
+Target: `tests/scenarios/` holds sample data-repo state plus a prompt plus the expected Claude response shape, reviewed manually.
+
+### 3. AI-assisted skill review. Implemented.
+
+The `skill-reviewer` subagent (`.claude/agents/skill-reviewer.md`) applies the checklist at `tests/claude-review.md`. Fresh context per run. Invocations:
+
+- **Pre-commit:** `hooks/pre-commit` calls `claude -p` headlessly and blocks the commit on `REVIEW: FAIL`. Triggered when the staged diff includes `SKILL.md` or `CLAUDE.md`. Enabled by `install.sh` via `git config core.hooksPath hooks`. If the `claude` CLI isn't on PATH, the hook warns and skips.
+- **Alongside pre-commit:** the same hook also runs `validate_deps.py` whenever any `modules/**/SKILL.md` is staged. That check blocks the commit on any required-dep cycle or unknown-dep reference. Unlike skill-reviewer, it does not skip if `claude` is missing — it only requires `uv`.
+- **On demand:** ask Claude Code to run the `skill-reviewer` subagent. Useful when writing or refactoring a module. Run `validate_deps.py` directly with `uv run python scripts/validate_deps.py` when you want the graph report without a commit.
+
+### 4. Human review. Not automated.
+
+PR flow; solo review on fresh-eyes days. No CI gating today.
+
+### When you change something, run the matching level
+
+- Changing `scripts/<name>.py` → `uv run pytest tests/test_<script>.py`.
+- Changing `mcp-server/server.py` → `uv run pytest tests/test_mcp_*.py`.
+- Changing any module's `SKILL.md` → pre-commit fires `validate_deps.py` (deps) + skill-reviewer (qualitative) automatically. To preview before commit, run either manually.
+- Changing `CLAUDE.md` → pre-commit fires skill-reviewer.
+- Changing `meta/schema.md` → also bump `schema_version` for the affected type(s) and ship a migration (see Invariants).
+- Changing `tests/fixtures/cto-os-data-sample/` → run `uv run pytest tests/test_scan.py` to catch fixture-dependent failures.
 
 ## Self-maintenance rules
 

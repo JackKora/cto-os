@@ -1,15 +1,48 @@
 #!/usr/bin/env bash
-# CTO OS pre-commit hook — runs the skill-reviewer subagent against
-# staged SKILL.md / CLAUDE.md changes.
+# CTO OS pre-commit hook. Runs two checks when relevant files are staged:
 #
-# Enabled by: git config core.hooksPath hooks (done by install.sh).
-# Bypass (not recommended): git commit --no-verify
+#  1. validate_deps — enforces the required-dependency DAG across modules.
+#     Runs whenever any modules/**/SKILL.md file is staged. Fast (sub-second
+#     on ~20 modules); never skipped when scope matches.
+#
+#  2. skill-reviewer subagent — qualitative review of SKILL.md / CLAUDE.md
+#     changes against tests/claude-review.md. Runs whenever any SKILL.md or
+#     CLAUDE.md file is staged. Requires the `claude` CLI; skipped (with a
+#     warning) if absent.
+#
+# Enabled by:  git config core.hooksPath hooks  (done by install.sh).
+# Bypass (not recommended):  git commit --no-verify
 
 set -euo pipefail
 
-staged="$(git diff --cached --name-only --diff-filter=ACMR | grep -E '(SKILL|CLAUDE)\.md$' || true)"
+REPO_ROOT="$(git rev-parse --show-toplevel)"
 
-if [[ -z "$staged" ]]; then
+staged="$(git diff --cached --name-only --diff-filter=ACMR || true)"
+
+# ---------- Check 1: validate_deps ----------
+
+staged_skills="$(echo "$staged" | grep -E '^modules/[^/]+/SKILL\.md$' || true)"
+
+if [[ -n "$staged_skills" ]]; then
+  echo "pre-commit: running validate_deps.py (module SKILL.md changes detected)"
+  if ! command -v uv >/dev/null 2>&1; then
+    echo "pre-commit: uv not found on PATH; cannot run validate_deps. Install uv or bypass with --no-verify." >&2
+    exit 1
+  fi
+  deps_output="$(cd "$REPO_ROOT" && uv run python scripts/validate_deps.py --args '{}' 2>&1)"
+  deps_status=$?
+  if [[ $deps_status -ne 0 ]]; then
+    echo "pre-commit: validate_deps.py failed (exit $deps_status):" >&2
+    echo "$deps_output" >&2
+    exit 1
+  fi
+fi
+
+# ---------- Check 2: skill-reviewer ----------
+
+staged_reviewable="$(echo "$staged" | grep -E '(SKILL|CLAUDE)\.md$' || true)"
+
+if [[ -z "$staged_reviewable" ]]; then
   exit 0
 fi
 
@@ -19,10 +52,9 @@ if ! command -v claude >/dev/null 2>&1; then
 fi
 
 echo "pre-commit: running skill-reviewer on:"
-echo "$staged" | sed 's/^/  /'
+echo "$staged_reviewable" | sed 's/^/  /'
 
-# Build a space-separated file list for the prompt.
-files_inline="$(echo "$staged" | tr '\n' ' ')"
+files_inline="$(echo "$staged_reviewable" | tr '\n' ' ')"
 
 prompt="Use the skill-reviewer subagent to review these staged files against the checklist at tests/claude-review.md:
 
