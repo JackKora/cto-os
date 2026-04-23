@@ -51,7 +51,7 @@ cto-os/                          # git repo — installed once, updated via git 
 
 - **Logic only.** No user-specific values anywhere — the same checkout would work for any user.
 - **Updated via `git pull`.** New modules, script fixes, schema revisions all flow in.
-- **Installed globally** (once per machine) via a symlink from `~/.claude/skills/cto-os/` into this repo's checkout. Chat and Cowork pick up the skill through this symlink; Claude Code references it indirectly via the data repo's `CLAUDE.md`.
+- **Installed globally** (once per machine) via a symlink from `~/.claude/skills/cto-os/` into this repo's checkout. All three surfaces (Chat, Cowork, Claude Code) pick up the skill through this symlink and activate it on description match against root `SKILL.md`. The data repo's `CLAUDE.md` biases Claude Code toward activating more liberally when cwd is that repo — but it's not what loads the skill.
 - **Module per directory.** Each PRD module gets one directory under `modules/`. The directory holds the module's `SKILL.md` and its `README.md`.
 
 ---
@@ -236,7 +236,7 @@ All paths passed to these tools are relative to `CTO_OS_DATA` (i.e., relative to
 
 All scripts live in `cto-os/scripts/` and are surface-agnostic. In Chat they're invoked via the MCP's `run_script` tool; in Code and Cowork they're invoked directly by Claude via bash. Same script, same contract, different entry point.
 
-**Current and planned scripts:**
+**Scripts:**
 
 - `scan.py` — the workhorse. Frontmatter scan + filter over all of `cto-os-data` in one call. See Context loading below.
 - `roll_up.py` — on-demand rollups (teams, projects, people). Returns compact tables of current-state metrics.
@@ -434,7 +434,7 @@ When `truncated_bodies: true` is set, fall back to the three-turn paths-only flo
 
 ## Where indexes still earn their keep
 
-A *listing* index (flat enumeration: path, type, slug, updated-date) is cheap to maintain because it contains no derived data. If scan latency ever becomes a problem, a listing index gets introduced as a build artifact in `cto-os-data/meta/` — regenerated via `cto-os/scripts/roll_up.py`, never hand-edited. This is a deferred optimization, not a day-one requirement.
+There is no persistent listing index. `scan` walks `cto-os-data` directly each call; at current repo sizes this is fast enough that an index wouldn't pay for its own maintenance cost. The two-pass filter (frontmatter-only → selective body read) is the optimization that matters.
 
 ---
 

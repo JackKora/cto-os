@@ -11,7 +11,7 @@ optional: []
 
 How work moves through the organization from idea to customer. Owns measurement and continuous improvement of the operating flows — Product Management, SDLC, Data Science, or whatever else the user declares. Foundational — no outbound dependencies. Required by Org Design and Board Comms (they consume this module's metrics).
 
-**v1 scope:** flow measurement + bottleneck tracking + flow retros. PM / SDLC / DS as *sub-flow modules* are deferred — in v1, each is a declarable flow the user adds to this module; if one accrues enough bespoke logic later, it can graduate into its own module.
+**Scope covers:** flow measurement, bottleneck tracking, and flow retros. PM, SDLC, and DS are handled as *declarable flows* the user adds to this module — one module, many flows, no dedicated sub-module per discipline.
 
 ## Out of scope
 

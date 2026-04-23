@@ -56,11 +56,13 @@ The system runs on all three surfaces of Claude. Each has different affordances;
 
 **How the skill activates on each surface:**
 
-- **Claude Code.** `cd ~/cto-os-data && claude`. Claude Code auto-loads `cto-os-data/CLAUDE.md` from cwd, which references the globally-installed `cto-os`. The skill is in scope for the whole session. No description matching needed — the presence of `CLAUDE.md` is the activation signal.
-- **Claude Desktop (Chat).** Chat has a built-in skill router that reads every installed skill's root `SKILL.md` description and picks the best match for each user message. `cto-os/SKILL.md` must have a description specific enough to avoid false positives ("write me a haiku") and broad enough to catch oblique phrasings ("I had a weird convo with Mike yesterday" should match, since 1:1 content is in scope). Once the root skill has activated, per-module `SKILL.md` files are loaded on demand.
-- **Cowork.** Same router behavior as Chat — description-based activation via root `SKILL.md`. Additionally, the Cowork project must be granted folder-scoped permission to `~/cto-os-data/`; without that, the skill activates but has nowhere to read or write state.
+All three surfaces share the same underlying mechanism: `install.sh` symlinks the skill repo into `~/.claude/skills/cto-os/`, and each surface reads from that registry. The skill activates when the user's request matches root `SKILL.md`'s `description:` frontmatter. Per-module `SKILL.md` files load on demand once the root is active.
 
-**Root `SKILL.md` is required, not optional.** Chat and Cowork have no other activation mechanism. Claude Code could in principle work without one (its `CLAUDE.md`-based activation is sufficient), but we keep a root `SKILL.md` for consistency.
+- **Claude Desktop (Chat).** The built-in skill router reads each installed skill's root `SKILL.md` description and picks the best match for each user message. `cto-os/SKILL.md`'s description must be specific enough to avoid false positives ("write me a haiku") and broad enough to catch oblique phrasings ("I had a weird convo with Mike yesterday" should match, since 1:1 content is in scope).
+- **Cowork.** Same router behavior as Chat — description-based activation via root `SKILL.md`. Additionally, the Cowork project must be granted folder-scoped permission to `~/cto-os-data/`; without that, the skill activates but has nowhere to read or write state.
+- **Claude Code.** Same skill registry (`~/.claude/skills/cto-os/`), same description-based activation. *Additionally*, when cwd is `cto-os-data/`, Claude Code loads that repo's `CLAUDE.md` into always-on context. That file instructs Claude to default to the `cto-os` skill for any request that could plausibly be CTO-domain work — biasing activation to be more permissive inside the data repo than the pure description-match rule would allow. The skill is not *auto-loaded* by cwd; `CLAUDE.md` just tells Claude to invoke it liberally.
+
+**Root `SKILL.md` is required, not optional.** Its description is the only activation lever all three surfaces share.
 
 **Primary use-by-surface pattern (suggested, not enforced):**
 
@@ -86,17 +88,21 @@ Three thin mechanisms and one install script. No symlinks cross the repo boundar
 
 ## CTO_OS_DATA env var
 
-Points at the path of `cto-os-data` on your machine (typically `~/cto-os-data`). The skill and all scripts read this to locate state. Resolution order:
+Points at the path of `cto-os-data` on your machine (typically `~/cto-os-data`). The skill and all scripts read this to locate state — no cwd auto-detection, no fallback. If `CTO_OS_DATA` is unset or empty, scripts and the MCP server error out with a clear "set `CTO_OS_DATA`" message.
 
-1. `CTO_OS_DATA` environment variable (set by `install.sh` in the MCP config, shell profile, and Cowork project config)
-2. Current working directory, if it contains `CLAUDE.md` and validates as a CTO OS data repo (how Claude Code picks it up when you `cd` into the data repo)
-3. Fallback: error with a clear "set `CTO_OS_DATA`" message
+How it gets set, per surface:
 
-In the normal single-laptop case, all three surfaces resolve to the same path. The env-var indirection exists so the skill remains portable to other setups (different user home, a second machine, a future cloud-hosted variant) without code changes.
+- **Claude Desktop.** `install.sh` writes it into the `mcpServers.cto-os.env` block of `claude_desktop_config.json`. The MCP server inherits it when Claude Desktop spawns it.
+- **Claude Code.** The user exports it in their shell profile (`install.sh` prints the exact line to add). Any `claude` session inherits it.
+- **Cowork.** The user sets it in the Cowork project config.
 
-## CLAUDE.md as the Code activation trigger
+In the normal single-laptop case, all three resolve to the same path. The env-var indirection exists so the skill remains portable to other setups (different user home, a second machine, a future cloud-hosted variant) without code changes.
 
-`cto-os-data/CLAUDE.md` tells Claude Code "this is a CTO OS data repo; use the globally-installed `cto-os`." That one file is what makes `cd ~/cto-os-data && claude` activate the skill automatically. Without it, Claude Code sees a plain directory and stays in generic mode. (Chat and Cowork use description-based activation via root `SKILL.md` — see Surfaces above.)
+## CLAUDE.md as Code-side activation bias
+
+`cto-os-data/CLAUDE.md` is loaded into Claude Code's always-on context whenever cwd is the data repo. It doesn't *trigger* activation — the skill is already in scope via the global `~/.claude/skills/cto-os/` symlink. What it does is **bias** activation: it tells Claude to default to invoking `cto-os` for any request that could plausibly be CTO-domain work, prefer activating over asking, and skip the skill only for clearly-unrelated tasks (shell admin, unrelated coding).
+
+The effect: inside the data repo, vague or oblique requests that wouldn't match description-based dispatch in Chat still route through the skill in Code. That's the user-facing payoff — less need to overspecify context when working in the data repo.
 
 Note: `cto-os` also has its own `CLAUDE.md`, for when you `cd` into the skill repo to work on the code itself. Different audience, different purpose. See [CTO OS — Skill repo](./SKILL_REPO.md).
 
@@ -117,12 +123,12 @@ Note: `cto-os` also has its own `CLAUDE.md`, for when you `cd` into the skill re
 
 Three files, three jobs, three homes.
 
-- `CLAUDE.md` in `cto-os-data` — Claude Code's activation trigger when operating on user state.
+- `CLAUDE.md` in `cto-os-data` — Claude Code's always-on context when operating on user state; biases toward the `cto-os` skill.
 - `CLAUDE.md` in `cto-os` — Claude Code's orientation when working on the system code itself.
-- `SKILL.md` in `cto-os` (root + per-module) — Chat/Cowork skill router's activation trigger and the execution spec.
+- `SKILL.md` in `cto-os` (root + per-module) — the skill body and activation description, loaded via the global skill registry on all three surfaces.
 - `README.md` in both repos — for humans and general orientation.
 
-Why not consolidate? `CLAUDE.md` can't be `SKILL.md` because they have different loading semantics (Claude Code's cwd-triggered vs. the skill router's description-matched) and different audiences. `README.md` can't be `CLAUDE.md` because READMEs are for humans skimming, and `CLAUDE.md` has instruction-prose that would confuse readers.
+Why not consolidate? `CLAUDE.md` can't be `SKILL.md` because they have different loading semantics (cwd-scoped always-on context vs. registry-scoped description-matched activation) and different audiences. `README.md` can't be `CLAUDE.md` because READMEs are for humans skimming, and `CLAUDE.md` has instruction-prose that would confuse readers.
 
 ---
 
@@ -211,30 +217,10 @@ A module without a Persistence section fails the skill-review checklist.
 
 ## Testing and code review
 
-Four levels.
+Two layers, both enforced via the pre-commit hook (`hooks/pre-commit`, wired up by `install.sh`).
 
-**Script tests.** Standard pytest in `cto-os/tests/` with fixtures in `tests/fixtures/cto-os-data-sample/`. Every script (`scan.py`, `roll_up.py`, `pull_*.py`, migrations) gets unit tests. Runs in CI on push.
+**Script and MCP tests.** Standard pytest in `cto-os/tests/` with fixtures in `tests/fixtures/cto-os-data-sample/`. Every script (`scan.py`, `validate_deps.py`, `roll_up.py`, `pull_*.py`, `rename_module.py`) and the MCP server has a test file using the subprocess pattern — tests shell out with real `--args '{...}'` invocations, asserting on exit code and parsed JSON stdout. Run with `uv run pytest tests/ -q`.
 
-**Skill behavior tests.** Harder because the skill is prose. Maintain `tests/scenarios/` with expected-behavior traces — given a sample data repo and a prompt, what should Claude do? Eyeball manually at first; automate with Claude-as-judge later if the manual review gets tedious.
+**AI-assisted skill review.** Prose skills have no compiler, so the `skill-reviewer` subagent (`.claude/agents/skill-reviewer.md`) applies the checklist at `tests/claude-review.md` whenever any `SKILL.md` or `CLAUDE.md` is staged. It checks for internal contradictions between `SKILL.md` files, overlap in trigger phrases across sibling modules, activation flow steps that reference missing schema fields, and prose that contradicts the module's README. The hook also runs `validate_deps.py` on any staged module `SKILL.md` to fail the commit on dep-graph cycles or unknown required deps.
 
-**AI-assisted skill review.** Prose skills have no compiler to catch inconsistencies, but Claude can review them well. On each PR to `cto-os`, a Claude Code Review action runs with a checklist encoded in `tests/claude-review.md`: check for internal contradictions between `SKILL.md` files, overlap in trigger phrases across sibling modules, activation flow steps that reference missing schema fields, and prose that contradicts the module's README.
-
-**Human PR review.** Standard GitHub PR flow on `cto-os`, even solo — reviewer is you with fresh eyes next day, or anyone you invite. CI gates merges on the pytest suite and the AI review.
-
-## Phasing
-
-A rough build order that respects the required-dependency DAG and the PRD's "Foundations → Daily drivers → Role-shape → Strategic" sequence:
-
-1. **Bootstrap.** Set up `cto-os` with: root layout, `meta/schema.md`, `scripts/scan.py`, `mcp-server/server.py` (minimum tool surface), and `install.sh`. Run `install.sh` to create an empty `cto-os-data` with `CLAUDE.md` and `README.md`. No modules yet in either repo.
-2. **Foundations.** Personal OS, Process Management, Business Alignment — the three zero-outbound-dependency modules from the PRD. Each gets `cto-os/modules/{slug}/SKILL.md` + `README.md`, and on activation creates `cto-os-data/modules/{slug}/`. Validate activation flow end-to-end with one of them.
-3. **Daily drivers.** Attention & Operations, Team Management, one of Managing Up/Down/Sideways.
-4. **Integrations.** `pull_slack.py`, `pull_linear.py` — once daily drivers exist to consume the data.
-5. **Role-shape.** Tech Ops, Technical Strategy, Hiring, Budget as needed.
-6. **Strategic.** Org Design, Performance & Development, Board Comms.
-7. **Deferred optimizations.** Listing index if scan latency ever becomes noticeable. Semantic search if keyword + frontmatter scan proves insufficient.
-
-## Open architectural questions
-
-- **Schema evolution edge cases.** The Schema evolution pattern (see [CTO OS — Skill repo](./SKILL_REPO.md)) handles straightforward migrations. What about irreversible field removals, or renames that need to preserve historical values? Tentatively: each migration documents its reversibility; irreversible ones require an explicit confirmation prompt during migration.
-
-Other questions were resolved during design: the schema mirror was dropped (single source of truth in skill repo); Homebrew distribution was rejected as overkill (`install.sh` per machine); framework link rot is fix-on-detection (no link-check script); the data-repo changelog was dropped (git log suffices).
+Human PR review is the final gate — fresh eyes the next day, or an invited reviewer.

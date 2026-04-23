@@ -58,7 +58,7 @@ Read a single file.
 
 **Notes:**
 
-- No size limit enforced in v1. Trust the caller. If files get huge in practice, add a 10MB cap and `FileTooLarge`.
+- No size limit enforced. Trust the caller.
 - Returns raw content, not a JSON envelope. If metadata is needed, call `list_directory` on the parent.
 
 ### `write_file(path, content)`
@@ -226,7 +226,7 @@ MCP does not parse `stdout`. Scripts emit JSON by contract; the caller (Claude) 
 - `ScriptTimeout` — exceeded 10 seconds.
 - `ScriptFailed` — does NOT raise on non-zero exit. `exit_code` in the return value signals failure; the caller decides what to do.
 
-**Whitelist (v1):**
+**Whitelist:**
 
 ```python
 RUN_SCRIPT_WHITELIST = {
@@ -263,7 +263,7 @@ Every error raised by the MCP surface uses one of these codes. Messages include 
 | `PermissionDenied` | Filesystem denied the operation. |
 | `ScriptNotInWhitelist` | `run_script` called with a non-whitelisted name. |
 | `ScriptNotFound` | Whitelisted but the file is missing on disk. |
-| `ScriptNotImplemented` | The script file exists but is empty / stub. Remove this code once all scripts are implemented. |
+| `ScriptNotImplemented` | The script file exists but is empty / stub. |
 | `ScriptTimeout` | Script exceeded 10 seconds. |
 | `ScriptFailed` | `scan.py` crashed (non-zero exit). `run_script` never raises this — it returns the exit code in its result. |
 
@@ -273,7 +273,7 @@ Error messages include enough context to debug without needing a stack trace —
 
 ## Testing strategy
 
-Implemented (handler-level, not transport-level). Run via `uv run pytest tests/`.
+Handler-level, not transport-level. Run via `uv run pytest tests/`.
 
 - **`tests/test_mcp_path.py`** — unit tests for `_resolve_path` and a parametrized escape-attempt battery (`/etc/passwd`, `..`, `foo/../../../etc`, escaping symlinks) run against every path-taking tool.
 - **`tests/test_mcp_files.py`** — `read_file`, `write_file`, `append_to_file`. Covers: UTF-8 and non-ASCII content, binary rejection, empty content, auto-create parents, `chars_written` counts code points not bytes, no auto-newline on append, overwrite vs create semantics, `allow_create=False` on `append_to_file` (raises `PathNotFound` when file is missing), `ForbiddenPath` rejection on writes to `.git/` / `logs/` / `integrations-cache/`, reads of forbidden-write prefixes still allowed, write to root itself (`.`) rejected with `ForbiddenPath`.
@@ -282,10 +282,7 @@ Implemented (handler-level, not transport-level). Run via `uv run pytest tests/`
 - **`tests/test_mcp_helpers.py`** — `_iso_z` format and roundtrip.
 - **`tests/conftest.py`** — `data_root` and `scripts_dir` fixtures monkeypatch `server.DATA_ROOT` / `server.SCRIPT_DIR` to pytest `tmp_path`; silences real file logging.
 
-Not yet covered:
-
-- **End-to-end stdio transport.** Needs the MCP SDK's test client; deferred until we confirm API shape against a running server. Current handler-level coverage validates behavior; the transport wrap is thin.
-- **Cold-start timing (< 200ms).** Measure manually until it matters.
+Coverage is at the handler level (direct calls into `server.py`) rather than full stdio transport; the transport wrap is thin. Cold-start timing is measured manually.
 
 ---
 

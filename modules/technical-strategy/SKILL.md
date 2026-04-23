@@ -64,7 +64,7 @@ Each step writes a concrete artifact and appends its step number to `activation_
 ### 3. Declare ADR cadence and format
 
 **Ask:** "How will ADRs work here? Any deviations from the Nygard format? Where are they stored if you already have a separate repo (e.g., inside the codebase) — or should this module be the canonical store? Do you want to backfill any prior important decisions as ADRs?"
-**Writes:** updates `cto-os-data/modules/technical-strategy/state/_module.md` (not a schema file itself — uses the `_module` type for module-level config) with an `adr_config` field capturing these choices.
+**Writes:** updates `cto-os-data/modules/technical-strategy/_module.md` (the module-level `_module` file, which lives alongside `state/`, not inside it) with an `adr_config` field capturing these choices.
 **Expects:** `_module.md` has `activation_completed` entry for step 3 regardless of whether backfill happens.
 
 ## Skills

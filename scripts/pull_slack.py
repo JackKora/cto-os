@@ -17,7 +17,7 @@ Behavior:
     Reads the newest cached file, finds the max `ts` per channel, passes it
     as `oldest` on the next `conversations.history` call. Dedupes on `ts`
     across prior + fresh.
-  - Messages only in v1. Reactions, files, thread replies are out of scope.
+  - Messages only. Reactions, files, thread replies are out of scope.
 
 Auth: reads `SLACK_BOT_TOKEN` from env. Missing or empty → exit 1.
 Token must have scopes: `channels:history`, `groups:history`, `channels:read`,

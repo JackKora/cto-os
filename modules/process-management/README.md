@@ -1,6 +1,6 @@
 # Process Management
 
-**Scope:** How work moves through the organization from idea to customer. Owns measurement and continuous improvement of the operating flows — Product Management, SDLC, Data Science, or custom flows the user declares. Foundational — required by Org Design and Board Comms. v1 scope: flow measurement + bottleneck tracking + flow retros. PM/SDLC/DS as dedicated sub-flow modules are deferred.
+**Scope:** How work moves through the organization from idea to customer. Owns measurement and continuous improvement of the operating flows — Product Management, SDLC, Data Science, or custom flows the user declares. Foundational — required by Org Design and Board Comms. Covers flow measurement, bottleneck tracking, and flow retros. PM, SDLC, and DS are declarable flows within this module, not dedicated sub-modules.
 
 **Out of scope:** Specific project execution (owned by teams doing the work); reliability and incident response (Tech Ops); team-aggregate health (Team Management); strategic team structure (Org Design).
 

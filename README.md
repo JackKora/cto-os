@@ -133,8 +133,6 @@ Recommended sequence when first adopting.
 - [Security & Compliance](modules/security-compliance/README.md) — risk register, controls, compliance regime tracking (SOC 2 / ISO 27001), ISO SoA, audit events, risk briefings.
 - [Budget](modules/budget/README.md) — budget structure, plan / actual / forecast per category, variance analysis, budget-narrative authoring.
 
-All PRD-defined modules are implemented. See [docs/BACKLOG.md](docs/BACKLOG.md) if you're adding a new module.
-
 ---
 
 ## Surfaces
@@ -197,4 +195,3 @@ You can do both; they don't conflict.
 - [docs/MCP_TOOLS.md](docs/MCP_TOOLS.md) — canonical MCP tool contracts.
 - [docs/SCRIPTS.md](docs/SCRIPTS.md) — deterministic-script inventory and contract.
 - [docs/DATA_REPO.md](docs/DATA_REPO.md) — data repo deep dive.
-- [docs/BACKLOG.md](docs/BACKLOG.md) — scope for modules not yet implemented.

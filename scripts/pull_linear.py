@@ -13,8 +13,7 @@ Behavior:
     updated since (max - 5 minutes) to guard against clock skew and
     eventual-consistency drift. Dedupes on Linear issue ID in the result
     file (union of the prior cache + newly-pulled).
-  - Issues only in v1. Comments are out of scope per the batch decision;
-    Attention & Operations doesn't need them yet.
+  - Issues only. Comments are out of scope.
 
 Auth: reads `LINEAR_API_KEY` from env. Missing or empty → exit 1.
 

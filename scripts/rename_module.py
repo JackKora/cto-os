@@ -17,10 +17,7 @@ What it rewrites automatically:
   - Updates `requires:` / `optional:` entries in other modules' SKILL.md
     frontmatter that reference the old slug (exact match only, inside those
     frontmatter blocks).
-  - Updates the line in `README.md`'s module index (both Implemented and any
-    legacy Planned section).
-  - Updates entries in `docs/BACKLOG.md` (slug field + target state location
-    + HTML anchor if present).
+  - Updates the line in `README.md`'s module index.
 
 What it flags but does NOT auto-rewrite:
   - Any other textual reference to the old slug anywhere in either repo.
@@ -301,7 +298,7 @@ def _plan_skill_repo(
                 )
             )
 
-    # 4. Update README.md — both Implemented and Planned-style links/paths.
+    # 4. Update README.md module-index links/paths.
     readme = repo_root / "README.md"
     if readme.is_file():
         content = readme.read_text(encoding="utf-8")
@@ -313,22 +310,6 @@ def _plan_skill_repo(
                     path="README.md",
                     action="update",
                     detail=f"references to {old_slug}",
-                    new_content=new_content,
-                )
-            )
-
-    # 5. Update docs/BACKLOG.md (may have a stale entry, or slug references).
-    backlog = repo_root / "docs" / "BACKLOG.md"
-    if backlog.is_file():
-        content = backlog.read_text(encoding="utf-8")
-        new_content = _rewrite_backlog_references(content, old_slug, new_slug)
-        if new_content != content:
-            changes.append(
-                PlannedChange(
-                    repo="skill",
-                    path="docs/BACKLOG.md",
-                    action="update",
-                    detail=f"slug/anchor references to {old_slug}",
                     new_content=new_content,
                 )
             )
@@ -386,7 +367,7 @@ def _plan_data_repo(
     return changes
 
 
-# ---------- README / BACKLOG rewriters ----------
+# ---------- README rewriters ----------
 
 # README: replace `modules/old-slug/README.md` and `modules/old-slug/SKILL.md`
 # style links, plus bare mentions like `modules/old-slug/` in prose/tree.
@@ -397,29 +378,10 @@ _README_PATH_TOKENS = (
     "cto-os-data/modules/{slug}/",
 )
 
-# BACKLOG: replace anchor `#old-slug`, target state location path, slug field.
-_BACKLOG_TOKENS_SLUG_FIELD = "- **Slug:** `{slug}`"
-_BACKLOG_TOKENS_STATE_LOCATION = "cto-os-data/modules/{slug}/state/"
-_BACKLOG_ANCHOR_TOKEN = '<a id="{slug}"></a>'
-
 
 def _rewrite_readme_references(content: str, old_slug: str, new_slug: str) -> str:
     new_content = content
     for template in _README_PATH_TOKENS:
-        new_content = new_content.replace(
-            template.format(slug=old_slug),
-            template.format(slug=new_slug),
-        )
-    return new_content
-
-
-def _rewrite_backlog_references(content: str, old_slug: str, new_slug: str) -> str:
-    new_content = content
-    for template in (
-        _BACKLOG_ANCHOR_TOKEN,
-        _BACKLOG_TOKENS_SLUG_FIELD,
-        _BACKLOG_TOKENS_STATE_LOCATION,
-    ):
         new_content = new_content.replace(
             template.format(slug=old_slug),
             template.format(slug=new_slug),

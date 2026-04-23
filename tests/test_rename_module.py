@@ -7,7 +7,7 @@ it (rename_module requires clean git state), and invokes the script.
 Covers:
   - Dry-run reports planned changes without touching files.
   - Committed run renames the dir, updates SKILL.md name, updates requires
-    in sibling modules, updates README.md and BACKLOG.md.
+    in sibling modules, updates README.md module-index references.
   - Data-repo side renames dir + updates _module.md.
   - Refuses on dirty git tree.
   - Refuses on slug collision.
