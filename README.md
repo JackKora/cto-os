@@ -91,8 +91,6 @@ Recommended sequence when first adopting.
 
 ## Modules
 
-### Implemented
-
 #### Stakeholder management
 
 - [Managing Up](modules/managing-up/README.md) — upward relationships; 1:1 prep/capture with boss and skip-levels, exec-summary translation, perception management.
@@ -132,6 +130,10 @@ Recommended sequence when first adopting.
 
 - [Security & Compliance](modules/security-compliance/README.md) — risk register, controls, compliance regime tracking (SOC 2 / ISO 27001), ISO SoA, audit events, risk briefings.
 - [Budget](modules/budget/README.md) — budget structure, plan / actual / forecast per category, variance analysis, budget-narrative authoring.
+
+#### System
+
+- [Data Backup](modules/data-backup/README.md) — zip the data repo (including `.git/`) and upload to a configured Google Drive folder; keep a user-chosen number of most-recent backups in Drive and prune older ones.
 
 ---
 
@@ -173,8 +175,9 @@ This gives you per-change history as a side effect of using the system: every st
 
 - **Push to a private git remote.** Extend the daily task: `git add -A && git commit -m "auto" && git push`. Private repo only (GitHub, GitLab, Bitbucket), 2FA enforced. Versioning + offsite in one command.
 - **Sync the directory to a cloud drive.** Put `cto-os-data` inside a Google Drive / iCloud / Dropbox synced folder, or symlink it there. The `.git/` directory comes along automatically, so you keep local versioning; the provider gives you offsite. Simpler than managing a git remote — but read the sensitivity note below first.
+- **Zip and upload via the Data Backup module.** Activate the `data-backup` module, point it at a Google Drive folder, set how many backups to retain, and schedule `backup-to-drive` via Cowork. Each run zips the whole data repo (including `.git/`), uploads to Drive, and prunes older backups down to the retained count.
 
-You can do both; they don't conflict.
+These don't conflict; you can layer them.
 
 ### ⚠️ This directory likely contains highly sensitive material
 

@@ -10,8 +10,8 @@ This is a **CTO OS data repo**. It holds personal state only — module activati
 - **No secrets.** `.env` and `.env.*` are gitignored; never commit them, never echo their contents into a tracked file. API keys belong in the macOS Keychain or that `.env`.
 - **Don't hand-edit `_module.md`.** Its `active`, `activated_at`, `deactivated_at`, `schema_version`, and `activation_completed` fields are managed by the skill's activation and migration scripts. If you find hand-edits that conflict with what those scripts would produce, flag it — don't silently fix it.
 - **Don't rename module slugs by hand.** Use `~/.claude/skills/cto-os/scripts/rename_module.py` — it edits both this repo and the skill repo in lockstep.
-- **`integrations-cache/` and `logs/` are gitignored and regenerable.** Safe to delete. Never hand-write into `integrations-cache/` — only the `pull_*` scripts write there.
-- **Git is the durability mechanism.** This repo should push to a private remote with 2FA. Commit daily at minimum. Never force-push — history here is the only history.
+- **`integrations-cache/`, `logs/`, and `.backups/` are gitignored and regenerable.** Safe to delete. Never hand-write into `integrations-cache/` or `.backups/` — only the `pull_*` and `zip_data` scripts write there.
+- **Don't proactively nudge the user about commits, backups, pushes, or git hygiene.** Those are user-operated or scheduled via Cowork (`data-backup` module). Answer if asked; don't volunteer.
 
 ## Where to read more
 
