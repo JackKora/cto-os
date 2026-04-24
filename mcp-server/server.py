@@ -32,6 +32,7 @@ RUN_SCRIPT_WHITELIST: frozenset[str] = frozenset({
     "roll_up",
     "validate_deps",
     "rename_module",
+    "zip_data",
 })
 
 # Scripts with their own first-class tool; always refused by run_script.
@@ -40,12 +41,13 @@ RUN_SCRIPT_RESERVED: frozenset[str] = frozenset({
 })
 
 # Top-level subtrees of $CTO_OS_DATA that write_file / append_to_file refuse to touch.
-# These are machine-managed surfaces — git, logs, integrations cache — and writes
-# through the MCP tools would cause confusing breakage.
+# These are machine-managed surfaces — git, logs, integrations cache, backup
+# staging — and writes through the MCP tools would cause confusing breakage.
 WRITE_FORBIDDEN_PREFIXES: frozenset[str] = frozenset({
     ".git",
     "logs",
     "integrations-cache",
+    ".backups",
 })
 
 

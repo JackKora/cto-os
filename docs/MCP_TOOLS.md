@@ -95,7 +95,7 @@ Create or overwrite a file.
 - No file locking. MCP is serial per-process; bash scripts on other surfaces use direct I/O. Concurrent writes to the same file from two surfaces at the same millisecond are a theoretical, not observed, risk; revisit if it ever bites.
 - Writes are not atomic (no temp-file rename dance). If atomicity matters for a specific file, handle it at a higher level.
 
-**Forbidden write prefixes.** `write_file` and `append_to_file` refuse any path whose first component is in `{.git, logs, integrations-cache}`. These subtrees are machine-managed (git itself, the MCP log file, `pull_*` script output) and writes through these tools would cause confusing breakage. Reads of those paths are still permitted.
+**Forbidden write prefixes.** `write_file` and `append_to_file` refuse any path whose first component is in `{.git, logs, integrations-cache, .backups}`. These subtrees are machine-managed (git itself, the MCP log file, `pull_*` script output, `zip_data` staging output) and writes through these tools would cause confusing breakage. Reads of those paths are still permitted.
 
 ### `append_to_file(path, content, allow_create=True)`
 
@@ -233,6 +233,7 @@ RUN_SCRIPT_WHITELIST = {
   "roll_up",
   "validate_deps",
   "rename_module",
+  "zip_data",
 }
 ```
 
@@ -255,7 +256,7 @@ Every error raised by the MCP surface uses one of these codes. Messages include 
 | `DataRootNotSet` | `$CTO_OS_DATA` missing or empty at startup. |
 | `InvalidPath` | Path is empty, absolute, or contains `..`. |
 | `PathOutsideRoot` | Canonicalized path isn't under `$CTO_OS_DATA`. |
-| `ForbiddenPath` | Write attempted to a machine-managed subtree (`.git/`, `logs/`, `integrations-cache/`). Reads of those paths are fine. |
+| `ForbiddenPath` | Write attempted to a machine-managed subtree (`.git/`, `logs/`, `integrations-cache/`, `.backups/`). Reads of those paths are fine. |
 | `PathNotFound` | Path doesn't exist. |
 | `PathIsDirectory` | Expected a file, got a directory. |
 | `PathIsFile` | Expected a directory, got a file. |

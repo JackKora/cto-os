@@ -12,7 +12,7 @@ The data repo holds your **personal state**. Private git repo, backed up to a pr
 cto-os-data/                           # git repo — your private data, backed up to private remote
 ├── CLAUDE.md                          # project constitution for Claude Code
 ├── README.md                          # short orientation
-├── .gitignore                         # excludes integrations-cache/, logs/, secrets
+├── .gitignore                         # excludes integrations-cache/, logs/, .backups/, secrets
 ├── modules/                           # slugs must match cto-os/modules/
 │   ├── personal-os/
 │   │   ├── _module.md                 # activation state, schema_version
@@ -40,7 +40,8 @@ cto-os-data/                           # git repo — your private data, backed 
 │   ├── slack/
 │   ├── linear/
 │   └── gmail/
-└── logs/                              # gitignored; MCP server writes mcp.log here (rotated daily, last 24h+)
+├── logs/                              # gitignored; MCP server writes mcp.log here (rotated daily, last 24h+)
+└── .backups/                          # gitignored; zip_data stages here; emptied by backup-to-drive on upload success
 ```
 
 **Key properties:**
@@ -48,7 +49,7 @@ cto-os-data/                           # git repo — your private data, backed 
 - **State only.** If you deleted `cto-os` from your laptop, `cto-os-data` would still be a complete, human-readable record of your work — just without the tooling to query it efficiently.
 - **Directory per activated module.** A `modules/{slug}/` directory exists if that module has ever been activated. Deactivation flips `active: false` in `_module.md` but keeps the directory, preserving history.
 - **State files are flat within a module** but hierarchical across modules via `modules/{slug}/state/…`. Cross-module reads always go through the scan script, never via hardcoded paths — this makes module renames safe.
-- **Backup via git.** Committed to a private remote with 2FA enforced.
+- **Backup options are layered.** Git commits + private remote push, cloud-drive folder sync, and the `data-backup` module (zip + upload to Google Drive) all coexist. See root README's Backup section for trade-offs; none is required by the system.
 - **Activation state lives here, not in the skill repo.** Activation is per-user; putting it in the skill repo would either mean writing user state into shared code or introduce copy/symlink synchronization.
 - **No meta/ directory.** No changelog (git log suffices), no schema mirror (skill repo's `meta/schema.md` is the single source of truth).
 

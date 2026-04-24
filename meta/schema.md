@@ -1539,6 +1539,58 @@ Invariants:
 
 ---
 
+## `backup-config`
+
+The Data Backup module's configuration. Singleton per installation — one file per data repo with `slug: current`.
+
+```yaml
+drive_folder_id:   string   # required; opaque Google Drive folder ID (from the Drive connector)
+drive_folder_name: string   # required; human-readable folder name for the config.md body + logs
+retain_count:      int      # required; positive integer; how many most-recent uploaded backups to keep in Drive
+```
+
+Invariants:
+- Lives at `state/config.md`.
+- `retain_count >= 1`. A retain_count of 0 would mean "delete immediately after upload," which defeats the point.
+- Changes to `drive_folder_id` capture the prior value in the body's `## History` section (overwrite-with-history). Retention-count changes save silently.
+
+**Current version:** 1.
+
+---
+
+## `backup-log`
+
+The Data Backup module's upload log. Singleton per installation — one file per data repo with `slug: current`. Append-only event stream in the body.
+
+```yaml
+last_upload:  datetime   # optional; ISO 8601 timestamp of the most recent `status: uploaded` entry
+upload_count: int        # required; running count of successful uploads (not decremented by pruning)
+```
+
+Body entries (each corresponds to one `backup-to-drive` run):
+
+```
+- upload_id:      <string>              # required; slug-derived from timestamp
+  uploaded_at:    <datetime>            # required
+  size_bytes:     <int>                 # required for uploaded/pruned; absent for upload_failed
+  file_count:     <int>                 # required for uploaded/pruned
+  drive_file_id:  <string>              # required for uploaded/pruned; absent for upload_failed
+  drive_file_url: <string>              # optional
+  status:         uploaded | pruned | upload_failed    # required
+  pruned_at:      <datetime>            # required when status == pruned
+  error:          <string>              # required when status == upload_failed
+```
+
+Invariants:
+- Lives at `state/uploads.md`.
+- Entries are never deleted; `status` transitions from `uploaded` to `pruned` when the retention sweep removes the file from Drive.
+- `upload_failed` entries don't transition — they're terminal; any retry creates a new entry.
+- Pruning operates *only* on entries in this log (by `drive_file_id`). Never touches files in the Drive folder that this skill didn't upload.
+
+**Current version:** 1.
+
+---
+
 ## `retro-personal`
 
 A personal retrospective in 4Ls format (Liked / Learned / Lacked / Longed for). Owned by `personal-os`.
@@ -1642,5 +1694,7 @@ Current canonical version per type.
 | `contribution-preferences` | 1 | `code-contribution` |
 | `contribution-sources` | 1 | `code-contribution` |
 | `contribution-log-entry` | 1 | `code-contribution` |
+| `backup-config` | 1 | `data-backup` |
+| `backup-log` | 1 | `data-backup` |
 
 Version bumps ship with a migration at `scripts/migrate_{type}_v{N}_to_v{N+1}.py`. The migration runs automatically the next time a surface loads and detects drift; it commits a pre-migration snapshot to git so rollback is `git revert`.

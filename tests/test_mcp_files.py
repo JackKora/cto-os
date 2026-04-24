@@ -137,6 +137,7 @@ FORBIDDEN_WRITE_PATHS = [
     ".git/config",
     "logs/mcp.log",
     "integrations-cache/slack/foo.md",
+    ".backups/cto-os-data-2026-04-23T10-00-00.zip",
 ]
 
 
