@@ -322,7 +322,7 @@ Minor but easy-to-miss.
 - **Import budget.** Cold start < 200ms means lazy imports where it costs nothing. `subprocess` is stdlib (cheap). The MCP SDK may not be — measure on first build and lazy-import the tool handlers if needed.
 - **Timeout enforcement.** Use `subprocess.run(..., timeout=10)`. On timeout, `subprocess.TimeoutExpired` becomes `ScriptTimeout`.
 - **stdout/stderr encoding.** Read subprocess streams as bytes, decode UTF-8 with `errors="replace"` — don't crash the MCP because a script emitted a stray byte.
-- **Python version.** 3.13+ per `pyproject.toml`. Use modern type hints (`list[str]`, `str | None`).
+- **Python version.** 3.12+ per `pyproject.toml`. Use modern type hints (`list[str]`, `str | None`).
 - **Dependencies** are managed via `uv` in `pyproject.toml` with `uv.lock` committed for reproducibility. The MCP server runs under the venv Python (`.venv/bin/python`) — that path is wired into `claude_desktop_config.json` by `install.sh`, so no PATH resolution is needed at Desktop launch time.
 - **Stdout is the MCP transport.** Never `print()` anything. All diagnostics go to the log file (see Logging above). Stderr is for last-ditch messages when the log file itself can't be opened.
 - **Log dir creation.** On startup, ensure `$CTO_OS_DATA/logs/` exists (mkdir -p). If it can't be created, emit a single stderr line and fall back to stderr logging for the session.

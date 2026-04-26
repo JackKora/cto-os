@@ -10,7 +10,7 @@ A composable set of modules — stakeholder management, team management, technic
 
 ## Install
 
-See [install.sh](install.sh). Requires macOS or Linux, git, Python 3.13+, and [uv](https://docs.astral.sh/uv/).
+See [install.sh](install.sh). Requires macOS or Linux, git, Python 3.12+, and [uv](https://docs.astral.sh/uv/).
 
 ```bash
 ./install.sh              # interactive

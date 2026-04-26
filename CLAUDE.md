@@ -21,7 +21,7 @@ cto-os/
 ├── CLAUDE.md              # this file
 ├── SKILL.md               # root skill (description drives activation on all surfaces)
 ├── install.sh             # bootstraps cto-os-data, installs skill, merges MCP config
-├── pyproject.toml         # Python deps (managed via uv); requires-python = ">=3.13"
+├── pyproject.toml         # Python deps (managed via uv); requires-python = ">=3.12"
 ├── uv.lock                # uv lockfile; committed for reproducible installs
 ├── .venv/                 # gitignored; created by `uv sync` on install
 ├── docs/                  # architecture, skill repo, data repo, MCP tools, scripts
