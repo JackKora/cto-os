@@ -78,6 +78,10 @@ You write to `cto-os-data` using whichever write mechanism your surface provides
 
 Full rule: `docs/ARCHITECTURE.md` → "Persistence model." Each module's `SKILL.md` declares its own paths, semantics (append / overwrite / upsert), and templates.
 
+**Working notes (top-level `notes/`).** For cross-module or pre-activation thinking that no module yet owns, save under `cto-os-data/notes/YYYY-MM-DD-{slug}.md` (`type: working-note`). See `docs/DATA_REPO.md` → Working notes for the spec.
+
+**Notes are never auto-saved.** This overrides the "default: just save" rule above. For substantial cross-module threads, suggest saving a working note and wait for the user to confirm — never write a note silently, even when the filename and content look obvious. If a module is active and owns the content, save into the module per the module's own rules.
+
 ## What not to do
 
 - **No secrets.** If a user asks you to record an API key, token, or password, refuse. Direct them to macOS Keychain or a gitignored `.env` in the data repo.

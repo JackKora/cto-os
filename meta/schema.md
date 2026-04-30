@@ -1591,6 +1591,29 @@ Invariants:
 
 ---
 
+## `working-note`
+
+A working/in-progress thread that doesn't yet belong to any single module's state. Lives at the top-level `notes/` directory, not under `modules/`. Cross-module thinking, pre-activation drafts, and multi-session working threads belong here.
+
+```yaml
+status: enum                # required; one of: in-progress, parked, promoted, abandoned
+created: date               # required; ISO 8601 (YYYY-MM-DD)
+related_modules: list       # optional; module slugs this thread touches
+related_goals: list         # optional; goal references this thread relates to
+promoted_to: string         # optional; relative path the note has been promoted into; required when status: promoted
+```
+
+Invariants:
+- Files live at `notes/{YYYY-MM-DD}-{slug}.md` (date prefix is the `created` date).
+- `slug` equals the kebab portion of the filename (date prefix excluded).
+- The file lives outside `modules/`, so module-level sensitivity defaults don't apply. Per-file `sensitivity: high` still works (file-level scan gate applies).
+- Promoted notes are not deleted — the working trail is part of the value. When status flips to `promoted`, copy (don't move) the relevant content into the owning module's `state/` and set `promoted_to` to that path.
+- No `_module.md`. No activation flow. The directory is created on first write, not on any module activation.
+
+**Current version:** 1.
+
+---
+
 ## `retro-personal`
 
 A personal retrospective in 4Ls format (Liked / Learned / Lacked / Longed for). Owned by `personal-os`.
@@ -1696,5 +1719,6 @@ Current canonical version per type.
 | `contribution-log-entry` | 1 | `code-contribution` |
 | `backup-config` | 1 | `data-backup` |
 | `backup-log` | 1 | `data-backup` |
+| `working-note` | 1 | (top-level convention) |
 
 Version bumps ship with a migration at `scripts/migrate_{type}_v{N}_to_v{N+1}.py`. The migration runs automatically the next time a surface loads and detects drift; it commits a pre-migration snapshot to git so rollback is `git revert`.
