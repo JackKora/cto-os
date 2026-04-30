@@ -91,6 +91,8 @@ Recommended sequence when first adopting.
 
 ## Modules
 
+**[Notes](docs/DATA_REPO.md)** — cross-module working threads and pre-activation thinking that doesn't yet belong to any module's state. Files live at `notes/` in the data repo. Never auto-saved; the skill suggests, the user confirms. Promotes into module state once a thread crystallizes.
+
 #### Stakeholder management
 
 - [Managing Up](modules/managing-up/README.md) — upward relationships; 1:1 prep/capture with boss and skip-levels, exec-summary translation, perception management.
@@ -157,7 +159,7 @@ Under the hood, Chat reaches your files through a local MCP server (a small tran
 
 Your state lives in a single directory on your laptop — `~/cto-os-data` by default, configurable via the `CTO_OS_DATA` environment variable at install time. Every module writes there, and nothing outside CTO OS touches it.
 
-State is organized under `modules/{slug}/state/` per activated module. There's also a top-level `notes/` directory for cross-module / pre-activation working threads — a holding pen for thinking that doesn't yet belong to a single module's state, with a documented promotion path once it does. Notes are never auto-saved; the skill suggests, the user confirms. Spec in `docs/DATA_REPO.md`.
+State is organized under `modules/{slug}/state/` per activated module.
 
 **Completely separate from the app.** The `cto-os` repo (this one) is code — same for every user, public or shared. Your data repo is yours only. You upgrade the app with `git pull` on `cto-os`; your data stays untouched. You can delete the app entirely and your data is still a complete, human-readable record — just without the tooling to query it efficiently.
 
