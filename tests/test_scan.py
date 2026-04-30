@@ -219,6 +219,61 @@ def test_body_truncation_marker_when_body_too_long(tmp_path):
     assert len(body_bytes) <= 4096
 
 
+# ---------- Top-level notes/ (working-note type) ----------
+
+
+def test_working_note_filter_returns_top_level_notes():
+    """Working notes live at top-level notes/, not under modules/. Filter by
+    type and confirm the fixture note appears with the expected path shape."""
+    result = _scan_json({"type": ["working-note"]})
+    assert len(result["matches"]) == 1, result
+    m = result["matches"][0]
+    assert m["path"] == "notes/2026-04-15-ai-native-org-shape.md"
+    fm = m["frontmatter"]
+    assert fm["type"] == "working-note"
+    assert fm["slug"] == "ai-native-org-shape"
+    assert fm["status"] == "in-progress"
+    assert "org-design" in fm["related_modules"]
+
+
+def test_default_walk_includes_top_level_notes():
+    """A bare scan (no filter) walks every non-excluded top-level dir, including
+    notes/. The note isn't tied to any module, so the active/sensitivity gates
+    don't drop it."""
+    result = _scan_json({})
+    paths = [m["path"] for m in result["matches"]]
+    assert "notes/2026-04-15-ai-native-org-shape.md" in paths
+
+
+def test_file_level_sensitivity_gate_applies_outside_modules(tmp_path):
+    """A note with sensitivity:high should be excluded by default (file-level
+    gate) and surfaced when include_high_sensitivity is set. Confirms the gate
+    works for files that have no module context."""
+    notes_dir = tmp_path / "notes"
+    notes_dir.mkdir(parents=True)
+    (notes_dir / "2026-04-20-sensitive.md").write_text(
+        "---\n"
+        "type: working-note\n"
+        "slug: sensitive\n"
+        "updated: 2026-04-20\n"
+        "status: in-progress\n"
+        "created: 2026-04-20\n"
+        "sensitivity: high\n"
+        "---\nbody\n",
+        encoding="utf-8",
+    )
+
+    default = _scan_json({"type": ["working-note"]}, data_root=tmp_path)
+    assert default["matches"] == [], "high-sensitivity note should be excluded by default"
+
+    opted_in = _scan_json(
+        {"type": ["working-note"], "include_high_sensitivity": True},
+        data_root=tmp_path,
+    )
+    assert len(opted_in["matches"]) == 1
+    assert opted_in["matches"][0]["path"] == "notes/2026-04-20-sensitive.md"
+
+
 # ---------- Query errors (exit 0 with structured error) ----------
 
 

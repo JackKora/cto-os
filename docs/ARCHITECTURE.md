@@ -204,6 +204,14 @@ Every `SKILL.md` in `modules/{slug}/` must include a **Persistence** section tha
 
 A module without a Persistence section fails the skill-review checklist.
 
+## Escape valve — top-level `notes/`
+
+Not every save has a module home. `cto-os-data/notes/` is an explicit top-level convention for cross-module / pre-activation thinking — a holding pen for working threads that don't yet belong to a single module's state. Full spec: [docs/DATA_REPO.md → Working notes](./DATA_REPO.md#working-notes-top-level-notes).
+
+This is **not** a way to bypass module state. Modules with declared paths still own their content; if a module is active and owns the content, it goes there. Notes is for the case where no module owns it yet.
+
+**Working notes override the "default: just save" rule above.** The skill does not auto-save notes — even when the filename and content look obvious. For substantial cross-module threads, the skill *suggests* saving a working note ("This thread spans X and Y; want me to save it as `notes/YYYY-MM-DD-{slug}.md`?") and waits for confirmation. This asymmetry is deliberate: the holding-pen exists *because* the target is unclear, which is exactly the condition the rule above flags as "ask, don't assume." Documenting the override here ensures it survives future skill rewrites.
+
 ---
 
 # Operations

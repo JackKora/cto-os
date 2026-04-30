@@ -36,6 +36,8 @@ cto-os-data/                           # git repo — your private data, backed 
 │   │   └── state/
 │   │       └── teams/platform.md
 │   └── …
+├── notes/                             # top-level working notes — cross-module / pre-activation; tracked in git
+│   └── YYYY-MM-DD-{slug}.md
 ├── integrations-cache/                # gitignored, regenerable
 │   ├── slack/
 │   ├── linear/
@@ -132,6 +134,58 @@ Examples of unit choices across modules:
 ## Sensitive modules
 
 Performance & Development, Board Comms, and Managing Down contain information that could be damaging if leaked. Their state directories are marked in frontmatter (`sensitivity: high`) and the scan tool excludes them from queries unless explicitly included. This is defense-in-depth, not encryption.
+
+---
+
+# Working notes (top-level `notes/`)
+
+Not every thought has a module home yet. `cto-os-data/notes/` is the explicit holding pen for working/in-progress thinking that doesn't belong to a single module's state. It is **not** a module — no `_module.md`, no activation flow — it's a top-level convention that spans modules by definition.
+
+## When to use it
+
+- **Cross-module strategic threads.** A thought that legitimately touches several modules (e.g., AI-native dev's effect on org structure → `org-design` + `performance-development` + `technical-strategy` + `managing-up`).
+- **Pre-activation drafts.** Thinking that would belong to a module the user hasn't activated yet — saving it into module state would force premature activation.
+- **Multi-session working threads.** Something you want to persist and pick up later, but isn't yet shaped into a module artifact.
+
+## When NOT to use it
+
+`notes/` is a holding pen, not a dumping ground. If a module already owns the content, it goes there. Common cases:
+
+| Content | Belongs in |
+| --- | --- |
+| 1:1 notes | `managing-up` / `managing-down` / `managing-sideways` |
+| Personal goals, retros, voice samples | `personal-os` |
+| ADRs, tech-debt items, technical strategy | `technical-strategy` |
+| Reorg proposals, design decisions | `org-design` |
+| Incident notes, postmortems, SLO updates | `tech-ops` |
+| Performance reviews, dev plans, PIPs | `performance-development` |
+| Board updates, pre-reads, meeting logs | `board-comms` |
+| Hiring reqs, candidates, debriefs | `hiring` |
+
+If the owning module is **active**, save into the module — never into `notes/`. If the owning module is **not active**, prefer `notes/` and offer to activate the module; don't activate silently.
+
+## Filename and frontmatter
+
+- **Filename:** `notes/YYYY-MM-DD-{kebab-slug}.md`. Date prefix is required for chronological scan and equals `created`.
+- **Frontmatter:** `type: working-note`. See `meta/schema.md` → `working-note` for the canonical fields (`status`, `created`, `related_modules`, `related_goals`, `promoted_to`).
+
+## Promotion
+
+When a working thread crystallizes into something a module owns:
+
+1. Copy (not move) the relevant content into the owning module's `state/` per the module's templates.
+2. On the original note, set `status: promoted` and `promoted_to: <relative path>`.
+3. Leave the note in place. The working trail is part of the value — promoted notes are never silently deleted.
+
+## Saving discipline
+
+**Notes are never auto-saved.** This is the explicit override of the cross-cutting "default: just save" rule from the [Persistence model](./ARCHITECTURE.md#persistence-model). For substantial cross-module / pre-activation conversations, the skill *suggests* saving a working note and waits for confirmation. The user triggers the save; the skill never writes the note silently, even when the filename and content look obvious. Modules that already own content keep their own write semantics — including auto-save, where their `SKILL.md` declares it.
+
+## Properties
+
+- Tracked in git. Not gitignored. Not in `integrations-cache/` semantics.
+- No auto-creation. The directory appears naturally on first use.
+- File lives outside `modules/`, so module-level sensitivity defaults don't apply. Per-file `sensitivity: high` still works (file-level scan gate).
 
 ---
 

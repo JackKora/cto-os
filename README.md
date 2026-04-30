@@ -157,6 +157,8 @@ Under the hood, Chat reaches your files through a local MCP server (a small tran
 
 Your state lives in a single directory on your laptop — `~/cto-os-data` by default, configurable via the `CTO_OS_DATA` environment variable at install time. Every module writes there, and nothing outside CTO OS touches it.
 
+State is organized under `modules/{slug}/state/` per activated module. There's also a top-level `notes/` directory for cross-module / pre-activation working threads — a holding pen for thinking that doesn't yet belong to a single module's state, with a documented promotion path once it does. Notes are never auto-saved; the skill suggests, the user confirms. Spec in `docs/DATA_REPO.md`.
+
 **Completely separate from the app.** The `cto-os` repo (this one) is code — same for every user, public or shared. Your data repo is yours only. You upgrade the app with `git pull` on `cto-os`; your data stays untouched. You can delete the app entirely and your data is still a complete, human-readable record — just without the tooling to query it efficiently.
 
 ### Backup
@@ -187,6 +189,20 @@ These don't conflict; you can layer them.
 > - **Be thoughtful with cloud sync.** Providers can be subpoenaed, accounts can be compromised, shared folders can leak. If you're uncomfortable with the offsite options for a particular category of content, keeping `cto-os-data` local-only (daily commits without push or cloud sync) is a legitimate choice — you lose laptop-failure resilience but you gain total isolation.
 > - **Modules flag their own sensitive subtrees** with `sensitivity: high`. Scan excludes those by default — a query has to opt in to see them. Defense in depth, not encryption.
 > - **No secrets in the data repo either.** API keys, tokens, passwords live in macOS Keychain or a gitignored `.env`, never in a module's state.
+
+---
+
+## Scripts
+
+Deterministic Python helpers under `scripts/`. Same contract everywhere — JSON args via `--args`, JSON on stdout, `CTO_OS_DATA` from env. Invoked via the MCP `run_script` tool in Chat or directly via `uv run python scripts/<name>.py --args '{...}'` in Code / Cowork. Detailed contracts in [docs/SCRIPTS.md](docs/SCRIPTS.md).
+
+- **`scan.py`** — frontmatter scan + filter over all of `cto-os-data` in one call. The workhorse for module reads and rollups.
+- **`validate_deps.py`** — walks module SKILL.md files, builds the required-dep graph, fails on cycles or unknown deps. Pre-commit hook.
+- **`roll_up.py`** — on-demand cross-type aggregations (team-health, per-person, goal-progress).
+- **`pull_linear.py`** — incremental pull of Linear issues into `cto-os-data/integrations-cache/linear/`. TTL-aware, watermark-based.
+- **`pull_slack.py`** — incremental pull of Slack messages across bot-accessible channels into `cto-os-data/integrations-cache/slack/`. TTL-aware, per-channel watermark.
+- **`rename_module.py`** — renames a slug in lockstep across `cto-os/modules/` and `cto-os-data/modules/`. Dry-run by default.
+- **`zip_data.py`** — zips `$CTO_OS_DATA` (including `.git/`) to a timestamped archive under `$CTO_OS_DATA/.backups/`. Used by `data-backup` module.
 
 ---
 
