@@ -17,3 +17,6 @@ venv/
 # Secrets (belt-and-braces; secrets shouldn't land here at all)
 .env
 .env.*
+
+# User-specific Caddy config — generated from Caddyfile.template, contains user's domain
+mcp-server/Caddyfile

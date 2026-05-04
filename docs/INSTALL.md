@@ -65,7 +65,7 @@ On any Claude client:
 {
   "mcpServers": {
     "cto-os": {
-      "url": "https://korafam.duckdns.org/mcp",
+      "url": "https://YOUR_DOMAIN.duckdns.org/mcp",
       "headers": { "Authorization": "Bearer YOUR_RAW_TOKEN" }
     }
   }
@@ -93,7 +93,7 @@ On the laptop:
 ```
 
 You'll be prompted for:
-- Remote MCP URL (e.g. `https://korafam.duckdns.org/mcp`)
+- Remote MCP URL (e.g. `https://YOUR_DOMAIN.duckdns.org/mcp`)
 - Bearer token (the raw token from Step 1, not the hash)
 
 The installer:

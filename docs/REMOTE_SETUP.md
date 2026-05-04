@@ -20,7 +20,7 @@ internet (443)
 - macOS on the server machine (the always-on Mac)
 - `cto-os` installed and working locally (`./install.sh` already run)
 - Router admin access
-- DuckDNS account (free) — domain already created: `korafam.duckdns.org`
+- DuckDNS account (free) with a hostname created (referred to as `YOUR_DOMAIN.duckdns.org` throughout this guide)
 - Ports 80 and 443 available on the server Mac
 
 ---
@@ -33,23 +33,23 @@ In your router's DHCP settings, assign a fixed IP to the server Mac by its MAC a
 
 ## 2. DuckDNS: keep the hostname pointed at your home IP
 
-DuckDNS maps `korafam.duckdns.org` to your home's public IP. Since most home ISPs rotate IPs, set up a cron job to keep it updated.
+DuckDNS maps `YOUR_DOMAIN.duckdns.org` to your home's public IP. Since most home ISPs rotate IPs, set up a cron job to keep it updated.
 
-1. Log in at [duckdns.org](https://www.duckdns.org) and copy your token.
+1. Log in at [duckdns.org](https://www.duckdns.org), create a hostname if you haven't, and copy your account token.
 
 2. Add a cron job on the server Mac:
    ```bash
    crontab -e
    ```
-   Add this line (replace `YOUR_DUCKDNS_TOKEN`):
+   Add this line (replace `YOUR_DOMAIN` with your DuckDNS subdomain — just the part before `.duckdns.org` — and `YOUR_DUCKDNS_TOKEN` with your account token):
    ```
-   */5 * * * * curl -s "https://www.duckdns.org/update?domains=korafam&token=YOUR_DUCKDNS_TOKEN&ip=" > /dev/null 2>&1
+   */5 * * * * curl -s "https://www.duckdns.org/update?domains=YOUR_DOMAIN&token=YOUR_DUCKDNS_TOKEN&ip=" > /dev/null 2>&1
    ```
    This runs every 5 minutes and silently updates the IP if it changed.
 
 3. Verify it's working:
    ```bash
-   curl "https://www.duckdns.org/update?domains=korafam&token=YOUR_DUCKDNS_TOKEN&ip="
+   curl "https://www.duckdns.org/update?domains=YOUR_DOMAIN&token=YOUR_DUCKDNS_TOKEN&ip="
    # Should return: OK
    ```
 
@@ -85,7 +85,16 @@ Caddy auto-provisions a TLS certificate from Let's Encrypt and terminates HTTPS,
 brew install caddy
 ```
 
-Copy the Caddyfile into Caddy's config location:
+Generate your Caddyfile from the template, replacing `YOUR_DOMAIN` with your real DuckDNS hostname:
+
+```bash
+# In the cto-os repo
+sed "s/YOUR_DOMAIN/yourname.duckdns.org/" mcp-server/Caddyfile.template > mcp-server/Caddyfile
+```
+
+`mcp-server/Caddyfile` is gitignored — your domain stays local, never committed.
+
+Then deploy it to Caddy's config location:
 
 ```bash
 sudo mkdir -p /etc/caddy
@@ -104,7 +113,7 @@ Verify Caddy is running and the certificate issued:
 sudo brew services list | grep caddy
 # Should show: caddy  started
 
-curl -I https://korafam.duckdns.org/
+curl -I https://YOUR_DOMAIN.duckdns.org/
 # Should return HTTP 404 (Caddy is up; MCP server not started yet)
 ```
 
@@ -197,7 +206,7 @@ In `~/Library/Application Support/Claude/claude_desktop_config.json`, add:
 {
   "mcpServers": {
     "cto-os": {
-      "url": "https://korafam.duckdns.org/mcp",
+      "url": "https://YOUR_DOMAIN.duckdns.org/mcp",
       "headers": {
         "Authorization": "Bearer YOUR_RAW_TOKEN"
       }
@@ -212,7 +221,7 @@ Replace `YOUR_RAW_TOKEN` with the raw token from step 5.
 
 In Claude's settings → Integrations → Add integration:
 
-- **URL:** `https://korafam.duckdns.org/mcp`
+- **URL:** `https://YOUR_DOMAIN.duckdns.org/mcp`
 - **Header name:** `Authorization`
 - **Header value:** `Bearer YOUR_RAW_TOKEN`
 
@@ -224,7 +233,7 @@ Add to `~/.claude/settings.json` or the project `.claude/settings.json`:
 {
   "mcpServers": {
     "cto-os": {
-      "url": "https://korafam.duckdns.org/mcp",
+      "url": "https://YOUR_DOMAIN.duckdns.org/mcp",
       "headers": {
         "Authorization": "Bearer YOUR_RAW_TOKEN"
       }
@@ -239,23 +248,23 @@ Add to `~/.claude/settings.json` or the project `.claude/settings.json`:
 
 ```bash
 # 1. No token → 401
-curl -s -o /dev/null -w "%{http_code}" https://korafam.duckdns.org/mcp
+curl -s -o /dev/null -w "%{http_code}" https://YOUR_DOMAIN.duckdns.org/mcp
 # Expected: 401
 
 # 2. Wrong token → 401
-curl -s -o /dev/null -w "%{http_code}" https://korafam.duckdns.org/mcp \
+curl -s -o /dev/null -w "%{http_code}" https://YOUR_DOMAIN.duckdns.org/mcp \
      -H "Authorization: Bearer wrongtoken"
 # Expected: 401
 
 # 3. Six wrong tokens → 429 on the sixth
 for i in {1..6}; do
-  curl -s -o /dev/null -w "attempt $i: %{http_code}\n" https://korafam.duckdns.org/mcp \
+  curl -s -o /dev/null -w "attempt $i: %{http_code}\n" https://YOUR_DOMAIN.duckdns.org/mcp \
        -H "Authorization: Bearer wrongtoken"
 done
 # Expected: 401 five times, then 429
 
 # 4. Correct token → MCP handshake
-curl -s https://korafam.duckdns.org/mcp \
+curl -s https://YOUR_DOMAIN.duckdns.org/mcp \
      -H "Authorization: Bearer YOUR_RAW_TOKEN" \
      -H "Content-Type: application/json" \
      -d '{"jsonrpc":"2.0","method":"initialize","id":1,"params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1"}}}'
@@ -297,7 +306,7 @@ To use Claude Code on a laptop with data on this server — no local `cto-os-dat
 ./install.sh --client
 ```
 
-You'll be prompted for the remote MCP URL (`https://korafam.duckdns.org/mcp`) and the raw bearer token from step 5. The installer:
+You'll be prompted for the remote MCP URL (`https://YOUR_DOMAIN.duckdns.org/mcp`) and the raw bearer token from step 5. The installer:
 
 - Creates `~/.claude/skills/cto-os` → local cto-os repo
 - Writes `~/.claude/CLAUDE.md` instructing Claude to use MCP for all data access

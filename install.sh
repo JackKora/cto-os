@@ -32,7 +32,7 @@ Options:
   -h, --help        Show this help.
 
 Environment variables (--client + -y mode):
-  CTO_OS_REMOTE_URL     Remote MCP URL (e.g. https://korafam.duckdns.org/mcp).
+  CTO_OS_REMOTE_URL     Remote MCP URL (e.g. https://YOUR_DOMAIN.duckdns.org/mcp).
   CTO_OS_BEARER_TOKEN   Raw bearer token for the remote MCP server.
 
 See docs/INSTALL.md for topology guidance (local-only vs server+remote vs server+client).
@@ -300,7 +300,7 @@ install_client() {
     [[ -n "$REMOTE_URL" ]] || die "--yes requires CTO_OS_REMOTE_URL env var to be set"
   else
     while [[ -z "$REMOTE_URL" ]]; do
-      read -r -p "Remote MCP URL (e.g. https://korafam.duckdns.org/mcp): " REMOTE_URL
+      read -r -p "Remote MCP URL (e.g. https://YOUR_DOMAIN.duckdns.org/mcp): " REMOTE_URL
       [[ -n "$REMOTE_URL" ]] || echo "  URL is required."
     done
   fi
