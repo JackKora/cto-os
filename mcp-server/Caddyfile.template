@@ -1,0 +1,7 @@
+# Copy this file to mcp-server/Caddyfile (gitignored), replace YOUR_DOMAIN with
+# your DuckDNS hostname (e.g. mydomain.duckdns.org), then deploy per
+# docs/REMOTE_SETUP.md step 4.
+
+YOUR_DOMAIN {
+    reverse_proxy localhost:8000
+}
