@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+    "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.cto-os.mcp-server</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <!-- Replace REPO_PATH with the absolute path to your cto-os repo -->
+        <string>REPO_PATH/.venv/bin/python</string>
+        <string>REPO_PATH/mcp-server/server.py</string>
+        <string>--http</string>
+    </array>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <!-- Replace DATA_PATH with the absolute path to your cto-os-data directory -->
+        <key>CTO_OS_DATA</key>
+        <string>DATA_PATH</string>
+        <!-- Paste the argon2 hash of your bearer token here -->
+        <key>CTO_OS_MCP_TOKEN_HASH</key>
+        <string>TOKEN_HASH</string>
+    </dict>
+
+    <!-- Start automatically when the Mac boots (after login) -->
+    <key>RunAtLoad</key>
+    <true/>
+
+    <!-- Restart if the process exits unexpectedly -->
+    <key>KeepAlive</key>
+    <true/>
+
+    <!-- Write server output to these log files (created automatically) -->
+    <key>StandardOutPath</key>
+    <string>DATA_PATH/logs/mcp-http.stdout.log</string>
+    <key>StandardErrorPath</key>
+    <string>DATA_PATH/logs/mcp-http.stderr.log</string>
+</dict>
+</plist>

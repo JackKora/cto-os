@@ -13,12 +13,16 @@ A composable set of modules — stakeholder management, team management, technic
 See [install.sh](install.sh). Requires macOS or Linux, git, Python 3.12+, and [uv](https://docs.astral.sh/uv/).
 
 ```bash
-./install.sh              # interactive
-./install.sh --yes        # accept defaults
+./install.sh --server     # this machine holds cto-os-data and runs the local MCP
+./install.sh --client     # this machine connects to a remote MCP server, no local data
 ./install.sh --help
 ```
 
-Install creates a `.venv` at the repo root via `uv sync` and points Claude Desktop at that venv's Python. For dev / direct script invocation from Code or Cowork, run `uv run python scripts/<name>.py --args '{...}'` from the repo root.
+`--server` creates a `.venv` via `uv sync`, sets up `cto-os-data`, and wires Claude Desktop to the local stdio MCP. `--client` wires both Claude Desktop and Claude Code to a remote HTTPS MCP — no local data needed.
+
+For topology guidance (local-only vs server+remote vs server+client), see [docs/INSTALL.md](docs/INSTALL.md).
+
+For dev / direct script invocation from Code or Cowork, run `uv run python scripts/<name>.py --args '{...}'` from the repo root.
 
 Details: [CLAUDE.md](CLAUDE.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
@@ -216,3 +220,4 @@ Deterministic Python helpers under `scripts/`. Same contract everywhere — JSON
 - [docs/MCP_TOOLS.md](docs/MCP_TOOLS.md) — canonical MCP tool contracts.
 - [docs/SCRIPTS.md](docs/SCRIPTS.md) — deterministic-script inventory and contract.
 - [docs/DATA_REPO.md](docs/DATA_REPO.md) — data repo deep dive.
+- [docs/REMOTE_SETUP.md](docs/REMOTE_SETUP.md) — expose the MCP server over HTTPS for remote access (Caddy + bearer token + launchd).

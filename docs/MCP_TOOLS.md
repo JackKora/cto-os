@@ -198,6 +198,43 @@ All keys optional; an empty spec returns every file's frontmatter.
 - `ScriptFailed` — `scan.py` crashed (non-zero exit).
 - `ScriptTimeout` — exceeded 10 seconds.
 
+### `grep(pattern, path, recursive, max_matches)`
+
+Text search across file bodies. Complements `scan` (which covers frontmatter only).
+
+**Parameters:**
+
+- `pattern` (string, required): Python regex pattern (`re.compile`). Searches for a match anywhere in the line (not anchored).
+- `path` (string, optional, default `"."`): directory to search, relative to `$CTO_OS_DATA`.
+- `recursive` (boolean, optional, default `true`): recurse into subdirectories.
+- `max_matches` (integer, optional, default `200`): stop collecting matches after this many hits.
+
+**Returns:**
+
+```json
+{
+  "matches": [
+    {"file": "modules/managing-down/state/1on1-jane-2026-04-01.md", "line": 12, "text": "coaching moment on delegation"},
+    ...
+  ],
+  "truncated": false
+}
+```
+
+- `file`: path relative to `$CTO_OS_DATA`.
+- `line`: 1-based line number.
+- `text`: full text of the matching line (not trimmed).
+- `truncated`: `true` if `max_matches` was hit before the search completed. Re-run with a more specific `pattern` or `path` to get complete results.
+
+Binary files (non-UTF-8) are silently skipped — same behavior as `read_file`.
+
+**Errors:**
+
+- `InvalidPattern` — `pattern` is not a valid Python regex.
+- `PathOutsideRoot`
+- `PathNotFound` — `path` does not exist.
+- `PathIsFile` — `path` is a file; provide a directory.
+
 ### `run_script(name, args)`
 
 Invoke a whitelisted script in `scripts/`.
@@ -267,6 +304,7 @@ Every error raised by the MCP surface uses one of these codes. Messages include 
 | `ScriptNotImplemented` | The script file exists but is empty / stub. |
 | `ScriptTimeout` | Script exceeded 10 seconds. |
 | `ScriptFailed` | `scan.py` crashed (non-zero exit). `run_script` never raises this — it returns the exit code in its result. |
+| `InvalidPattern` | `grep` called with a regex that fails `re.compile`. |
 
 Error messages include enough context to debug without needing a stack trace — e.g., `"PathOutsideRoot: /etc/passwd is not under /Users/you/cto-os-data"`, not just `"path error"`.
 
@@ -280,6 +318,7 @@ Handler-level, not transport-level. Run via `uv run pytest tests/`.
 - **`tests/test_mcp_files.py`** — `read_file`, `write_file`, `append_to_file`. Covers: UTF-8 and non-ASCII content, binary rejection, empty content, auto-create parents, `chars_written` counts code points not bytes, no auto-newline on append, overwrite vs create semantics, `allow_create=False` on `append_to_file` (raises `PathNotFound` when file is missing), `ForbiddenPath` rejection on writes to `.git/` / `logs/` / `integrations-cache/`, reads of forbidden-write prefixes still allowed, write to root itself (`.`) rejected with `ForbiddenPath`.
 - **`tests/test_mcp_list.py`** — file/dir entries sort and structure, recursive traversal, escaping-symlink omission, dotfile inclusion, errors for file-path and missing path.
 - **`tests/test_mcp_scripts.py`** — whitelist enforcement (scan refused, unknown refused, pull_* refused), `ScriptNotFound` / `ScriptNotImplemented` / `ScriptTimeout`, non-zero exit passthrough, stdout/stderr capture, scan JSON proxy + bad-JSON handling.
+- **`tests/test_mcp_grep.py`** — basic match with file/line/text, `recursive=False` scope, bad regex (`InvalidPattern`), binary file skip, `max_matches` cap and `truncated` flag, empty result, path errors (`PathNotFound`, `PathIsFile`, `PathOutsideRoot`).
 - **`tests/test_mcp_helpers.py`** — `_iso_z` format and roundtrip.
 - **`tests/conftest.py`** — `data_root` and `scripts_dir` fixtures monkeypatch `server.DATA_ROOT` / `server.SCRIPT_DIR` to pytest `tmp_path`; silences real file logging.
 

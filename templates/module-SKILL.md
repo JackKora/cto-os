@@ -5,6 +5,14 @@ requires: []
 optional: []
 ---
 
+<!--
+Authoring note: keep skill prose access-mechanism-agnostic. Describe *what* to read
+and write (paths, frontmatter, state shape) — not *how*. Don't reference bash, git,
+grep, find, or cd. Claude picks the right access mechanism (direct filesystem on a
+server install, MCP tools on a client install) based on the active CLAUDE.md. Skills
+that hardcode bash will break on client installs.
+-->
+
 # {{Module Name}}
 
 ## Scope
