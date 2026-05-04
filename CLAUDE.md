@@ -102,6 +102,7 @@ Detailed contracts, MCP tool surface, and the scripts-vs-MCP decision rule live 
 - **A new script earns its existence** by being called more than 2–3 times, or by clearly winning the deterministic-offload decision rule in `docs/SKILL_REPO.md`. Otherwise keep it as skill prose + `scan`.
 - **A new module =** `modules/{slug}/SKILL.md` + `modules/{slug}/README.md` + an entry in `README.md`'s module index.
 - **Skill prose lives in `SKILL.md` files.** Never duplicate it into `README.md` or `CLAUDE.md`. These pointers stay thin.
+- **Skill prose is access-mechanism-agnostic.** Describe *what* to read and write — paths, frontmatter, state shape. Don't reference bash, git, grep, find, or cd. Claude picks the access mechanism (direct filesystem on server installs, MCP tools on client installs) from the active CLAUDE.md. Skills that hardcode bash break on client installs.
 
 ## Testing
 

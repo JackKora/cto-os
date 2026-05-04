@@ -10,17 +10,26 @@ Spec (source of truth): docs/MCP_TOOLS.md.
 
 from __future__ import annotations
 
+import argparse
 import json
 import logging
 import logging.handlers
 import os
+import re
 import subprocess
 import sys
+import threading
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from argon2 import PasswordHasher
+from argon2.exceptions import InvalidHashError, VerificationError, VerifyMismatchError
 from mcp.server.fastmcp import FastMCP
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from starlette.responses import JSONResponse
 
 
 # ---------- Constants ----------
@@ -76,6 +85,7 @@ class ScriptNotFound(McpError):          code = "ScriptNotFound"
 class ScriptNotImplemented(McpError):    code = "ScriptNotImplemented"
 class ScriptTimeout(McpError):           code = "ScriptTimeout"
 class ScriptFailed(McpError):            code = "ScriptFailed"
+class InvalidPattern(McpError):          code = "InvalidPattern"
 
 
 # ---------- Loggers (module-level; handler attached in _configure_logging) ----------
@@ -87,6 +97,74 @@ LOG_APPEND_TO_FILE = logging.getLogger("append_to_file")
 LOG_LIST_DIRECTORY = logging.getLogger("list_directory")
 LOG_SCAN = logging.getLogger("scan")
 LOG_RUN_SCRIPT = logging.getLogger("run_script")
+LOG_GREP = logging.getLogger("grep")
+
+# ---------- HTTP auth ----------
+
+_ph = PasswordHasher()
+_rate_limits: dict[str, tuple[int, float]] = {}  # ip → (failure_count, window_start)
+_rate_lock = threading.Lock()
+
+RATE_LIMIT_MAX = 5
+RATE_LIMIT_WINDOW = 60.0  # seconds
+
+
+def _rate_limit_state(ip: str, now: float) -> tuple[int, float]:
+    """Read current (count, window_start) for ``ip``, resetting if the window has elapsed.
+
+    Caller must hold ``_rate_lock``.
+    """
+    count, window_start = _rate_limits.get(ip, (0, now))
+    if now - window_start > RATE_LIMIT_WINDOW:
+        return 0, now
+    return count, window_start
+
+
+class BearerAuthMiddleware(BaseHTTPMiddleware):
+    """Authenticate every inbound request against the hashed bearer token.
+
+    Tracks per-IP failure counts and returns 429 after RATE_LIMIT_MAX consecutive
+    failures within RATE_LIMIT_WINDOW seconds.
+    """
+
+    def __init__(self, app: Any, token_hash: str) -> None:
+        super().__init__(app)
+        self._token_hash = token_hash
+
+    async def dispatch(self, request: Request, call_next: Any) -> Any:
+        client_ip = request.client.host if request.client else "unknown"
+        now = time.monotonic()
+
+        with _rate_lock:
+            count, _ = _rate_limit_state(client_ip, now)
+            if count >= RATE_LIMIT_MAX:
+                return JSONResponse(
+                    {"error": "Too many failed attempts"},
+                    status_code=429,
+                    headers={"Retry-After": str(int(RATE_LIMIT_WINDOW))},
+                )
+
+        auth_header = request.headers.get("Authorization", "")
+        if not auth_header.startswith("Bearer "):
+            LOG_SERVER.warning(f"auth missing/malformed from {client_ip}")
+            return JSONResponse({"error": "Unauthorized"}, status_code=401)
+
+        token = auth_header[7:]
+        try:
+            _ph.verify(self._token_hash, token)
+        except (VerifyMismatchError, VerificationError, InvalidHashError):
+            with _rate_lock:
+                count, window_start = _rate_limit_state(client_ip, now)
+                _rate_limits[client_ip] = (count + 1, window_start)
+                new_count = count + 1
+            LOG_SERVER.warning(f"auth failure from {client_ip} (attempt {new_count})")
+            return JSONResponse({"error": "Unauthorized"}, status_code=401)
+
+        with _rate_lock:
+            _rate_limits.pop(client_ip, None)
+
+        return await call_next(request)
+
 
 # ---------- Globals, set in main() ----------
 
@@ -412,10 +490,86 @@ def run_script(name: str, args: dict[str, Any]) -> dict[str, Any]:
     return result
 
 
+@mcp.tool()
+def grep(
+    pattern: str,
+    path: str = ".",
+    recursive: bool = True,
+    max_matches: int = 200,
+) -> dict[str, Any]:
+    """Search file contents for a regex pattern. Path is relative to CTO_OS_DATA."""
+    try:
+        resolved = _resolve_path(path)
+    except McpError as e:
+        LOG_GREP.error(str(e))
+        raise
+
+    if not resolved.exists():
+        LOG_GREP.error(f"PathNotFound: {path}")
+        raise PathNotFound(f"{path} does not exist")
+    if resolved.is_file():
+        LOG_GREP.error(f"PathIsFile: {path}")
+        raise PathIsFile(f"{path} is a file; provide a directory path")
+
+    try:
+        compiled = re.compile(pattern)
+    except re.error as e:
+        LOG_GREP.error(f"InvalidPattern: {pattern!r} — {e}")
+        raise InvalidPattern(f"{pattern!r} is not a valid regex: {e}")
+
+    matches: list[dict[str, Any]] = []
+    truncated = False
+    files_searched = 0
+
+    iterator = resolved.rglob("*") if recursive else resolved.iterdir()
+    for child in iterator:
+        if not child.is_file():
+            continue
+        # Drop entries whose resolved target escapes the root (e.g., symlinks).
+        try:
+            child_resolved = child.resolve()
+            child_resolved.relative_to(DATA_ROOT)
+        except (ValueError, OSError):
+            LOG_GREP.info(f"omitting escaping or unreadable entry: {child}")
+            continue
+        try:
+            text = child.read_text(encoding="utf-8")
+        except (UnicodeDecodeError, OSError):
+            continue
+
+        files_searched += 1
+        for lineno, line in enumerate(text.splitlines(), start=1):
+            if compiled.search(line):
+                matches.append({
+                    "file": str(child.relative_to(DATA_ROOT)),
+                    "line": lineno,
+                    "text": line,
+                })
+                if len(matches) >= max_matches:
+                    truncated = True
+                    break
+        if truncated:
+            break
+
+    LOG_GREP.info(
+        f"grep: {len(matches)} matches in {files_searched} files, "
+        f"path={path!r}, pattern={pattern!r}, truncated={truncated}"
+    )
+    return {"matches": matches, "truncated": truncated}
+
+
 # ---------- Main ----------
 
 def main() -> None:
     global DATA_ROOT
+
+    parser = argparse.ArgumentParser(description="CTO OS MCP server")
+    parser.add_argument(
+        "--http",
+        action="store_true",
+        help="Run Streamable HTTP transport (requires CTO_OS_MCP_TOKEN_HASH)",
+    )
+    args = parser.parse_args()
 
     try:
         DATA_ROOT = _resolve_data_root()
@@ -425,14 +579,36 @@ def main() -> None:
 
     _configure_logging(DATA_ROOT)
 
-    LOG_SERVER.info(f"server start; CTO_OS_DATA={DATA_ROOT}")
-    try:
-        mcp.run()
-    except Exception as e:
-        LOG_SERVER.exception(f"server crashed: {e}")
-        raise
-    finally:
-        LOG_SERVER.info("server stop")
+    if args.http:
+        token_hash = os.environ.get("CTO_OS_MCP_TOKEN_HASH", "").strip()
+        if not token_hash:
+            print("CTO_OS_MCP_TOKEN_HASH must be set in HTTP mode", file=sys.stderr)
+            sys.exit(1)
+
+        import uvicorn
+
+        host = os.environ.get("CTO_OS_MCP_HOST", "127.0.0.1")
+        port = int(os.environ.get("CTO_OS_MCP_PORT", "8000"))
+
+        LOG_SERVER.info(f"server start (HTTP); CTO_OS_DATA={DATA_ROOT} host={host} port={port}")
+        app = mcp.streamable_http_app()
+        app.add_middleware(BearerAuthMiddleware, token_hash=token_hash)
+        try:
+            uvicorn.run(app, host=host, port=port)
+        except Exception as e:
+            LOG_SERVER.exception(f"server crashed: {e}")
+            raise
+        finally:
+            LOG_SERVER.info("server stop")
+    else:
+        LOG_SERVER.info(f"server start; CTO_OS_DATA={DATA_ROOT}")
+        try:
+            mcp.run()
+        except Exception as e:
+            LOG_SERVER.exception(f"server crashed: {e}")
+            raise
+        finally:
+            LOG_SERVER.info("server stop")
 
 
 if __name__ == "__main__":
