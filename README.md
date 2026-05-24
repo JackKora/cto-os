@@ -121,6 +121,11 @@ Recommended sequence when first adopting.
 - [Technical Strategy](modules/technical-strategy/README.md) — strategy documents (Larson-style), ADRs (Nygard), tech-debt tracking.
 - [Org Design](modules/org-design/README.md) — reorg proposals, structural decisions, bottleneck analysis through Reinertsen + Conway.
 
+#### Product & data
+
+- [Product](modules/product/README.md) — product strategy (Rumelt kernel), product goals, now/next/later roadmap, initiative lifecycle (Cagan discovery → validated → in-flight → shipped | killed), prioritization decisions, user-research findings, structured GTM/post-sale feedback (sales/CS/support/implementation/marketing/partner — 7-category taxonomy), the product-trio operating model (PM + design + engineering + data science), operating cadence.
+- [Data Science](modules/data-science/README.md) — DS strategy (Rumelt kernel), DS goals (cascade from company goals), initiative lifecycle, structured experiments (Kohavi-style: A/B / holdout / canary / switchback / observational), ML evals (offline / online / human-rated / synthetic / comparative, per Husain & Shankar), model registry (training → staging → production → retired), insights with consumed-by tracking (loop-closure ritual per Peter Deng), DS-product partnership (embedded / hub-and-spoke / centralized / service-org), operating cadence with model-review layer.
+
 #### Communication
 
 - [Organizational Communications](modules/org-comms/README.md) — internal comms at scale: recurring updates, all-hands content, incident comms, cross-functional announcements.
