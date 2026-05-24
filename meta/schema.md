@@ -1591,6 +1591,243 @@ Invariants:
 
 ---
 
+## `product-strategy-doc`
+
+A written product strategy following Rumelt's kernel (diagnosis / guiding policy / coherent actions). Owned by `product`. One file per strategy area (most users have one — `slug: current`; the type supports area-scoped variants like `growth`, `enterprise`, `platform`).
+
+```yaml
+area: string           # required; e.g., "current", "growth", "enterprise", "platform"
+horizon: string        # required; e.g., "18 months", "2026"
+status: enum           # required; one of: draft, active, archived
+owner: string          # optional
+```
+
+Invariants:
+- Files live at `state/strategies/{strategy-slug}.md`.
+- `slug` equals the strategy slug (`area` value, kebab-cased).
+- Body sections: `## Diagnosis`, `## Guiding policy`, `## Coherent actions`, `## History`.
+- Prior versions preserved under `## History`.
+- Mirrors `technical-strategy-doc` shape deliberately. Both follow Rumelt; the discriminator is which domain (product vs technical) the strategy covers.
+
+**Current version:** 1.
+
+---
+
+## `product-roadmap`
+
+Singleton now / next / later roadmap, outcome-oriented. Owned by `product`. Following Janna Bastow's Now/Next/Later framework and Itamar Gilad's outcome-roadmap framing: each band is a list of *outcomes* (not features, not release dates).
+
+```yaml
+horizon_anchor: date    # required; when the roadmap was last re-anchored
+now: list[string]       # required; outcomes committed for the current quarter (may be empty deliberately)
+next: list[string]      # required; outcomes likely next quarter (may be empty deliberately)
+later: list[string]     # required; outcomes on the horizon beyond next (may be empty deliberately)
+```
+
+Invariants:
+- Singleton at `state/roadmap.md` with `slug: current`.
+- Prior versions preserved under `## History` in body.
+- Entries are outcomes, not features. A roadmap entry that names a feature ("ship the new alerting UI") is a smell the skill should call out at write time; the outcome-form ("reduce time-to-first-alert for new districts") is preferred.
+
+**Current version:** 1.
+
+---
+
+## `product-initiative`
+
+A single product initiative — a bet the product team is making against an outcome. Owned by `product`. One file per initiative; status transitions captured in body history.
+
+```yaml
+title: string                  # required
+status: enum                   # required; one of: discovery, validated, in-flight, shipped, killed
+outcome: string                # required; the user outcome this initiative serves
+linked_product_goal: string    # optional; product-goal slug this initiative moves
+customer_segment: string       # optional; which segment this serves (e.g., for K-12 edtech: district-admin, IT, teacher, parent)
+roadmap_band: enum             # required; one of: now, next, later, none
+confidence: enum               # required; one of: low, medium, high — evidence-guided posture, how grounded the initiative is
+risks_assessed: list[enum]     # required; subset of [value, usability, feasibility, business-viability] — Cagan's four risks that have been evaluated
+opened: date                   # required
+shipped_date: date             # optional; set when status flips to shipped
+killed_date: date              # optional; set when status flips to killed
+owner: string                  # required; the PM driving this initiative
+```
+
+Invariants:
+- Files live at `state/initiatives/{initiative-slug}.md`.
+- `slug` equals the initiative slug.
+- Body sections: `## Hypothesis`, `## Evidence`, `## Decisions`, `## History`.
+- Status transitions and confidence changes preserved under `## History`.
+- Status-transition guidance (advisory, not enforced by schema): `discovery → validated` warrants ≥3 of the four risks in `risks_assessed` having evidence (per Cagan). `confidence` is independent of risks-assessed; an initiative can be `validated` and still `confidence: medium`.
+
+**Current version:** 1.
+
+---
+
+## `prioritization-decision`
+
+A written prioritization decision — what was chosen, what was deferred, what was killed, by what framework, and why. Owned by `product`. Append-new-file per decision; body is immutable once written (parallel to `adr`).
+
+```yaml
+decision_summary: string         # required; one-line statement of what was decided
+framework: enum                  # required; one of: rice, ice, kano, value-vs-effort, opportunity-tree, other
+initiatives_in: list[string]     # required; initiative slugs considered
+initiatives_chosen: list[string] # required; initiative slugs chosen to proceed
+initiatives_deferred: list[string] # required; initiative slugs deferred (may be empty)
+initiatives_killed: list[string] # required; initiative slugs killed (may be empty)
+```
+
+Invariants:
+- Files live at `state/prioritization-decisions/{YYYY-MM-DD}-{decision-slug}.md`.
+- `slug` equals the filename stem.
+- Body sections: `## Context`, `## Options`, `## Decision`, `## Rationale`, `## Review date`.
+- Body is immutable once written.
+
+**Current version:** 1.
+
+---
+
+## `user-research-finding`
+
+A finding from product-team-initiated research — interview, usability test, survey, prototype test, or analytics dig. Owned by `product`. Append-new-file per finding.
+
+Distinct from `business-alignment.customer-signal` (which is inbound third-party signal from sales/support/marketing/onboarding at CTO altitude) and from `product-feedback` (which is structured inbound from GTM and post-sale teams at product-decision altitude). `user-research-finding` is *initiated* by the product team using a structured method.
+
+```yaml
+research_type: enum         # required; one of: interview, usability-test, survey, prototype-test, log-analysis, other
+participants_count: int     # optional; how many participants this finding draws from
+opportunity: string         # optional; Torres-style opportunity tag (free-text or kebab slug)
+linked_initiative: string   # optional; initiative slug if the finding drove or shaped one
+confidence: enum            # required; one of: low, medium, high
+```
+
+Invariants:
+- Files live at `state/findings/{YYYY-MM-DD}-{finding-slug}.md`.
+- `slug` equals the filename stem.
+- Body sections: `## Finding`, `## Evidence`, `## Implication`, `## Follow-ups`.
+- The `opportunity` field uses the same convention as `product-feedback.opportunity` so both inbound types roll up against the same opportunity tree at query time.
+
+**Current version:** 1.
+
+---
+
+## `product-feedback`
+
+A structured feedback item from a GTM or post-sale team — sales, customer success, support, implementation, marketing, partner. Owned by `product`. Append-new-file per feedback item.
+
+Distinct from `business-alignment.customer-signal` and `user-research-finding`: customer-signal is inbound third-party at CTO altitude (strategic); product-feedback is structured inbound at the product-decision altitude (categorized for prioritization); user-research-finding is product-team-initiated direct research. The three don't merge.
+
+```yaml
+source: enum             # required; which internal team surfaced this. One of: sales, customer-success, support, implementation, marketing, partner.
+category: enum           # required; one of seven (see below)
+customer: string         # optional; customer slug or identifier; absent when feedback is an aggregate pattern rather than a single account
+linked_initiative: string # optional; initiative slug if this feedback maps to an active or considered initiative
+opportunity: string      # optional; Torres-style opportunity tag (free-text or kebab slug). Same convention as `user-research-finding.opportunity`.
+severity: enum           # required; one of: blocker, major, minor, fyi
+verbatim: bool           # required; true if body captures customer's actual words, false if it's the internal team's summary
+```
+
+**Category enum (7 values, fixed)** — industry-neutral taxonomy validated against SaaS PM taxonomy guides (consensus 5–8 themes) and edtech procurement research (compliance and accessibility are procurement gates):
+
+- `missing-capability` — workflow or feature gap; the thing isn't there.
+- `usability` — it's there but friction in using it.
+- `reliability-performance` — uptime, speed, error rates.
+- `integration` — fit with the customer's surrounding stack (e.g., LMS/SIS/SSO in edtech; CRM/identity/data warehouse in general SaaS).
+- `pricing-packaging` — price point, tiering, contract shape, packaging objections.
+- `compliance-security` — regulatory (FERPA, COPPA, HIPAA, SOC 2, GDPR), data handling, audit-readiness, *and accessibility (WCAG)*. Grouped here because all of these are procurement gates that block deals before product features matter. Accessibility is folded in deliberately — it's a procurement-screen factor, not a usability sub-type. Sub-detail (e.g., "WCAG 2.2 AA — screen reader fails on roster table") lives in the body, not in additional enum values.
+- `support-enablement` — onboarding, training, docs, CS responsiveness, time-to-value.
+
+Resist expanding the enum — sub-detail lives in the body. Adding an 8th value requires a schema migration.
+
+Invariants:
+- Files live at `state/feedback/{YYYY-MM-DD}-{feedback-slug}.md`.
+- `slug` equals the filename stem.
+- Body sections: `## Feedback`, `## Context` (customer situation, deal stage if relevant), `## Implication`, `## Follow-ups`.
+
+**Current version:** 1.
+
+---
+
+## `product-goal`
+
+A measurable product-level goal — the layer beneath product strategy and above the roadmap. Owned by `product`. One file per goal. Implements the cascade: `business-alignment.company-goal-horizon` items → `product-goal` → `product-initiative`. Lets the system answer "are we hitting our product goals" independently of "are we shipping our roadmap" — two questions that get conflated in feature-factory orgs.
+
+```yaml
+title: string                # required
+metric: string               # required; the measurement (e.g., "time-to-first-alert", "MAU among district-admin segment")
+current: string              # optional; current observed reading
+target: string               # required; target value or movement (e.g., "reduce by 30%", "≥10k WAU")
+horizon: string              # required; when the target should be hit (e.g., "2026-Q3")
+status: enum                 # required; one of: on-track, at-risk, off-track, hit, missed, retired
+linked_company_goal: string  # optional; item from `business-alignment.company-goal-horizon` this product goal ladders to; gracefully absent when `business-alignment` isn't activated
+owner: string                # required; typically a PM or product leader
+```
+
+Invariants:
+- Files live at `state/goals/{goal-slug}.md`.
+- `slug` equals the goal slug.
+- Body sections: `## Rationale`, `## Tracking notes`, `## History`.
+- Status changes preserved under `## History`.
+- The `linked_company_goal` reference is optional and may become an orphan reference if `business-alignment` is deactivated. Consumers (`show-product-status`, etc.) surface orphans rather than erroring.
+
+**Current version:** 1.
+
+---
+
+## `product-trio-model`
+
+Singleton declaring the empowered-team operating model. Owned by `product`.
+
+**Naming note.** The classic "product trio" (Torres / SVPG) is PM + design + engineering. We keep the standard industry term because the literature, conferences, and PM/design hires already speak it. We add **data science as an explicit fourth role** via the `data_science_role` field. The trio name is a slight misnomer once DS is added, but the alternative ("product quartet," "product team model") is non-standard and loses recognition. The mismatch is deliberate; the field structure makes the reality legible.
+
+**DS is not core to every product.** At companies where DS is embedded in some product surfaces (e.g., ML-driven safety classification) but absent from others (e.g., classroom-management-for-devices), `data_science_role` captures the *dominant* mode; per-product variance lives in the body prose, not in additional schema fields.
+
+```yaml
+discovery_model: enum       # required; one of: dual-track, sequential, hybrid
+scope_negotiation: enum     # required; one of: pm-owns, eng-owns, joint
+handoff_artifact: string    # required; what document crosses the PM→eng line (PRD, problem brief, opportunity brief, etc.)
+pm_to_eng_ratio: string     # optional; e.g., "1:7"
+design_role: enum           # required; one of: embedded, shared, none — how design integrates with product teams
+data_science_role: enum     # required; one of: embedded, shared, separate, none — how DS integrates (embedded in product teams, shared as a center of excellence, separate as a different org product asks for help, or not part of the product surface)
+```
+
+Invariants:
+- Singleton at `state/trio-model.md` with `slug: current`.
+- Body documents per-product variance in DS integration (and any per-team variance worth recording) + `## History`.
+- Prior versions preserved under `## History`.
+
+**Current version:** 1.
+
+---
+
+## `product-operating-cadence`
+
+Singleton declaring the product function's review rhythms. Owned by `product`.
+
+Captures the cadence layers Claire Hughes Johnson (former Stripe COO) flags as commonly broken: when metrics-review cadence outpaces strategy-review cadence, the metrics meeting becomes a de facto strategy meeting because there's nowhere else to think strategically. The `strategy_refresh.next_refresh` field is surfaced as "overdue" by `show-product-status` once the date is in the past.
+
+```yaml
+product_review:            # required
+  frequency: string        # required; e.g., "weekly", "biweekly"
+  presenters: enum         # required; one of: rotating-pm, all-pms, on-demand
+  attendees: string        # required; free-text description of who attends
+metrics_review:            # required
+  frequency: string        # required; e.g., "monthly"
+  owner: string            # required; who runs the meeting
+strategy_refresh:          # required
+  frequency: string        # required; e.g., "quarterly", "semi-annual"
+  last_refresh: date       # optional; date of the most recent strategy refresh
+  next_refresh: date       # optional; when the next strategy refresh is due
+```
+
+Invariants:
+- Singleton at `state/operating-cadence.md` with `slug: current`.
+- Prior versions preserved under `## History` in body.
+- `update-operating-cadence` is the writer; `set-product-strategy` updates `strategy_refresh.last_refresh` as a side effect.
+
+**Current version:** 1.
+
+---
+
 ## `working-note`
 
 A working/in-progress thread that doesn't yet belong to any single module's state. Lives at the top-level `notes/` directory, not under `modules/`. Cross-module thinking, pre-activation drafts, and multi-session working threads belong here.
@@ -1719,6 +1956,15 @@ Current canonical version per type.
 | `contribution-log-entry` | 1 | `code-contribution` |
 | `backup-config` | 1 | `data-backup` |
 | `backup-log` | 1 | `data-backup` |
+| `product-strategy-doc` | 1 | `product` |
+| `product-roadmap` | 1 | `product` |
+| `product-initiative` | 1 | `product` |
+| `prioritization-decision` | 1 | `product` |
+| `user-research-finding` | 1 | `product` |
+| `product-feedback` | 1 | `product` |
+| `product-goal` | 1 | `product` |
+| `product-trio-model` | 1 | `product` |
+| `product-operating-cadence` | 1 | `product` |
 | `working-note` | 1 | (top-level convention) |
 
 Version bumps ship with a migration at `scripts/migrate_{type}_v{N}_to_v{N+1}.py`. The migration runs automatically the next time a surface loads and detects drift; it commits a pre-migration snapshot to git so rollback is `git revert`.
