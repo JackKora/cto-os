@@ -1828,6 +1828,252 @@ Invariants:
 
 ---
 
+## `ds-strategy-doc`
+
+A written data-science strategy following Rumelt's kernel (diagnosis / guiding policy / coherent actions). Owned by `data-science`. One file per strategy area (most users have one — `slug: current`).
+
+```yaml
+area: string           # required; e.g., "current", "ml-platform", "analytics"
+horizon: string        # required; e.g., "18 months", "2026"
+status: enum           # required; one of: draft, active, archived
+owner: string          # optional
+```
+
+Invariants:
+- Files live at `state/strategies/{strategy-slug}.md`.
+- `slug` equals the strategy slug.
+- Body sections: `## Diagnosis`, `## Guiding policy`, `## Coherent actions`, `## History`.
+- Prior versions preserved under `## History`.
+- Mirrors `product-strategy-doc` and `technical-strategy-doc` shape deliberately; only the subject domain differs.
+
+**Current version:** 1.
+
+---
+
+## `ds-goal`
+
+A measurable data-science goal — the layer beneath DS strategy. Owned by `data-science`. Cascade: `business-alignment.company-goal-horizon` items → `ds-goal` → `ds-initiative`. Mirrors `product-goal` exactly so cross-module cascade queries are symmetric.
+
+```yaml
+title: string                # required
+metric: string               # required; the measurement (e.g., "safety classifier F1", "time-from-question-to-insight")
+current: string              # optional; current observed reading
+target: string               # required; target value or movement
+horizon: string              # required; when the target should be hit (e.g., "2026-Q3")
+status: enum                 # required; one of: on-track, at-risk, off-track, hit, missed, retired
+linked_company_goal: string  # optional; item from `business-alignment.company-goal-horizon` this DS goal ladders to; gracefully absent when `business-alignment` isn't activated
+owner: string                # required
+```
+
+Invariants:
+- Files live at `state/goals/{goal-slug}.md`.
+- `slug` equals the goal slug.
+- Body sections: `## Rationale`, `## Tracking notes`, `## History`.
+- Status changes preserved under `## History`.
+- `linked_company_goal` is a soft reference; consumers surface orphans rather than erroring when `business-alignment` is inactive.
+
+**Current version:** 1.
+
+---
+
+## `ds-initiative`
+
+A substantial data-science project — new model build, multi-week investigation, dashboard with stakeholder commitment, etc. Owned by `data-science`. One file per initiative; lifecycle in frontmatter, status transitions in body history. Mirrors `product-initiative` lifecycle.
+
+```yaml
+title: string                    # required
+status: enum                     # required; one of: discovery, validated, in-flight, shipped, killed
+outcome: string                  # required; the outcome this initiative serves
+linked_ds_goal: string           # optional; ds-goal slug this initiative moves
+linked_product_initiative: string # optional; product-initiative slug when the DS work is the back-end of a product initiative — closes the cross-module loop
+confidence: enum                 # required; one of: low, medium, high
+opened: date                     # required
+shipped_date: date               # optional; set when status flips to shipped
+killed_date: date                # optional; set when status flips to killed
+owner: string                    # required
+```
+
+Invariants:
+- Files live at `state/initiatives/{initiative-slug}.md`.
+- `slug` equals the initiative slug.
+- Body sections: `## Hypothesis`, `## Evidence`, `## Decisions`, `## History`.
+- No `risks_assessed` field — Cagan's four product risks don't apply cleanly to DS investigations. Confidence remains.
+
+**Current version:** 1.
+
+---
+
+## `ds-experiment`
+
+A structured experiment (A/B test, holdout, canary, switchback, observational study) following Kohavi's discipline. Owned by `data-science`. Append-new-file per experiment; status transitions in body history. The `## Decision` section is the oracle property — closed experiments without a decision are orphans.
+
+```yaml
+title: string                    # required
+design: enum                     # required; one of: a-b-test, holdout, canary, switchback, observational, other
+hypothesis: string               # required; the bet being tested
+primary_metric: string           # required; the primary KR moved
+linked_ds_initiative: string     # optional; ds-initiative slug this experiment belongs to
+linked_model: string             # optional; model slug when comparing model versions
+status: enum                     # required; one of: designing, running, completed, killed, inconclusive
+started_date: date               # required
+ended_date: date                 # optional; set when status flips to completed | killed | inconclusive
+owner: string                    # required
+```
+
+Invariants:
+- Files live at `state/experiments/{YYYY-MM-DD}-{experiment-slug}.md`.
+- `slug` equals the filename stem.
+- Body sections: `## Design`, `## Result`, `## Decision`, `## Follow-ups`.
+- `## Decision` is empty until the experiment closes; `update-ds-experiment` warns (does not block) on `completed` transitions when `## Decision` is empty. Orphans (closed without decision) are flagged by `show-ds-status`.
+- Distinct from `ml-eval` — experiments compare variants in flight; evals score model output against a reference.
+
+**Current version:** 1.
+
+---
+
+## `ml-eval`
+
+A model output quality evaluation against a labeled / golden / human-rated set. Owned by `data-science`. Append-new-file per eval. Structurally distinct from `ds-experiment` — different shape, different lifecycle.
+
+```yaml
+title: string                  # required
+eval_type: enum                # required; one of: offline-benchmark, online-scoring, human-rated, synthetic, comparative
+target_model: string           # required; model slug being evaluated
+baseline_model: string         # optional; for comparative evals
+dataset: string                # required; free-text pointer to the labeled set (path, URL, description)
+metric_name: string            # required; e.g., F1, accuracy, ROUGE-L, precision@k, hallucination-rate
+score: string                  # optional; latest score (free-text — numeric, percentage, qualitative grade)
+baseline_score: string         # optional; for comparative evals
+status: enum                   # required; one of: designing, running, completed
+linked_ds_initiative: string   # optional
+owner: string                  # required
+```
+
+Invariants:
+- Files live at `state/evals/{YYYY-MM-DD}-{eval-slug}.md`.
+- `slug` equals the filename stem.
+- Body sections: `## Setup`, `## Result`, `## Conclusion`, `## Follow-ups`.
+- On `update-ml-eval` transition to `completed` for a `target_model` in `stage: production`, the consumer must also update the target model's `latest_eval` pointer — so the model registry always knows its most recent quality reading. (Side-effect documented at the skill level, not enforced at the schema level.)
+
+**Current version:** 1.
+
+---
+
+## `model`
+
+A model registry entry. Owned by `data-science`. Canonical record per production model — `tech-ops` reads this for SLO scoping but does not own it.
+
+```yaml
+title: string                # required
+model_family: string         # required; e.g., "safety-text-classifier", "alert-prioritizer"
+version: string              # required
+stage: enum                  # required; one of: training, staging, production, retired
+owner: string                # required
+training_data: string        # required; free-text pointer to the dataset / source (path, URL, description). Schema captures *which* dataset; tools own internals.
+retraining_cadence: string   # required; e.g., "weekly", "on-drift", "ad-hoc"
+latest_eval: string          # optional; ml-eval slug — the most recent eval for this model
+linked_slo: string           # optional; slug of an `slo` in `tech-ops` covering this model's serving. Soft reference — surfaces as orphan when tech-ops isn't activated.
+linked_ds_initiative: string # optional; ds-initiative slug this model came from
+deployed_date: date          # optional; set when stage flips to production
+retired_date: date           # optional; set when stage flips to retired
+```
+
+Invariants:
+- Files live at `state/models/{model-slug}.md`.
+- `slug` equals the model slug (typically `<model-family>-<version>`).
+- Body sections: `## Description`, `## Performance history`, `## Retraining log`, `## History`.
+- `linked_slo` and `latest_eval` are soft references — consumers surface orphans rather than erroring.
+
+**Current version:** 1.
+
+---
+
+## `insight`
+
+An analysis output with explicit consumed-by tracking. Owned by `data-science`. Append-new-file per insight, overwrite-with-history on consumption events. The schema's point: per Peter Deng, insights get produced and ignored; the `consumed_by` and `drove_decision` fields force loop closure — the orphan-by-default posture is deliberate.
+
+```yaml
+title: string                # required
+confidence: enum             # required; one of: low, medium, high
+source_analysis: string      # required; free-text — where the insight came from (which dashboard, query, analysis, model exploration)
+opportunity: string          # optional; Torres-style opportunity tag (free-text or kebab slug). Same convention as `user-research-finding.opportunity` and `product-feedback.opportunity` — three inbound surfaces across two modules roll up against the same opportunity tree.
+consumed_by: list            # required; who/what consumed the insight (e.g., ["product-team-safety", "exec-staff"]); empty list at creation by default
+drove_decision: string       # optional; free-text or slug pointing to a `prioritization-decision` in `product` or an `adr` in `technical-strategy`
+status: enum                 # required; one of: open, consumed, parked, superseded
+owner: string                # required
+```
+
+Invariants:
+- Files live at `state/insights/{YYYY-MM-DD}-{insight-slug}.md`.
+- `slug` equals the filename stem.
+- Body sections: `## Insight`, `## Evidence`, `## Implication`, `## Follow-ups`.
+- An insight with `status: open` and empty `consumed_by` for ≥ N days (default 14) is an orphan; `show-insight-pipeline` surfaces orphans first by default.
+- `consume-insight` is the skill that transitions `status: open → consumed`, appends to `consumed_by`, and optionally sets `drove_decision`.
+
+**Current version:** 1.
+
+---
+
+## `ds-product-partnership`
+
+Singleton declaring the DS-product partnership operating model from the **DS side**. Owned by `data-science`.
+
+**Coexistence note** (important — covered in both this schema doc and the SKILL.md): this is the inverse of `product.product-trio-model.data_science_role`. Both types describe the same DS-product relationship from different vantage points and **must coexist** — they're complementary, not redundant.
+
+- `product.product-trio-model.data_science_role` says, from product's POV: "DS is embedded in product teams / shared as a center of excellence / a separate org we ask for help / not part of this product surface at all."
+- `data-science.ds-product-partnership.operating_model` says, from DS's POV: "Our operating model is embedded / hub-and-spoke / centralized / service-org, and these are the product surfaces we actively support."
+
+When the two views disagree (e.g., DS thinks it's hub-and-spoke; product thinks DS is separate), the system surfaces the asymmetry as informational — the disagreement itself is a useful signal worth reconciling rather than auto-erasing.
+
+```yaml
+operating_model: enum             # required; one of: embedded, hub-and-spoke, centralized, service-org
+supported_product_areas: list     # required; product surfaces actively using DS (e.g., ["safety-classification", "alert-prioritization"]). Missing entries imply DS isn't involved in those surfaces.
+intake_process: string            # required; how product asks DS for work
+roadmap_sync_cadence: string      # required; how often DS and product re-sync roadmaps
+governance_owner: string          # optional; for hub-and-spoke: who owns the central platform / standards
+```
+
+Invariants:
+- Singleton at `state/partnership.md` with `slug: current`.
+- Body documents per-surface variance (when DS integration differs by product surface) + `## History`.
+- Prior versions preserved under `## History`.
+
+**Current version:** 1.
+
+---
+
+## `ds-operating-cadence`
+
+Singleton declaring the data-science function's review rhythms. Owned by `data-science`. Mirror of `product-operating-cadence` with one DS-specific cadence layer: `model_review`.
+
+```yaml
+practitioner_review:       # required
+  frequency: string        # required; e.g., "weekly", "biweekly"
+  presenters: enum         # required; one of: rotating-ic, all-ics, on-demand
+  attendees: string        # required; free-text description of who attends
+analytics_review:          # required
+  frequency: string        # required; e.g., "monthly"
+  owner: string            # required; who runs the meeting
+model_review:              # required — DS-specific, no Product equivalent
+  frequency: string        # required; e.g., "monthly", "quarterly"
+  owner: string            # required
+  scope: string            # required; free-text — which models are in scope (e.g., "all production models", "tier-1 safety models only")
+strategy_refresh:          # required
+  frequency: string        # required; e.g., "quarterly", "semi-annual"
+  last_refresh: date       # optional
+  next_refresh: date       # optional
+```
+
+Invariants:
+- Singleton at `state/operating-cadence.md` with `slug: current`.
+- Prior versions preserved under `## History` in body.
+- `update-ds-operating-cadence` is the writer; `set-ds-strategy` updates `strategy_refresh.last_refresh` as a side effect.
+- `model_review` exists here but not in `product-operating-cadence` because production-model health (drift, error analysis, retraining triggers) is a DS-specific review surface with no clean Product equivalent.
+
+**Current version:** 1.
+
+---
+
 ## `working-note`
 
 A working/in-progress thread that doesn't yet belong to any single module's state. Lives at the top-level `notes/` directory, not under `modules/`. Cross-module thinking, pre-activation drafts, and multi-session working threads belong here.
@@ -1965,6 +2211,15 @@ Current canonical version per type.
 | `product-goal` | 1 | `product` |
 | `product-trio-model` | 1 | `product` |
 | `product-operating-cadence` | 1 | `product` |
+| `ds-strategy-doc` | 1 | `data-science` |
+| `ds-goal` | 1 | `data-science` |
+| `ds-initiative` | 1 | `data-science` |
+| `ds-experiment` | 1 | `data-science` |
+| `ml-eval` | 1 | `data-science` |
+| `model` | 1 | `data-science` |
+| `insight` | 1 | `data-science` |
+| `ds-product-partnership` | 1 | `data-science` |
+| `ds-operating-cadence` | 1 | `data-science` |
 | `working-note` | 1 | (top-level convention) |
 
 Version bumps ship with a migration at `scripts/migrate_{type}_v{N}_to_v{N+1}.py`. The migration runs automatically the next time a surface loads and detects drift; it commits a pre-migration snapshot to git so rollback is `git revert`.
