@@ -14,6 +14,7 @@ When this file changes in a way that affects existing state, bump the relevant t
 - **Required fields** must be present and non-null. **Optional fields** may be absent; the value falls back to the default documented per field.
 - **Sensitivity** defaults to `standard`. Files or modules marked `sensitivity: high` are excluded from `scan` results unless the caller explicitly includes them.
 - **Module extensions:** each module defines one or more per-type schemas below. Those schemas extend the baseline; they may add required and optional fields but must not contradict the baseline.
+- **Industry overlays in examples:** some field examples follow a `General SaaS / *<Industry> overlay*` pattern — e.g., `customer_segment` documents general values (`enterprise`, `mid-market`, `SMB`) and an *edtech overlay* (`district-admin`, `IT`, `teacher`, `parent`). The pattern keeps the schema industry-neutral by default while letting users in a specific industry see how the field is typically populated. Today only `edtech` overlays are documented inline; new overlays (e.g., `healthcare`, `fintech`) can be added in the same pattern when CTO OS serves users in those domains. Overlays are *examples*, not enum constraints — the underlying field types remain free-form strings.
 
 ---
 
@@ -1642,7 +1643,7 @@ title: string                  # required
 status: enum                   # required; one of: discovery, validated, in-flight, shipped, killed
 outcome: string                # required; the user outcome this initiative serves
 linked_product_goal: string    # optional; product-goal slug this initiative moves
-customer_segment: string       # optional; which segment this serves (e.g., for K-12 edtech: district-admin, IT, teacher, parent)
+customer_segment: string       # optional; which segment this serves. General SaaS: enterprise, mid-market, SMB; or by buyer persona: admin, IT, end-user. *Edtech overlay*: district-admin, IT, teacher, parent.
 roadmap_band: enum             # required; one of: now, next, later, none
 confidence: enum               # required; one of: low, medium, high — evidence-guided posture, how grounded the initiative is
 risks_assessed: list[enum]     # required; subset of [value, usability, feasibility, business-viability] — Cagan's four risks that have been evaluated
@@ -1733,7 +1734,7 @@ verbatim: bool           # required; true if body captures customer's actual wor
 - `reliability-performance` — uptime, speed, error rates.
 - `integration` — fit with the customer's surrounding stack (e.g., LMS/SIS/SSO in edtech; CRM/identity/data warehouse in general SaaS).
 - `pricing-packaging` — price point, tiering, contract shape, packaging objections.
-- `compliance-security` — regulatory (FERPA, COPPA, HIPAA, SOC 2, GDPR), data handling, audit-readiness, *and accessibility (WCAG)*. Grouped here because all of these are procurement gates that block deals before product features matter. Accessibility is folded in deliberately — it's a procurement-screen factor, not a usability sub-type. Sub-detail (e.g., "WCAG 2.2 AA — screen reader fails on roster table") lives in the body, not in additional enum values.
+- `compliance-security` — regulatory, data handling, audit-readiness, *and accessibility (WCAG)*. Grouped here because all of these are procurement gates that block deals before product features matter. Accessibility is folded in deliberately — it's a procurement-screen factor, not a usability sub-type. General SaaS regulators: SOC 2, GDPR, ISO 27001. *Edtech overlay*: FERPA, COPPA, plus WCAG as a procurement gate. *Healthcare overlay (future)*: HIPAA, BAAs. Sub-detail (e.g., "WCAG 2.2 AA — screen reader fails on roster table") lives in the body, not in additional enum values.
 - `support-enablement` — onboarding, training, docs, CS responsiveness, time-to-value.
 
 Resist expanding the enum — sub-detail lives in the body. Adding an 8th value requires a schema migration.
@@ -1753,7 +1754,7 @@ A measurable product-level goal — the layer beneath product strategy and above
 
 ```yaml
 title: string                # required
-metric: string               # required; the measurement (e.g., "time-to-first-alert", "MAU among district-admin segment")
+metric: string               # required; the measurement. General SaaS: e.g., "activation rate", "MAU among enterprise tier", "time-to-value". *Edtech overlay*: e.g., "time-to-first-alert", "MAU among district-admin segment".
 current: string              # optional; current observed reading
 target: string               # required; target value or movement (e.g., "reduce by 30%", "≥10k WAU")
 horizon: string              # required; when the target should be hit (e.g., "2026-Q3")

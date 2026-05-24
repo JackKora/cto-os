@@ -16,7 +16,7 @@
 - "Eval the new safety classifier on the September golden set."
 - "Register the v2 alert-prioritizer model in staging."
 - "Promote the alert-prioritizer to production."
-- "Log an insight — the dashboard shows district-admin users open Alerts 3x more than IT users."
+- "Log an insight — the dashboard shows enterprise-tier users open the dashboard 3x more than self-serve users." (Edtech overlay: "district-admin users open Alerts 3x more than IT users.")
 - "Consume that insight — exec staff used it to greenlight the new prioritization push."
 - "Prep for the DS review with [IC]."
 - "Show me the insight pipeline — any orphans?"

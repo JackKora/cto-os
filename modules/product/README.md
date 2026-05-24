@@ -12,7 +12,7 @@
 
 **Example tasks:**
 - "Activate the product module and walk me through current strategy, goals, and roadmap."
-- "Sales got pushback on FERPA evidence from [district] — log product feedback."
+- "Sales got pushback on SOC 2 evidence from [enterprise customer] — log product feedback." (Edtech overlay: "Sales got pushback on FERPA evidence from [district].")
 - "We're starting discovery on a new alerting flow. Add the initiative."
 - "Re-anchor the roadmap — move [outcome] from next to now."
 - "Prep for the product review with [PM]."
