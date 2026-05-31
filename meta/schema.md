@@ -2117,6 +2117,131 @@ Kept module-scoped (vs. a shared `retro` type) until other modules add retros �
 
 ---
 
+## `decision`
+
+A decision extracted from a meeting transcript by the `conversation-intake` module's `transcript` skill, written under the target module's `state/intake/decisions/` subtree. The skill writes this generic type **only when the target module has no native decision type**. When the target module owns one — `technical-strategy` (`adr`), `org-design` (`design-decision`), `product` (`prioritization-decision`) — a capture-worthy decision is written as that native type in its native location (as a draft / `status: proposed`) instead of this type. So this type is the fallback for decisions that matter but land in a module without a first-class decision record.
+
+```yaml
+decision: string            # required; one-line statement of what was decided
+rationale: string           # required; why — the reasoning the meeting surfaced
+confidence: enum            # required; one of: low, medium, high. How clearly the transcript states it.
+source: string              # required; speaker who announced/made the decision (free-text name or stakeholder slug)
+meeting_date: date          # required; ISO 8601 (YYYY-MM-DD)
+meeting_time: string        # required; "HH:MM" (24-hour, user's local time)
+attendees: list[string]     # required; names or stakeholder slugs of meeting participants
+conflicts_with: string      # optional; relative path to an existing record this decision contradicts (if a conflict was flagged at intake)
+```
+
+Invariants:
+- Files live at `cto-os-data/modules/{target}/state/intake/decisions/{YYYY-MM-DD}-{slug}.md` — the `{target}` is decided at routing time.
+- `slug` equals the filename stem.
+- Append-new-file per decision; never overwrite (a re-extraction of the same meeting produces a new file).
+- Written only after explicit user confirmation during the `transcript` skill flow.
+
+**Current version:** 1.
+
+---
+
+## `action-item`
+
+An action item extracted from a meeting transcript by the `conversation-intake` module. Routed to the target module that owns the action's subject area; lives under that module's `state/intake/action-items/` subtree.
+
+```yaml
+action: string              # required; one-line description of what needs to be done
+owner: string               # required; who's on the hook (free-text name or stakeholder slug; "user" for the user themselves)
+due_date: date              # optional; ISO 8601 if a date was given
+status: enum                # required; one of: open, in-progress, done. Defaults to "open" at intake.
+source: string              # required; who committed the action (often but not always the owner)
+meeting_date: date          # required
+meeting_time: string        # required; "HH:MM"
+attendees: list[string]     # required
+```
+
+Invariants:
+- Files live at `cto-os-data/modules/{target}/state/intake/action-items/{YYYY-MM-DD}-{slug}.md`.
+- `slug` equals the filename stem.
+- Append-new-file per action item.
+- `status` transitions (open → in-progress → done) preserved under `## History` in body when updated.
+- Written only after explicit user confirmation.
+
+**Current version:** 1.
+
+---
+
+## `observation`
+
+An observation or signal extracted from a meeting transcript — something worth noting that isn't a decision, action, or quote (e.g., "Mike seemed checked out," "the team kept circling back to the migration risk"). Owned by `conversation-intake`, routed to the target module the observation pertains to.
+
+```yaml
+observation: string         # required; what was observed
+possible_meaning: string    # required; tentative interpretation ("I think this might mean..."). Always phrased as theory.
+confidence: enum            # required; one of: low, medium, high. How strongly the observation is supported by the transcript.
+source: string              # required; speaker the observation is about, or whose statement triggered it
+linked_record: string       # optional; relative path to the goal / project / person record this observation is most relevant to
+meeting_date: date          # required
+meeting_time: string        # required; "HH:MM"
+attendees: list[string]     # required
+```
+
+Invariants:
+- Files live at `cto-os-data/modules/{target}/state/intake/observations/{YYYY-MM-DD}-{slug}.md`.
+- `slug` equals the filename stem.
+- Append-new-file per observation.
+- `possible_meaning` is always tentative — never written as fact. The skill renders it with hedging language ("I think...", "Maybe...", "It could mean...").
+- Written only after explicit user confirmation.
+
+**Current version:** 1.
+
+---
+
+## `quote`
+
+A verbatim quote extracted from a meeting transcript — language worth preserving exactly because the wording matters (performance feedback phrasing, customer language a CS lead reported, board-ready phrasing). Owned by `conversation-intake`, routed to the module where the quote is most useful (often `board-comms`, `managing-down`, `org-comms`, or `business-alignment`).
+
+```yaml
+quote: string               # required; the verbatim text
+source: string              # required; speaker who said it
+context: string             # required; one-line description of the surrounding situation
+why_preserved: string       # required; why the exact wording matters (e.g., "board-ready phrasing for Q3 narrative", "specific feedback language to mirror in 1:1")
+meeting_date: date          # required
+meeting_time: string        # required; "HH:MM"
+attendees: list[string]     # required
+```
+
+Invariants:
+- Files live at `cto-os-data/modules/{target}/state/intake/quotes/{YYYY-MM-DD}-{slug}.md`.
+- `slug` equals the filename stem.
+- Append-new-file per quote.
+- `quote` is verbatim — the skill does not paraphrase, summarize, or "clean up" the language. If the transcript is unclear, the open-question type is used instead.
+- Written only after explicit user confirmation.
+
+**Current version:** 1.
+
+---
+
+## `open-question`
+
+A question raised in a meeting transcript but not resolved during the meeting — something the user (or someone in the room) committed to follow up on, or that the skill flagged as worth answering before forgetting. Owned by `conversation-intake`, routed to the module the question pertains to.
+
+```yaml
+question: string            # required; the question itself
+who_could_answer: string    # required; best guess at who can resolve it (stakeholder slug, role, or free-text)
+why_it_matters: string      # required; one-line on why this is worth tracking
+meeting_date: date          # required
+meeting_time: string        # required; "HH:MM"
+attendees: list[string]     # required
+```
+
+Invariants:
+- Files live at `cto-os-data/modules/{target}/state/intake/questions/{YYYY-MM-DD}-{slug}.md`.
+- `slug` equals the filename stem.
+- Append-new-file per question.
+- Written only after explicit user confirmation.
+
+**Current version:** 1.
+
+---
+
 ## Schema versions
 
 Current canonical version per type.
@@ -2222,5 +2347,12 @@ Current canonical version per type.
 | `ds-product-partnership` | 1 | `data-science` |
 | `ds-operating-cadence` | 1 | `data-science` |
 | `working-note` | 1 | (top-level convention) |
+| `decision` | 1 | `conversation-intake` |
+| `action-item` | 1 | `conversation-intake` |
+| `observation` | 1 | `conversation-intake` |
+| `quote` | 1 | `conversation-intake` |
+| `open-question` | 1 | `conversation-intake` |
 
 Version bumps ship with a migration at `scripts/migrate_{type}_v{N}_to_v{N+1}.py`. The migration runs automatically the next time a surface loads and detects drift; it commits a pre-migration snapshot to git so rollback is `git revert`.
+
+> **Note on additions vs. migrations.** The five `conversation-intake` types above (`decision`, `action-item`, `observation`, `quote`, `open-question`) were added as new types at version 1 — no existing records use these types, so no migration is needed. The migration requirement applies when an *existing* type's schema changes in a way that affects records already on disk.
