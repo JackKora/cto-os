@@ -113,6 +113,7 @@ Recommended sequence when first adopting.
 - [Attention & Operations](modules/attention-operations/README.md) — daily/weekly operational rhythm, inbox triage, morning briefings, week-starter and week-wrap.
 - [Team Management](modules/team-management/README.md) — team-aggregate health, team rubric, team retros, composition tracking.
 - [Tech Ops](modules/tech-ops/README.md) — SLOs and error budgets, incident lifecycle, blameless postmortems, reliability posture.
+- [Conversation Intake](modules/conversation-intake/README.md) — extract decisions, action items, observations, quotes, and open questions from pasted meeting transcripts; route each to the right module; write only after user confirmation. Raw transcripts never stored.
 
 #### Strategic
 
