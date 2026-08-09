@@ -1,6 +1,6 @@
 # MCP tool contracts
 
-Canonical spec for the Chat-facing MCP server at `mcp-server/server.py`. This file is the source of truth for tool signatures, response shapes, error semantics, and guardrails. Update it in lockstep with the server implementation.
+Canonical spec for the MCP server at `mcp-server/server.py`. This file is the source of truth for tool signatures, response shapes, error semantics, and guardrails. Update it in lockstep with the server implementation.
 
 Background and scope decisions live in [docs/SKILL_REPO.md → MCP server](./SKILL_REPO.md#mcp-server). This doc just nails the contracts.
 
@@ -8,8 +8,8 @@ Background and scope decisions live in [docs/SKILL_REPO.md → MCP server](./SKI
 
 ## Transport and lifecycle
 
-- **Transport:** stdio. Claude Desktop launches the server per session via `claude_desktop_config.json`.
-- **Authentication:** none. Single-user, local-disk.
+- **Transport:** stdio for local/server installs, launched per session from the Claude Desktop or Codex MCP configuration; HTTPS for remote clients.
+- **Authentication:** none for local stdio. Remote HTTPS mode uses the bearer-token setup documented in [REMOTE_SETUP.md](./REMOTE_SETUP.md).
 - **Environment:** reads `CTO_OS_DATA` on startup. Missing or empty → fail fast with a clear error before accepting any request.
 - **Cold start target:** < 200ms. No persistent index, no warmup.
 - **Concurrency:** serial per-process. MCP handles one request at a time over stdio.
@@ -20,7 +20,7 @@ Background and scope decisions live in [docs/SKILL_REPO.md → MCP server](./SKI
 
 Every tool that accepts a `path` parameter resolves and validates it identically.
 
-**Convention for prose / SKILL.md.** When a doc, SKILL.md, or CLAUDE.md mentions a data-repo path, write it with the literal `cto-os-data/` prefix (e.g., `cto-os-data/modules/personal-os/state/goals.md`). Claude strips that prefix when calling the MCP tool, because tool paths are relative to `$CTO_OS_DATA`. The prefix is for humans and for the skill-reviewer's cross-reference check — without it, those paths would be mistaken for skill-repo paths and fail to resolve.
+**Convention for prose / SKILL.md.** When a doc, SKILL.md, `CLAUDE.md`, or `AGENTS.md` mentions a data-repo path, write it with the literal `cto-os-data/` prefix (e.g., `cto-os-data/modules/personal-os/state/goals.md`). The active host strips that prefix when calling the MCP tool, because tool paths are relative to `$CTO_OS_DATA`. The prefix is for humans and for the skill-reviewer's cross-reference check—without it, those paths would be mistaken for skill-repo paths and fail to resolve.
 
 **Resolution algorithm:**
 
@@ -92,7 +92,7 @@ Create or overwrite a file.
 
 - Auto-creates parent directories as needed (`mkdir -p` behavior).
 - `chars_written` is `len(content)` — Unicode code points, not bytes. Matches the caller's mental model; bytes can be recovered via `list_directory`.
-- No file locking. MCP is serial per-process; bash scripts on other surfaces use direct I/O. Concurrent writes to the same file from two surfaces at the same millisecond are a theoretical, not observed, risk; revisit if it ever bites.
+- No file locking. MCP is serial per-process; hosts with local filesystem and process access use direct I/O. Concurrent writes to the same file through MCP and direct I/O at the same millisecond are a theoretical, not observed, risk; revisit if it ever bites.
 - Writes are not atomic (no temp-file rename dance). If atomicity matters for a specific file, handle it at a higher level.
 
 **Forbidden write prefixes.** `write_file` and `append_to_file` refuse any path whose first component is in `{.git, logs, integrations-cache, .backups}`. These subtrees are machine-managed (git itself, the MCP log file, `pull_*` script output, `zip_data` staging output) and writes through these tools would cause confusing breakage. Reads of those paths are still permitted.
@@ -254,7 +254,7 @@ Invoke a whitelisted script in `scripts/`.
 }
 ```
 
-MCP does not parse `stdout`. Scripts emit JSON by contract; the caller (Claude) parses it.
+MCP does not parse `stdout`. Scripts emit JSON by contract; the calling host parses it.
 
 **Errors:**
 
@@ -277,10 +277,10 @@ RUN_SCRIPT_WHITELIST = {
 Not whitelisted:
 
 - `scan` — has its own first-class tool. Always refused.
-- `pull_slack`, `pull_linear` — network I/O, long-running, side-effect-bearing. Keep them to Code/Cowork surfaces where bash invocation is direct.
+- `pull_slack`, `pull_linear` — network I/O, long-running, side-effect-bearing. They are intentionally unavailable through MCP `run_script`; run them directly from any host with local filesystem and process access (for example, Claude Code, Cowork, or Codex locally).
 - `migrate_*` — destructive. Run via the schema evolution flow (skill-initiated, explicit).
 
-Adding a script to the whitelist is a deliberate code change, not a config toggle. This prevents an accidental "Chat can run anything" surface.
+Adding a script to the whitelist is a deliberate code change, not a config toggle. The whitelist is the MCP execution/security boundary: it prevents an MCP-connected host from running arbitrary repository scripts.
 
 ---
 

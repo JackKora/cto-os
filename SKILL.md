@@ -68,7 +68,7 @@ Never silently write activation state. Activation is a deliberate flow with the 
 
 ## Persistence — how you save
 
-You write to `cto-os-data` using whichever write mechanism your surface provides (see Surfaces below). Every save surfaces in the transcript — via a tool call or a file-write action that's visible to the user. You do not save silently.
+You write to `cto-os-data` using whichever access mechanism your host provides (see [Access mechanisms — same logic, different mechanics](#access-mechanisms--same-logic-different-mechanics) below). Every save surfaces in the transcript — via a tool call or a file-write action that's visible to the user. You do not save silently.
 
 **Default: just save.** When the target file and content are clear (user said "save this," narrated a flow-ending event a specific module owns, answered an activation question, hit a scheduled checkpoint), write without blocking for confirmation.
 
@@ -86,31 +86,31 @@ Full rule: `docs/ARCHITECTURE.md` → "Persistence model." Each module's `SKILL.
 
 - **No secrets.** If a user asks you to record an API key, token, or password, refuse. Direct them to macOS Keychain or a gitignored `.env` in the data repo.
 - **No generalizing from training data when the repo has specifics.** "Mike" means the Mike in the data repo, not a generic persona.
-- **No cross-surface branching in your prose.** The skill operates the same way in Chat, Code, and Cowork. Tool names may differ (MCP tools in Chat; bash + filesystem in Code/Cowork) but your logic doesn't.
+- **No cross-host branching in your prose.** The skill operates the same way in Claude Desktop, Claude Code, Cowork, and Codex. The available access mechanism may differ, but your logic does not.
 - **No fabricating metrics.** If a number isn't in the state or a scanned source, say "I don't have that" — don't invent.
 - **No bypassing the Persistence model.** See above.
 
-## Surfaces — same logic, different mechanics
+## Access mechanisms — same logic, different mechanics
 
-Your logic is identical across Chat, Code, and Cowork. Only the underlying tools differ. Below is how the logical operations this skill refers to ("read a file," "write a file," "scan state," "run a script") map to each surface.
+Your logic is identical across hosts. The active project instructions determine whether state is available through MCP or a local filesystem. Below is how the logical operations this skill refers to ("read a file," "write a file," "scan state," "run a script") map to each mechanism.
 
-| Logical operation | Chat (Desktop) via MCP | Code / Cowork via bash + filesystem |
+| Logical operation | MCP-backed access | Local filesystem access |
 | --- | --- | --- |
-| Read a file | `read_file(path)` | `Read` tool / direct filesystem |
-| Write (overwrite) | `write_file(path, content)` | `Write` tool / direct filesystem |
-| Append to a file | `append_to_file(path, content)` | `Read` + `Write` (concatenate) or shell `>>` |
-| List a directory | `list_directory(path, recursive)` | `Glob` / `ls` |
+| Read a file | `read_file(path)` | Direct file read |
+| Write (overwrite) | `write_file(path, content)` | Direct file write |
+| Append to a file | `append_to_file(path, content)` | Read + write or safe append |
+| List a directory | `list_directory(path, recursive)` | Filesystem listing or glob |
 | Scan state | `scan(query_spec)` | `uv run python scripts/scan.py --args '...'` |
 | Run a script | `run_script(name, args)` | `uv run python scripts/{name}.py --args '...'` |
 
-On all surfaces, paths into `cto-os-data` are prefixed with `cto-os-data/` in prose (e.g., `cto-os-data/modules/personal-os/state/goals/weekly.md`). When calling an MCP tool that takes a path relative to `$CTO_OS_DATA`, strip the prefix. When running direct shell commands, use the full absolute path (`$CTO_OS_DATA/...`).
+On all hosts, paths into `cto-os-data` are prefixed with `cto-os-data/` in prose (e.g., `cto-os-data/modules/personal-os/state/goals/weekly.md`). When calling an MCP tool that takes a path relative to `$CTO_OS_DATA`, strip the prefix. When running direct shell commands, use the full absolute path (`$CTO_OS_DATA/...`).
 
-Cowork additionally has first-class scheduled and async task support — nothing extra to remember when reading/writing state; same as Code.
+Some hosts also provide scheduled and asynchronous task support. That does not change state semantics.
 
 ## Where to read more
 
 - `README.md` in this skill repo — overview + full module index + PRD.
-- `docs/ARCHITECTURE.md` — system-wide design (surfaces, storage, persistence, dependencies, operations).
+- `docs/ARCHITECTURE.md` — system-wide design (access mechanisms, storage, persistence, dependencies, operations).
 - `docs/SKILL_REPO.md` — how this skill repo is built (MCP tool surface, scripts, scan, schema evolution).
 - `docs/DATA_REPO.md` — how the data repo is laid out (modules, state, integrations cache).
 - `modules/{slug}/SKILL.md` — per-module activation flow, frameworks, skills, persistence.

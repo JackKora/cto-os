@@ -7,9 +7,9 @@ optional: []
 
 <!--
 Authoring note: this skill is access-mechanism-agnostic. It describes what to read
-and write — paths, frontmatter, state shape, scan queries — not how. Claude picks
+and write — paths, frontmatter, state shape, scan queries — not how. The active host picks
 the access mechanism (direct filesystem on a server install, MCP tools on a client
-install) from the active CLAUDE.md.
+install) from the active project instructions.
 -->
 
 # Conversation Intake

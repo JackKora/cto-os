@@ -6,7 +6,7 @@ This repo holds the skill definitions, deterministic scripts, MCP server, canoni
 
 ## What CTO OS is
 
-A composable set of modules — stakeholder management, team management, technical strategy, business alignment, hiring, board comms, and more — that run on top of Claude to help a senior engineering leader (Director / VP / SVP / C-level) manage their people, technology, communication, and decisions. Each module is a focused capability with its own framework and skills. Modules share state and read each other's context. The system is altitude-aware, values-driven, and frameworks-first.
+A composable set of modules — stakeholder management, team management, technical strategy, business alignment, hiring, board comms, and more — that run on Claude or Codex to help a senior engineering leader (Director / VP / SVP / C-level) manage their people, technology, communication, and decisions. Each module is a focused capability with its own framework and skills. Modules share state and read each other's context. The system is altitude-aware, values-driven, and frameworks-first.
 
 ## Install
 
@@ -15,16 +15,19 @@ See [install.sh](install.sh). Requires macOS or Linux, git, Python 3.12+, and [u
 ```bash
 ./install.sh --server     # this machine holds cto-os-data and runs the local MCP
 ./install.sh --client     # this machine connects to a remote MCP server, no local data
+./install.sh --server --reviewer codex  # choose the pre-commit AI reviewer
 ./install.sh --help
 ```
 
-`--server` creates a `.venv` via `uv sync`, sets up `cto-os-data`, and wires Claude Desktop to the local stdio MCP. `--client` wires both Claude Desktop and Claude Code to a remote HTTPS MCP — no local data needed.
+`--server` creates a `.venv` via `uv sync`, sets up `cto-os-data`, and wires Claude Desktop and Codex to the local stdio MCP. `--client` wires Claude Desktop, Claude Code, and Codex to a remote HTTPS MCP — no local data needed. Both modes register the same repo as a skill in `~/.claude/skills/cto-os` and `~/.agents/skills/cto-os`; there is no copied Codex skill tree to drift.
+
+The installer is safe to rerun. Correct managed files and config entries are true no-ops, config-file symlinks are preserved, and unrelated config entries remain untouched. An exact known legacy data-repo instruction file is migrated to the shared Claude/Codex version; customized or unknown versions are preserved with a warning. The Codex CLI is optional during install: `config.toml` is written either way and is additionally validated when the CLI is available. `--reviewer` accepts `auto`, `claude`, `codex`, or `none`; without an explicit choice an existing repo setting is preserved, otherwise `auto` prefers Claude and falls back to Codex.
 
 For topology guidance (local-only vs server+remote vs server+client), see [docs/INSTALL.md](docs/INSTALL.md).
 
-For dev / direct script invocation from Code or Cowork, run `uv run python scripts/<name>.py --args '{...}'` from the repo root.
+For direct script invocation from any host with local filesystem access, run `uv run python scripts/<name>.py --args '{...}'` from the repo root.
 
-Details: [CLAUDE.md](CLAUDE.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+Project instructions: [CLAUDE.md](CLAUDE.md) is canonical and [AGENTS.md](AGENTS.md) is its symlink for Codex. Architecture details: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ---
 
@@ -149,19 +152,21 @@ Recommended sequence when first adopting.
 
 ---
 
-## Surfaces
+## Hosts and access
 
-CTO OS runs on three different Claude surfaces. You use them for different things.
+CTO OS uses one skill and one state model across Claude and Codex. Choose the host that fits the work.
 
 **Chat (Claude Desktop).** The interactive app. Best for ad-hoc questions — "what's on my plate today," "help me think through this reorg," "draft a note to my boss" — quick triage, weekly reviews, and anything that benefits from back-and-forth conversation.
 
 **Code (Claude Code CLI).** Day-to-day use of the skill when you want a longer, more focused session. **Launch Code from your `cto-os-data` directory, not the `cto-os` source repo** — that's what tells Claude to activate the skill for managing your state rather than working on the system itself (`cd ~/cto-os-data && claude`). Advantages over Chat: unlimited conversation length (no running out of context mid-flow), direct file access (no MCP roundtrip), the ability to work with git / grep / your editor alongside Claude, and easier handling of multi-step work that persists across days. Worth reaching for when you're doing reflective work (weekly review, quarter planning), drafting longer artifacts (board update, strategy memo), or want uninterrupted time to think through a problem.
 
+**Codex (app, CLI, or IDE).** Uses the same repo through `~/.agents/skills/cto-os` and reads `AGENTS.md`, which is symlinked to the canonical `CLAUDE.md`. On a server install it can use the local stdio MCP or work directly from `cto-os-data`; on a client install it uses the configured remote MCP. Codex-specific agent definitions live in `.codex/agents/`, but their shared procedures stay in `meta/`.
+
 **Cowork.** Runs tasks on a schedule, in the background, without you watching. Best for morning briefings, pre-meeting prep that lands in your inbox, overnight digests, weekly wraps — anything that benefits from arriving before you ask for it.
 
-All three read and write the same state on your laptop — your `cto-os-data` directory. There's no copying between surfaces; same disk, same files. Edits made in one surface are immediately visible in the others.
+On a local/server install, every host reads and writes the same `cto-os-data` directory. There's no copying between hosts; edits are immediately visible everywhere. On a client install, the same state stays on the server and each configured host reaches it through HTTPS MCP.
 
-Under the hood, Chat reaches your files through a local MCP server (a small translation layer that starts with Claude Desktop). Code and Cowork access the filesystem directly. Same state, same results — just two different mechanisms. You don't need to think about this day-to-day.
+Under the hood there are only two access mechanisms: MCP and direct filesystem access. The skill prose is deliberately independent of that choice, so Claude and Codex use the same instructions and state contracts.
 
 ---
 
@@ -206,7 +211,7 @@ These don't conflict; you can layer them.
 
 ## Scripts
 
-Deterministic Python helpers under `scripts/`. Same contract everywhere — JSON args via `--args`, JSON on stdout, `CTO_OS_DATA` from env. Invoked via the MCP `run_script` tool in Chat or directly via `uv run python scripts/<name>.py --args '{...}'` in Code / Cowork. Detailed contracts in [docs/SCRIPTS.md](docs/SCRIPTS.md).
+Deterministic Python helpers under `scripts/`. Same contract everywhere — JSON args via `--args`, JSON on stdout, `CTO_OS_DATA` from env. Invoked through MCP's `run_script` tool or directly via `uv run python scripts/<name>.py --args '{...}'` when the host has local filesystem access. Detailed contracts in [docs/SCRIPTS.md](docs/SCRIPTS.md).
 
 - **`scan.py`** — frontmatter scan + filter over all of `cto-os-data` in one call. The workhorse for module reads and rollups.
 - **`validate_deps.py`** — walks module SKILL.md files, builds the required-dep graph, fails on cycles or unknown deps. Pre-commit hook.
@@ -220,7 +225,7 @@ Deterministic Python helpers under `scripts/`. Same contract everywhere — JSON
 
 ## Where to go deeper
 
-- [CLAUDE.md](CLAUDE.md) — conventions for editing this repo.
+- [CLAUDE.md](CLAUDE.md) / [AGENTS.md](AGENTS.md) — canonical shared conventions for editing this repo.
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — system-wide architecture.
 - [docs/SKILL_REPO.md](docs/SKILL_REPO.md) — this repo deep dive (MCP, scripts, scan, schema).
 - [docs/MCP_TOOLS.md](docs/MCP_TOOLS.md) — canonical MCP tool contracts.

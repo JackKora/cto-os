@@ -25,8 +25,8 @@ All paths are relative to the root of `cto-os-data` on the server.
 
 ## What lives locally
 
-- The skill definitions: `~/.claude/skills/cto-os/modules/` (symlinked from the local `cto-os` repo)
-- The MCP server config (in Claude Desktop and Claude Code settings) — already wired by install
+- The skill definitions, symlinked from the local `cto-os` repo into the active host's user skill registry
+- The MCP server config for Claude Desktop, Claude Code, and Codex — already wired by install
 
 ## What stays on the server
 
@@ -39,4 +39,4 @@ Do not attempt git operations on `cto-os-data` from here — there is no local r
 
 ## Skill reference
 
-Skills are at `~/.claude/skills/cto-os/modules/`. The root skill orientation is at `~/.claude/skills/cto-os/SKILL.md`.
+Use the active `cto-os` skill directory. Its root `SKILL.md` provides system orientation, and `modules/{slug}/SKILL.md` contains each module's detailed workflow.

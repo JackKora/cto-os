@@ -1,11 +1,11 @@
 # Scripts
 
-All scripts live in `scripts/` at the repo root. Each follows a common contract and gets invoked the same way across Chat, Code, and Cowork.
+All scripts live in `scripts/` at the repo root. Each follows a common contract across Claude and Codex hosts.
 
 ## Invocation
 
-- **From Code or Cowork:** `uv run python scripts/{name}.py --args '{...}'` from the repo root.
-- **From Chat (Claude Desktop via MCP):** via the `run_script` tool for whitelisted scripts, or the first-class `scan` tool for scan.
+- **With local filesystem access:** `uv run python scripts/{name}.py --args '{...}'` from the repo root.
+- **Through MCP (Claude Desktop, Codex, or a remote client):** via the `run_script` tool for whitelisted scripts, or the first-class `scan` tool for scan.
 
 ## Contract
 
@@ -19,7 +19,7 @@ Exit-code semantics vary by script — see each script's docstring. Broadly:
 - **`validate_deps.py`**: exit 0 = clean, exit 1 = validation failure (cycle or unknown dep), exit 2 = operational crash.
 - Other whitelisted scripts should follow `scan.py`'s model unless there's a reason not to.
 
-Details, including which scripts are whitelisted for Chat and the scan guardrails, live in [docs/SKILL_REPO.md → Scripts](./SKILL_REPO.md#scripts) and [docs/MCP_TOOLS.md](./MCP_TOOLS.md).
+Details, including which scripts are whitelisted for MCP and the scan guardrails, live in [docs/SKILL_REPO.md → Scripts](./SKILL_REPO.md#scripts) and [docs/MCP_TOOLS.md](./MCP_TOOLS.md).
 
 ## Inventory
 

@@ -10,7 +10,7 @@ You are working on the **logic** side of CTO OS. This repo holds the MCP server,
 - `docs/ARCHITECTURE.md` — system-wide architecture (foundations, surfaces, storage, how the two repos connect, operations).
 - `docs/SKILL_REPO.md` — deep dive on this repo (layout, MCP server, scripts, schema, patterns).
 - `docs/DATA_REPO.md` — deep dive on the data repo (layout, module state, integrations cache).
-- `docs/MCP_TOOLS.md` — canonical contracts for the Chat-facing MCP server (signatures, response shapes, errors, whitelist).
+- `docs/MCP_TOOLS.md` — canonical contracts for the MCP server (signatures, response shapes, errors, whitelist).
 - `docs/SCRIPTS.md` — inventory and contract for the deterministic scripts in `scripts/`.
 
 ## Layout
@@ -18,8 +18,9 @@ You are working on the **logic** side of CTO OS. This repo holds the MCP server,
 ```
 cto-os/
 ├── README.md              # overview + PRD
-├── CLAUDE.md              # this file
-├── SKILL.md               # root skill (description drives activation on all surfaces)
+├── CLAUDE.md              # canonical project instructions
+├── AGENTS.md → CLAUDE.md  # Codex-compatible project instructions
+├── SKILL.md               # root skill (description drives activation across hosts)
 ├── install.sh             # bootstraps cto-os-data, installs skill, merges MCP config
 ├── pyproject.toml         # Python deps (managed via uv); requires-python = ">=3.12"
 ├── uv.lock                # uv lockfile; committed for reproducible installs
@@ -27,11 +28,12 @@ cto-os/
 ├── docs/                  # architecture, skill repo, data repo, MCP tools, scripts
 ├── modules/               # one directory per PRD module — SKILL.md + README.md each
 ├── scripts/               # deterministic Python helpers (see Scripts below)
-├── mcp-server/server.py   # MCP bridge for Claude Desktop
-├── meta/schema.md         # canonical frontmatter schema (single source of truth)
+├── mcp-server/server.py   # MCP bridge for MCP-connected hosts
+├── meta/                  # canonical schema + shared reviewer procedure
 ├── templates/             # files install.sh copies into a new cto-os-data
-├── hooks/pre-commit       # git hook that runs the skill-reviewer on staged SKILL/CLAUDE changes
-├── .claude/agents/        # Claude Code subagent definitions (skill-reviewer)
+├── hooks/pre-commit       # git hook that runs validation + the selected AI reviewer
+├── .claude/agents/        # thin Claude adapters for shared agent procedures
+├── .codex/agents/         # thin Codex adapters for shared agent procedures
 └── tests/                 # pytest suite + skill-review checklist
 ```
 
@@ -47,7 +49,7 @@ uv run python scripts/scan.py --args '{}'   # runs a script directly
 
 `uv run` handles venv resolution — never activate `.venv` manually. Add deps with `uv add <pkg>` (runtime) or `uv add --dev <pkg>` (dev). `uv.lock` is the source of truth for pinned versions; commit any change to it alongside the `pyproject.toml` change that caused it.
 
-Full system install (data repo, Desktop MCP config, symlink, hooks): `./install.sh`. Only needed when you want to actually use the skill via Chat / Cowork / Claude Code, not to develop on it.
+Full system install (data repo, host MCP configs, skill symlinks, hooks): `./install.sh`. Only needed when you want to actually use the skill via Claude, Cowork, or Codex, not to develop on it.
 
 ## Conversation discipline
 
@@ -78,7 +80,7 @@ All scripts live in `scripts/`. The shared contract — every script must satisf
 - Read `CTO_OS_DATA` from the environment.
 - Idempotent where possible (safe to re-run).
 
-Surface-agnostic: Claude Desktop invokes them via the MCP `run_script` tool; Claude Code and Cowork invoke them directly via `uv run python scripts/{name}.py --args '{...}'` from the repo root. Same script, same contract. `uv run` handles venv resolution — don't activate `.venv` manually.
+Host-agnostic: MCP-connected hosts invoke them via the MCP `run_script` tool; hosts with local filesystem access may invoke them directly via `uv run python scripts/{name}.py --args '{...}'` from the repo root. Same script, same contract. `uv run` handles venv resolution — don't activate `.venv` manually.
 
 **Deps are managed by uv.** Runtime: `uv add <pkg>`. Dev: `uv add --dev <pkg>`. `uv.lock` is committed; never hand-edit it.
 
@@ -102,7 +104,7 @@ Detailed contracts, MCP tool surface, and the scripts-vs-MCP decision rule live 
 - **A new script earns its existence** by being called more than 2–3 times, or by clearly winning the deterministic-offload decision rule in `docs/SKILL_REPO.md`. Otherwise keep it as skill prose + `scan`.
 - **A new module =** `modules/{slug}/SKILL.md` + `modules/{slug}/README.md` + an entry in `README.md`'s module index.
 - **Skill prose lives in `SKILL.md` files.** Never duplicate it into `README.md` or `CLAUDE.md`. These pointers stay thin.
-- **Skill prose is access-mechanism-agnostic.** Describe *what* to read and write — paths, frontmatter, state shape. Don't reference bash, git, grep, find, or cd. Claude picks the access mechanism (direct filesystem on server installs, MCP tools on client installs) from the active CLAUDE.md. Skills that hardcode bash break on client installs.
+- **Skill prose is access-mechanism-agnostic.** Describe *what* to read and write — paths, frontmatter, state shape. Don't reference bash, git, grep, find, or cd. The active host picks the access mechanism (direct filesystem on server installs, MCP tools on client installs) from its project instructions. Skills that hardcode shell access break on client installs.
 
 ## Testing
 
@@ -127,6 +129,8 @@ Coverage:
 - **`tests/test_pull_linear.py`** — Linear pull with mocked `urlopen`: TTL skip, force override, watermark incremental, dedup, HTTP errors, GraphQL errors.
 - **`tests/test_pull_slack.py`** — Slack pull with mocked `urlopen`, dispatched across `conversations.list` / `users.list` / `conversations.history`: TTL skip, force override, watermark per-channel, dedup on (channel, ts), `ok: false` errors, HTTP errors, channel filter.
 - **`tests/test_rename_module.py`** — synthetic skill + data repos in `tmp_path`; dry-run vs. commit, dirty-tree refusal, slug collision refusal, unmodified-reference scan.
+- **`tests/test_install.py`** — isolated end-to-end server/client installs; filesystem-identity no-ops, config-symlink preservation, Codex CLI-present/absent behavior, legacy-instruction migration, unrelated config preservation, unmanaged conflicts, and syntax/semantic config fail-fast behavior.
+- **`tests/test_pre_commit_hook.py`** — reviewer selection precedence, Claude-compatible `auto`, Codex execution, staged deletions, exact verdict contracts, and blocking verdicts.
 
 **When changing a script:**
 - Run its test file: `uv run pytest tests/test_<script>.py`.
@@ -143,26 +147,26 @@ Coverage:
 
 ### AI-assisted skill review
 
-The `skill-reviewer` subagent (`.claude/agents/skill-reviewer.md`) applies the checklist at `tests/claude-review.md`. Fresh context per run. Invocations:
+The shared reviewer procedure at `meta/skill-reviewer.md` applies the checklist at `tests/claude-review.md`. Claude and Codex expose it through thin adapters at `.claude/agents/skill-reviewer.md` and `.codex/agents/skill-reviewer.toml`, so the review logic has one source of truth. Fresh context per run. Invocations:
 
-- **Pre-commit:** `hooks/pre-commit` calls `claude -p` headlessly and blocks the commit on `REVIEW: FAIL`. Triggered when the staged diff includes `SKILL.md` or `CLAUDE.md`. Enabled by `install.sh` via `git config core.hooksPath hooks`. If the `claude` CLI isn't on PATH, the hook warns and skips.
-- **Alongside pre-commit:** the same hook also runs `validate_deps.py` whenever any `modules/**/SKILL.md` is staged. That check blocks the commit on any required-dep cycle or unknown-dep reference. Unlike skill-reviewer, it does not skip if `claude` is missing — it only requires `uv`.
-- **On demand:** ask Claude Code to run the `skill-reviewer` subagent. Useful when writing or refactoring a module. Run `validate_deps.py` directly with `uv run python scripts/validate_deps.py` when you want the graph report without a commit.
+- **Pre-commit:** `hooks/pre-commit` runs the selected headless reviewer and blocks the commit unless its final verdict is `REVIEW: PASS`. Selection order is `CTO_OS_REVIEWER`, repo-local `git config cto-os.reviewer`, then `auto`; valid values are `auto`, `claude`, `codex`, and `none`. `auto` prefers Claude for backward compatibility, then Codex. If the selected CLI is absent, the hook warns and skips. `install.sh --reviewer <value>` configures the repo-local choice without overwriting an existing choice unless the flag or environment variable is explicit.
+- **Alongside pre-commit:** the same hook also runs `validate_deps.py` whenever any `modules/**/SKILL.md` change, including a deletion, is staged. That check blocks the commit on any required-dep cycle or unknown required-dep reference. It is deterministic and only requires `uv`.
+- **On demand:** ask Claude Code or Codex to run `skill-reviewer`. Useful when writing or refactoring a module. Run `validate_deps.py` directly with `uv run python scripts/validate_deps.py` when you want the graph report without a commit.
 
 ### When you change something, run the matching check
 
 - Changing `scripts/<name>.py` → `uv run pytest tests/test_<script>.py`.
 - Changing `mcp-server/server.py` → `uv run pytest tests/test_mcp_*.py`.
 - Changing any module's `SKILL.md` → pre-commit fires `validate_deps.py` (deps) + skill-reviewer (qualitative) automatically. To preview before commit, run either manually.
-- Changing `CLAUDE.md` → pre-commit fires skill-reviewer.
+- Changing a `SKILL.md`, project-instruction file (`CLAUDE.md` or `AGENTS.md`), reviewer procedure/adapter, checklist, or `docs/*.md` → pre-commit fires skill-reviewer.
 - Changing `meta/schema.md` → also bump `schema_version` for the affected type(s) and ship a migration (see Invariants).
 - Changing `tests/fixtures/cto-os-data-sample/` → run `uv run pytest tests/test_scan.py` to catch fixture-dependent failures.
 
 ## Self-maintenance rules
 
-When evolving this repo — apply these yourself, including when Claude Code is editing.
+When evolving this repo — apply these yourself, including when an AI coding agent is editing.
 
-**Catch-all:** If a change alters how users or Claude interact with the system — installation, activation, persistence, the MCP/scripts contract, the skill-review checklist, or any convention documented in `docs/` — update `README.md` and the relevant `docs/*.md` files in the same commit. A change that's user-visible or contract-affecting is never complete without doc updates.
+**Catch-all:** If a change alters how users or an AI host interact with the system — installation, activation, persistence, the MCP/scripts contract, the skill-review checklist, or any convention documented in `docs/` — update `README.md` and the relevant `docs/*.md` files in the same commit. A change that's user-visible or contract-affecting is never complete without doc updates.
 
 **Specific rules:**
 
@@ -176,7 +180,7 @@ When evolving this repo — apply these yourself, including when Claude Code is 
   - **Install-time template** (copied into a new `cto-os-data` by `install.sh`, e.g., `CLAUDE.md`, `README.md`, `gitignore`): update `install.sh` to copy it, and list it in `README.md` under what a fresh `cto-os-data` contains.
   - **Module-authoring template** (used when drafting a new module, e.g., `module-SKILL.md`, `module-README.md`): reference it from the module-authoring pointer in `README.md`; do not add to `install.sh`.
 - After **adding a hook to `hooks/`**: update `install.sh` if wiring is needed, add it to `README.md`, and reference it in this file's Testing section if it runs the skill-reviewer or any other checks.
-- After **adding a subagent under `.claude/agents/`**: name and describe it in this file's Testing section (if review-related) or a dedicated section, and list it in `README.md`.
+- After **adding an agent adapter under `.claude/agents/` or `.codex/agents/`**: put shared behavior in `meta/`, keep the adapter host-specific and thin, name it in this file's Testing section (if review-related) or a dedicated section, and list it in `README.md`.
 - After **changing `install.sh` behavior** (new flag, new prompt, new side effect): update the install instructions in `README.md`.
 - After **changing `tests/claude-review.md`**: if the change alters what the skill-reviewer fails on, reflect it in this file's Testing section.
 - After **adding or upgrading a Python dep**: use `uv add` / `uv add --dev`, never hand-edit `pyproject.toml` or `uv.lock`. Commit both `pyproject.toml` and `uv.lock` in the same commit.

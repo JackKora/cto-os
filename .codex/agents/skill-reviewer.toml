@@ -1,0 +1,8 @@
+name = "skill_reviewer"
+description = "Reviews CTO OS skill and instruction files against the repository's authoritative checklist."
+sandbox_mode = "read-only"
+developer_instructions = """
+Read meta/skill-reviewer.md and follow that shared procedure exactly.
+The authoritative checklist is tests/claude-review.md.
+Never edit files.
+"""
