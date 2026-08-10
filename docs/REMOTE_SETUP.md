@@ -196,7 +196,7 @@ launchctl load   ~/Library/LaunchAgents/com.cto-os.mcp-server.plist
 
 ---
 
-## 8. Configure Claude clients
+## 8. Configure clients
 
 ### Claude Desktop (remote machine)
 
@@ -241,6 +241,18 @@ Add to `~/.claude/settings.json` or the project `.claude/settings.json`:
   }
 }
 ```
+
+### Codex (remote machine)
+
+The client installer configures Codex together with the Claude clients:
+
+```bash
+CTO_OS_REMOTE_URL="https://YOUR_DOMAIN.duckdns.org/mcp" \
+CTO_OS_BEARER_TOKEN="YOUR_RAW_TOKEN" \
+./install.sh --client -y
+```
+
+It merges the URL and the same existing `Authorization: Bearer ...` header into `~/.codex/config.toml`, preserving unrelated entries and config symlinks. When the Codex CLI is installed, the installer validates the existing config before writing and the generated entry afterward. This is the remote transport's existing token—not a separate Codex credential.
 
 ---
 
@@ -300,7 +312,7 @@ launchctl start com.cto-os.mcp-server
 
 ## 10. Client install (laptop / second machine)
 
-To use Claude Code on a laptop with data on this server — no local `cto-os-data`, no sync, no conflicts — run the client installer on the laptop:
+To use Claude Code or Codex on a laptop with data on this server—no local `cto-os-data`, no sync, no conflicts—run the client installer on the laptop:
 
 ```bash
 ./install.sh --client
@@ -309,7 +321,8 @@ To use Claude Code on a laptop with data on this server — no local `cto-os-dat
 You'll be prompted for the remote MCP URL (`https://YOUR_DOMAIN.duckdns.org/mcp`) and the raw bearer token from step 5. The installer:
 
 - Creates `~/.claude/skills/cto-os` → local cto-os repo
-- Writes `~/.claude/CLAUDE.md` instructing Claude to use MCP for all data access
-- Configures both Claude Desktop and Claude Code (`~/.claude/settings.json`) with the remote URL + token
+- Creates `~/.agents/skills/cto-os` → the same local cto-os repo
+- Installs managed MCP-only instructions at `~/.claude/CLAUDE.md` and links `~/.codex/AGENTS.md` to them
+- Configures Claude Desktop, Claude Code (`~/.claude/settings.json`), and Codex (`~/.codex/config.toml`) with the remote URL + token
 
-After install, launch Claude Code from any directory — no need to `cd` into a data repo.
+After install, launch Claude Code or Codex from any directory—no need to `cd` into a data repo.

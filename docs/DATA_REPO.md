@@ -1,6 +1,6 @@
 # CTO OS — Data repo (cto-os-data)
 
-Child of [CTO OS — Architecture](./ARCHITECTURE.md). Covers everything specific to `cto-os-data`: layout, `CLAUDE.md`, module state conventions, integrations cache semantics.
+Child of [CTO OS — Architecture](./ARCHITECTURE.md). Covers everything specific to `cto-os-data`: project instructions, module state conventions, and integrations-cache semantics.
 
 The data repo holds your **personal state**. Private git repo, backed up to a private remote. Contains only content — no logic, no scripts, no skill definitions.
 
@@ -10,7 +10,8 @@ The data repo holds your **personal state**. Private git repo, backed up to a pr
 
 ```
 cto-os-data/                           # git repo — your private data, backed up to private remote
-├── CLAUDE.md                          # project constitution for Claude Code
+├── CLAUDE.md                          # canonical project constitution
+├── AGENTS.md → CLAUDE.md              # Codex-compatible project constitution
 ├── README.md                          # short orientation
 ├── .gitignore                         # excludes integrations-cache/, logs/, .backups/, secrets
 ├── modules/                           # slugs must match cto-os/modules/
@@ -57,19 +58,19 @@ cto-os-data/                           # git repo — your private data, backed 
 
 ---
 
-# CLAUDE.md (project constitution)
+# Project instructions (`CLAUDE.md` / `AGENTS.md`)
 
-**Audience:** Claude Code, when launched with `cto-os-data/` as cwd. Loaded into the system prompt on every turn, so every line is always-on context — keep it short.
+**Audience:** Claude Code or Codex when launched with `cto-os-data/` as the workspace. `CLAUDE.md` is canonical and `AGENTS.md` is a symlink to it, so every line is shared always-on context—keep it short.
 
-**How the skill actually activates:** via the global skill registry, not this file. `install.sh` creates `~/.claude/skills/cto-os -> <skill-repo>`; Claude Code scans `~/.claude/skills/` on startup and loads each `SKILL.md`'s frontmatter into its registry. The `cto-os` skill then activates on description match (user intent), regardless of cwd. This file does **not** trigger activation — it provides repo-level framing and invariants that apply *before* any skill is in context.
+**How the skill actually activates:** via the host's global skill registry, not this file. `install.sh` points both `~/.claude/skills/cto-os` and `~/.agents/skills/cto-os` at the skill repo. The host loads root `SKILL.md` metadata and activates on user intent. Project instructions provide repo-level framing and invariants that apply before any skill is in context.
 
-**Purpose:** tell Claude (a) this is a CTO OS data repo, (b) to use the `cto-os` skill, (c) the handful of invariants that apply even before the skill activates (secret hygiene, `_module.md` discipline, slug-rename discipline, git posture), (d) where to read more on demand.
+**Purpose:** tell the active host (a) this is a CTO OS data repo, (b) to use the `cto-os` skill, (c) the handful of invariants that apply even before the skill activates (secret hygiene, `_module.md` discipline, slug-rename discipline, git posture), and (d) where to read more on demand.
 
-**Do not duplicate skill content here.** Persistence rules, integrations-cache semantics, per-module conventions — all belong in the skill repo's `docs/` and module `SKILL.md` files, which Claude reads when the skill activates. Always-on context is expensive; pay for it only with what matters every turn.
+**Do not duplicate skill content here.** Persistence rules, integrations-cache semantics, and per-module conventions all belong in the skill repo's `docs/` and module `SKILL.md` files, which the host reads when the skill activates. Always-on context is expensive; pay for it only with what matters every turn.
 
-**Why in data and not skill:** it points *at* the skill, it doesn't *contain* the skill. It ships with the data repo so Claude Code can tell it's inside one.
+**Why in data and not skill:** it points *at* the skill; it doesn't *contain* the skill. It ships with the data repo so a coding host can tell it is inside one.
 
-**Do not confuse with the skill repo's `CLAUDE.md`.** That one orients Claude when modifying the system's code. This one orients Claude when using the system to manage state.
+**Do not confuse with the skill repo's project instructions.** Those orient the host when modifying system code. These orient it when using the system to manage state.
 
 **Length budget:** ~35 lines. If it grows past that, sections belong in the skill repo.
 
@@ -238,7 +239,7 @@ Each pull writes a new timestamped file rather than replacing the previous one. 
 
 # Self-maintenance rules (data side)
 
-Rules for Claude Code working in the data repo:
+Rules for an AI coding host working in the data repo:
 
 - After activating or deactivating a module: verify the module directory exists and `_module.md` is current.
 - After a schema migration completes: confirm `schema_version` in `_module.md` matches the canonical version in the skill repo.

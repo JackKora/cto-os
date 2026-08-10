@@ -8,13 +8,13 @@ CTO OS supports three topologies. Pick the one that matches how you want to use 
 
 | | Local only | Server + remote access | Server + client machine |
 |---|---|---|---|
-| **Best for** | Single machine, simple setup | Phone access, always-on jobs | Claude Code on laptop, data on server |
+| **Best for** | Single machine, simple setup | Phone access, always-on jobs | Claude Code or Codex on laptop, data on server |
 | `install.sh` flag | `--server` | `--server` on server | `--server` on server, `--client` on laptop |
 | cto-os-data location | Local | Server | Server only |
 | Caddy / TLS needed | No | Yes | Yes |
 | Phone / Claude.ai mobile | No | Yes | Yes |
 | Scheduled tasks | Manual / laptop cron | Server cron | Server cron |
-| Claude Code | Direct file access | On server only | Remote MCP (no local data) |
+| Claude Code / Codex | Direct file access or local MCP | On server | Remote MCP (no local data) |
 | Sync / conflicts | N/A | N/A | None — single source of truth |
 
 ---
@@ -23,15 +23,15 @@ CTO OS supports three topologies. Pick the one that matches how you want to use 
 
 **One machine. Data lives on your laptop. No remote access.**
 
-This is the simplest path. Everything runs locally. Claude Desktop talks to the MCP server via stdio (subprocess). Claude Code accesses files directly. No Caddy, no bearer tokens, no port-forwarding.
+This is the simplest path. Everything runs locally. Claude Desktop and Codex are configured for the stdio MCP server; Claude Code and Codex can also access files directly. No Caddy, no bearer tokens, no port-forwarding.
 
 ```bash
 ./install.sh --server
 ```
 
-That's it. Follow the post-install prompts to set `CTO_OS_DATA` and restart Claude Desktop.
+That's it. Follow the post-install prompts to set `CTO_OS_DATA` for direct shell use and restart Claude Desktop or Codex so it reloads MCP configuration.
 
-To use Claude Code: `cd ~/cto-os-data && claude`
+To use a local coding host, open `~/cto-os-data` in Claude Code or Codex. The installer creates `CLAUDE.md` plus `AGENTS.md -> CLAUDE.md`, so both receive the same data-repo instructions.
 
 ---
 
@@ -59,7 +59,7 @@ After the server install, do the additional setup in [docs/REMOTE_SETUP.md](REMO
 
 ### Step 3 — Configure remote clients (phone, other machines)
 
-On any Claude client:
+On any MCP client:
 
 ```json
 {
@@ -72,13 +72,13 @@ On any Claude client:
 }
 ```
 
-Claude Code on the server still uses stdio (local) — it never goes through HTTP.
+Claude Code or Codex on the server can stay local; they do not need to go through HTTP.
 
 ---
 
-## Topology 3: Server + client machine (Claude Code on laptop)
+## Topology 3: Server + client machine (Claude Code or Codex on laptop)
 
-**Data on server. Claude Code on laptop uses remote MCP — no sync, no conflicts.**
+**Data on server. Claude Code or Codex on the laptop uses remote MCP — no sync, no conflicts.**
 
 ### Step 1 — Server install + remote access
 
@@ -98,30 +98,37 @@ You'll be prompted for:
 
 The installer:
 - Creates `~/.claude/skills/cto-os` → local cto-os repo
-- Writes `~/.claude/CLAUDE.md` with MCP-only instructions
-- Configures both Claude Desktop and Claude Code to use the remote MCP
+- Creates `~/.agents/skills/cto-os` → the same local cto-os repo
+- Installs a managed `~/.claude/CLAUDE.md` with MCP-only instructions and creates `~/.codex/AGENTS.md` as a symlink to it
+- Configures Claude Desktop, Claude Code, and Codex to use the remote MCP
 
-### Step 3 — Use Claude Code from anywhere
+### Step 3 — Use Claude Code or Codex from anywhere
 
-Launch Claude Code from any directory:
+Launch either host from any directory:
 
 ```bash
 claude
+codex
 ```
 
-The skill is loaded globally via `~/.claude/CLAUDE.md`. All data access goes through the remote MCP — no local `cto-os-data` needed.
+The skill is loaded from the host's global registry and the managed global instructions require MCP for data access. No local `cto-os-data` is needed.
 
 ---
 
 ## Re-running install
 
-Both modes are idempotent. Re-run anytime to refresh the venv, update MCP config, or repair a broken symlink.
+Both modes are idempotent. Re-run anytime to refresh the venv and update managed MCP entries or instruction files. Correct config entries are content and filesystem-identity no-ops, config symlinks remain symlinks, and unrelated entries are preserved. The installer migrates only an exact known legacy data-repo instruction template; customized and unknown versions are preserved with a warning.
 
 ```bash
 ./install.sh --server   # re-run server install
 ./install.sh --client   # re-run client install (prompts for URL/token again)
 ./install.sh --client -y  # non-interactive; reads CTO_OS_REMOTE_URL and CTO_OS_BEARER_TOKEN from env
+./install.sh --server --reviewer codex  # explicit hook runner: auto/claude/codex/none
 ```
+
+Reviewer selection is explicit environment (`CTO_OS_REVIEWER`) first, then repo-local `git config cto-os.reviewer`, then `auto`. An ordinary rerun preserves an existing repo-local choice. `auto` prefers Claude for compatibility with existing installs and falls back to Codex.
+
+The Codex CLI is not required to write `~/.codex/config.toml`. When it is available, install validates the existing configuration before any writes and validates the generated `cto-os` entry afterward. Without it, install completes with a warning that CLI validation was unavailable.
 
 ---
 

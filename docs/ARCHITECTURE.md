@@ -14,33 +14,32 @@ The system is split across two repos — `cto-os` (logic) and `cto-os-data` (you
 ## Design goals (in priority order)
 
 1. **Latency efficiency.** Anything deterministic runs as Python or bash, not as an LLM round-trip. The LLM's job is judgment; scripts do the counting.
-2. **Token efficiency.** Claude reads the smallest slice of state that answers the question. Never "read ten files in sequence when one scan will do."
-3. **Surface portability.** Same skill files work in Chat, Code, and Cowork. No branching on surface.
+2. **Token efficiency.** The active host reads the smallest slice of state that answers the question. Never "read ten files in sequence when one scan will do."
+3. **Host portability.** The same skill files work in Claude, Cowork, and Codex. No host-specific branching in skill prose.
 4. **No lock-in.** Markdown + git. Everything is readable in a plain editor, versionable, and portable. No proprietary formats, no hidden databases.
 5. **Extensible without core changes.** A new module = a new directory conforming to conventions. No central registry to update.
 
 These goals are in tension. When they conflict, the one listed earlier wins.
 
-## Surfaces
+## Hosts
 
-The system runs on all three surfaces of Claude. Each has different affordances; the architecture assumes the lowest common denominator (disk + scripts) and lets each surface add what it can.
+The system runs on Claude and Codex hosts with different affordances. The architecture assumes two access mechanisms—MCP and direct filesystem access—and keeps skill behavior independent of the mechanism.
 
-| Capability | Chat (Desktop) | Code | Cowork |
-| --- | --- | --- | --- |
-| File access | Local MCP | Direct disk | Direct disk (folder-permissioned) |
-| Scheduled/async tasks | ❌ | via `cron` / external | ✅ native |
-| Remote connectors (Linear, Gmail, Slack) | ✅ native | via bash + local scripts | via bash + local scripts |
-| Chat history search | ✅ | ❌ | ❌ |
-| Skill loading | ✅ `SKILL.md` | via `CLAUDE.md` reference | ✅ `SKILL.md` |
+| Capability | Claude Desktop | Claude Code | Cowork | Codex app / CLI / IDE |
+| --- | --- | --- | --- | --- |
+| File access | MCP | Direct disk or MCP | Direct disk (folder-permissioned) | Direct disk or MCP |
+| Scheduled/async tasks | ❌ | via `cron` / external | ✅ native | via external scheduling |
+| Project instructions | — | `CLAUDE.md` | project context | `AGENTS.md` |
+| Skill registry | `~/.claude/skills` | `~/.claude/skills` | `~/.claude/skills` | `~/.agents/skills` |
 
-**All three surfaces read the same `~/cto-os-data/` directory on your laptop.** Claude Code `cd`'s into it. Claude Desktop accesses it via the local MCP server. Cowork is granted folder-scoped permission to it. Same files, same disk, edits are instantly visible everywhere. No sync dance between surfaces.
+**On a local/server install, every host reads the same `~/cto-os-data/` directory.** Claude Code and Codex can open it directly, Claude Desktop accesses it through the local MCP server, and Cowork is granted folder-scoped permission. On a client install the data stays on the server and Claude/Codex clients use the remote HTTPS MCP. There is still one source of truth and no copied skill tree.
 
 ```
     ~/cto-os-data/   (single source of truth, on your laptop)
-    ↑      ↑     ↑
-    │      │     │
- Code   Desktop  Cowork
-(cd)  (via MCP) (folder permission)
+    ↑      ↑       ↑       ↑
+    │      │       │       │
+ Code   Desktop  Cowork   Codex
+(disk)  (MCP)   (disk)  (disk/MCP)
 
            ↓
   git push (periodic, for backup)
@@ -52,23 +51,25 @@ The system runs on all three surfaces of Claude. Each has different affordances;
 
 **Concurrent writes.** The only coordination concern is two surfaces writing the same file at the same moment (e.g., hand-editing a journal while Cowork runs an overnight digest that appends to it). In practice: most writes are append-only, collisions are vanishingly rare, and scripts that do non-append writes use a short `fcntl` file lock. Not worth architecting around further until it actually bites.
 
-**The skill is written once.** It references tools by logical name (`scan`, `write_file`). Each surface provides those tools via whatever mechanism is native — MCP in Chat, direct bash/filesystem in Code and Cowork. The skill never branches on surface.
+**The skill is written once.** It references operations by logical name (`scan`, `write_file`). Each host supplies them through MCP or direct filesystem access. The skill never branches on host.
 
 **How the skill activates on each surface:**
 
-All three surfaces share the same underlying mechanism: `install.sh` symlinks the skill repo into `~/.claude/skills/cto-os/`, and each surface reads from that registry. The skill activates when the user's request matches root `SKILL.md`'s `description:` frontmatter. Per-module `SKILL.md` files load on demand once the root is active.
+`install.sh` points both host registries at the same checkout: `~/.claude/skills/cto-os` for Claude and `~/.agents/skills/cto-os` for Codex. The skill activates when the user's request matches root `SKILL.md`'s `description:` frontmatter. Per-module `SKILL.md` files load on demand once the root is active.
 
 - **Claude Desktop (Chat).** The built-in skill router reads each installed skill's root `SKILL.md` description and picks the best match for each user message. `cto-os/SKILL.md`'s description must be specific enough to avoid false positives ("write me a haiku") and broad enough to catch oblique phrasings ("I had a weird convo with Mike yesterday" should match, since 1:1 content is in scope).
 - **Cowork.** Same router behavior as Chat — description-based activation via root `SKILL.md`. Additionally, the Cowork project must be granted folder-scoped permission to `~/cto-os-data/`; without that, the skill activates but has nowhere to read or write state.
 - **Claude Code.** Same skill registry (`~/.claude/skills/cto-os/`), same description-based activation. *Additionally*, when cwd is `cto-os-data/`, Claude Code loads that repo's `CLAUDE.md` into always-on context. That file instructs Claude to default to the `cto-os` skill for any request that could plausibly be CTO-domain work — biasing activation to be more permissive inside the data repo than the pure description-match rule would allow. The skill is not *auto-loaded* by cwd; `CLAUDE.md` just tells Claude to invoke it liberally.
+- **Codex.** Discovers the same checkout through `~/.agents/skills/cto-os/`. When Codex opens either repo it reads `AGENTS.md`, which is a symlink to that repo's canonical `CLAUDE.md`; there is no second instruction document to maintain.
 
-**Root `SKILL.md` is required, not optional.** Its description is the only activation lever all three surfaces share.
+**Root `SKILL.md` is required, not optional.** Its description is the shared activation lever across hosts.
 
 **Primary use-by-surface pattern (suggested, not enforced):**
 
 - **Chat** — interactive queries, 1:1 prep, journal writing, weekly review, cross-module questions
 - **Code** — bulk operations, migrations, structural changes to the OS itself, batch index updates
 - **Cowork** — scheduled digests, pre-meeting briefings, inbox-driven triggers, overnight rollups
+- **Codex** — the same interactive and long-running work through the app, CLI, or IDE
 
 ## Storage format
 
@@ -84,7 +85,7 @@ All three surfaces share the same underlying mechanism: `install.sh` symlinks th
 
 # How the two repos connect
 
-Three thin mechanisms and one install script. No symlinks cross the repo boundary; no shared files.
+Thin host adapters plus one install script connect the repos. No symlinks cross the repo boundary; no user state is shared into the skill repo.
 
 ## CTO_OS_DATA env var
 
@@ -95,16 +96,17 @@ How it gets set, per surface:
 - **Claude Desktop.** `install.sh` writes it into the `mcpServers.cto-os.env` block of `claude_desktop_config.json`. The MCP server inherits it when Claude Desktop spawns it.
 - **Claude Code.** The user exports it in their shell profile (`install.sh` prints the exact line to add). Any `claude` session inherits it.
 - **Cowork.** The user sets it in the Cowork project config.
+- **Codex.** `install.sh` adds it to the local stdio MCP server entry. Direct script invocations inherit it from the shell like Claude Code.
 
-In the normal single-laptop case, all three resolve to the same path. The env-var indirection exists so the skill remains portable to other setups (different user home, a second machine, a future cloud-hosted variant) without code changes.
+In the normal single-laptop case, all hosts resolve to the same path. The env-var indirection keeps the skill portable to other setups without code changes.
 
-## CLAUDE.md as Code-side activation bias
+## Project instructions as local activation bias
 
 `cto-os-data/CLAUDE.md` is loaded into Claude Code's always-on context whenever cwd is the data repo. It doesn't *trigger* activation — the skill is already in scope via the global `~/.claude/skills/cto-os/` symlink. What it does is **bias** activation: it tells Claude to default to invoking `cto-os` for any request that could plausibly be CTO-domain work, prefer activating over asking, and skip the skill only for clearly-unrelated tasks (shell admin, unrelated coding).
 
 The effect: inside the data repo, vague or oblique requests that wouldn't match description-based dispatch in Chat still route through the skill in Code. That's the user-facing payoff — less need to overspecify context when working in the data repo.
 
-Note: `cto-os` also has its own `CLAUDE.md`, for when you `cd` into the skill repo to work on the code itself. Different audience, different purpose. See [CTO OS — Skill repo](./SKILL_REPO.md).
+Each repo also has `AGENTS.md -> CLAUDE.md`, so Codex receives the same instructions without a copied file. The `cto-os` skill repo has its own canonical `CLAUDE.md` for working on system code. Different audience, different purpose. See [CTO OS — Skill repo](./SKILL_REPO.md).
 
 ## Slug convention
 
@@ -114,18 +116,19 @@ Note: `cto-os` also has its own `CLAUDE.md`, for when you `cd` into the skill re
 
 `cto-os/install.sh` is idempotent — safe to re-run. Given a target path (e.g., `~/cto-os-data`), it:
 
-1. `git init`s the data repo if needed and writes `CLAUDE.md`, `README.md`, `.gitignore` only if absent — never clobbering existing data.
-2. Symlinks `~/.claude/skills/cto-os/` → the skill repo checkout so updates via `git pull` flow automatically.
-3. Writes (or merges) the MCP entry in `claude_desktop_config.json` with `CTO_OS_DATA` set.
-4. Prints one-screen follow-ups for Cowork and Claude Code that can't be fully automated.
+1. `git init`s the data repo if needed, writes missing templates, safely migrates the exact known legacy `CLAUDE.md`, preserves customized instructions, and creates `AGENTS.md -> CLAUDE.md` when that path is free.
+2. Symlinks both `~/.claude/skills/cto-os/` and `~/.agents/skills/cto-os/` to the skill repo checkout so updates via `git pull` flow automatically.
+3. Merges the `cto-os` MCP entry into Claude and Codex config while preserving unrelated entries and config symlinks. Identical output is not rewritten. If the Codex CLI is available, a read-only preflight validates the entire existing config before any install writes.
+4. Configures the repo-local pre-commit reviewer (`auto`, `claude`, `codex`, or `none`) without replacing an existing explicit choice on an ordinary rerun.
+5. Leaves conflicting unmanaged files or symlinks intact and reports warnings instead of overwriting them.
 
-## The three file types
+## The instruction and skill files
 
-Three files, three jobs, three homes.
+Each file has one job and one canonical home.
 
-- `CLAUDE.md` in `cto-os-data` — Claude Code's always-on context when operating on user state; biases toward the `cto-os` skill.
-- `CLAUDE.md` in `cto-os` — Claude Code's orientation when working on the system code itself.
-- `SKILL.md` in `cto-os` (root + per-module) — the skill body and activation description, loaded via the global skill registry on all three surfaces.
+- `CLAUDE.md` in each repo — the canonical project instructions for that repo's audience.
+- `AGENTS.md` in each repo — a symlink to its `CLAUDE.md`, exposing identical instructions to Codex.
+- `SKILL.md` in `cto-os` (root + per-module) — the shared skill body and activation description, loaded through each host's global skill registry.
 - `README.md` in both repos — for humans and general orientation.
 
 Why not consolidate? `CLAUDE.md` can't be `SKILL.md` because they have different loading semantics (cwd-scoped always-on context vs. registry-scoped description-matched activation) and different audiences. `README.md` can't be `CLAUDE.md` because READMEs are for humans skimming, and `CLAUDE.md` has instruction-prose that would confuse readers.
@@ -229,6 +232,6 @@ Two layers, both enforced via the pre-commit hook (`hooks/pre-commit`, wired up 
 
 **Script and MCP tests.** Standard pytest in `cto-os/tests/` with fixtures in `tests/fixtures/cto-os-data-sample/`. Every script (`scan.py`, `validate_deps.py`, `roll_up.py`, `pull_*.py`, `rename_module.py`) and the MCP server has a test file using the subprocess pattern — tests shell out with real `--args '{...}'` invocations, asserting on exit code and parsed JSON stdout. Run with `uv run pytest tests/ -q`.
 
-**AI-assisted skill review.** Prose skills have no compiler, so the `skill-reviewer` subagent (`.claude/agents/skill-reviewer.md`) applies the checklist at `tests/claude-review.md` whenever any `SKILL.md` or `CLAUDE.md` is staged. It checks for internal contradictions between `SKILL.md` files, overlap in trigger phrases across sibling modules, activation flow steps that reference missing schema fields, and prose that contradicts the module's README. The hook also runs `validate_deps.py` on any staged module `SKILL.md` to fail the commit on dep-graph cycles or unknown required deps.
+**AI-assisted skill review.** Prose skills have no compiler, so the shared procedure in `meta/skill-reviewer.md` applies the checklist at `tests/claude-review.md`. Thin adapters expose it to Claude (`.claude/agents/skill-reviewer.md`) and Codex (`.codex/agents/skill-reviewer.toml`). The pre-commit hook selects a runner through `CTO_OS_REVIEWER`, repo-local `cto-os.reviewer`, or `auto` (Claude first for backward compatibility, then Codex), and reviews staged skills, project instructions, docs, and reviewer files. The hook also runs `validate_deps.py` on any staged module `SKILL.md` to fail the commit on dep-graph cycles or unknown required deps.
 
 Human PR review is the final gate — fresh eyes the next day, or an invited reviewer.

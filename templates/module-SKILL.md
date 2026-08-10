@@ -8,8 +8,8 @@ optional: []
 <!--
 Authoring note: keep skill prose access-mechanism-agnostic. Describe *what* to read
 and write (paths, frontmatter, state shape) — not *how*. Don't reference bash, git,
-grep, find, or cd. Claude picks the right access mechanism (direct filesystem on a
-server install, MCP tools on a client install) based on the active CLAUDE.md. Skills
+grep, find, or cd. The active host picks the right access mechanism (direct filesystem on a
+server install, MCP tools on a client install) based on the active project instructions. Skills
 that hardcode bash will break on client installs.
 -->
 
@@ -47,7 +47,7 @@ Running this flow populates baseline state. Each step writes one concrete artifa
 
 ### 1. {{Step title}}
 
-**Ask:** "{{Verbatim question Claude asks the user.}}"
+**Ask:** "{{Verbatim question the active host asks the user.}}"
 **Writes:** `cto-os-data/modules/{{MODULE_SLUG}}/state/{{path}}.md` with `type: {{type-slug}}` frontmatter.
 **Expects:** {{one sentence describing what a complete output looks like — e.g., "frontmatter `altitude` is one of director / vp / svp / c-level; body is empty"}}.
 

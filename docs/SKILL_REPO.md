@@ -15,7 +15,8 @@ cto-os/                          # git repo — installed once, updated via git 
 │   ├── ARCHITECTURE.md                # overview architecture doc (mirror of the Notion overview page)
 │   ├── SKILL_REPO.md                  # skill repo deep-dive (mirror of this page)
 │   └── DATA_REPO.md                   # data repo deep-dive (mirror of the data repo page)
-├── CLAUDE.md                          # orientation for Claude Code working *on the skill code*
+├── CLAUDE.md                          # canonical project instructions
+├── AGENTS.md → CLAUDE.md              # Codex-compatible project instructions
 ├── install.sh                         # bootstraps cto-os-data + installs skill
 ├── SKILL.md                           # root skill — required for Chat/Cowork activation
 ├── mcp-server/
@@ -30,7 +31,10 @@ cto-os/                          # git repo — installed once, updated via git 
 │   └── lib/
 │       └── integrations.yaml          # per-source TTL config
 ├── meta/
-│   └── schema.md                      # canonical frontmatter schemas (single source of truth)
+│   ├── schema.md                      # canonical frontmatter schemas (single source of truth)
+│   └── skill-reviewer.md              # shared qualitative-review procedure
+├── .claude/agents/                    # thin Claude agent adapters
+├── .codex/agents/                     # thin Codex agent adapters
 ├── tests/
 │   ├── fixtures/cto-os-data-sample/   # fixture data repo for script tests
 │   ├── scenarios/                     # expected-behavior traces for skill review
@@ -51,18 +55,32 @@ cto-os/                          # git repo — installed once, updated via git 
 
 - **Logic only.** No user-specific values anywhere — the same checkout would work for any user.
 - **Updated via `git pull`.** New modules, script fixes, schema revisions all flow in.
-- **Installed globally** (once per machine) via a symlink from `~/.claude/skills/cto-os/` into this repo's checkout. All three surfaces (Chat, Cowork, Claude Code) pick up the skill through this symlink and activate it on description match against root `SKILL.md`. The data repo's `CLAUDE.md` biases Claude Code toward activating more liberally when cwd is that repo — but it's not what loads the skill.
+- **Installed globally** (once per machine) through two symlinks to this checkout: `~/.claude/skills/cto-os/` for Claude hosts and `~/.agents/skills/cto-os/` for Codex. Both load the same root `SKILL.md`; no skills are copied or translated.
 - **Module per directory.** Each PRD module gets one directory under `modules/`. The directory holds the module's `SKILL.md` and its `README.md`.
 
 ---
 
-# CLAUDE.md (for working on the skill repo)
+# Project instructions (for working on the skill repo)
 
-When you `cd ~/cto-os && claude`, Claude Code auto-loads this file. It orients Claude on how the skill is built — different audience from `cto-os-data/CLAUDE.md`, which orients Claude to operate on user state.
+`CLAUDE.md` is the canonical instruction file. Claude Code loads it directly; Codex loads `AGENTS.md`, which is a symlink to it. It orients the active host on how the skill is built—different audience from the matching files in `cto-os-data`, which orient the host to operate on user state.
 
-**Purpose:** Tell Claude (a) this is the CTO OS skill repo, (b) the architecture lives in `docs/ARCHITECTURE.md` / `docs/SKILL_REPO.md` / `docs/DATA_REPO.md`, (c) conventions for modifying the system (test before merge, update changelog, bump schema_version if frontmatter changes), (d) which scripts exist and their contracts, (e) self-maintenance rules.
+**Purpose:** Tell the active host (a) this is the CTO OS skill repo, (b) where the architecture lives, (c) conventions for modifying the system, (d) which scripts exist and their contracts, and (e) self-maintenance rules.
 
-**Audience:** future-you or a collaborator iterating on the skill code — not an end user managing their CTO state. This `CLAUDE.md` should never talk about "your team" or "your 1:1s"; it talks about modules, scripts, and the MCP server.
+**Audience:** future-you or a collaborator iterating on the skill code—not an end user managing CTO state. These project instructions should discuss modules, scripts, and the MCP server, not address the user as though this were their data repo.
+
+## Host adapters
+
+CTO OS behavior is shared. Only host integration points differ:
+
+| Integration point | Claude | Codex |
+| --- | --- | --- |
+| Project instructions | `CLAUDE.md` | `AGENTS.md -> CLAUDE.md` |
+| User skill registry | `~/.claude/skills/cto-os` | `~/.agents/skills/cto-os` |
+| Reviewer adapter | `.claude/agents/skill-reviewer.md` | `.codex/agents/skill-reviewer.toml` |
+| Headless review | `claude -p` | `codex exec --ephemeral --sandbox read-only` |
+| MCP configuration | Symlink-safe JSON merge | Symlink-safe `~/.codex/config.toml` merge, CLI-validated when available |
+
+The adapters contain no domain workflow. Shared skill logic stays in root and module `SKILL.md` files; shared reviewer logic stays in `meta/skill-reviewer.md`. This is the rule that prevents Claude and Codex behavior from drifting.
 
 ---
 
@@ -82,7 +100,7 @@ Notion is the discussion surface; the repo files are canonical for implementatio
 
 Two layers:
 
-- **Root `cto-os/SKILL.md`** is what the Chat/Cowork skill router reads to decide whether to activate the system at all. Required, not optional.
+- **Root `cto-os/SKILL.md`** is what each host's skill router reads to decide whether to activate the system at all. Required, not optional.
 - **Per-module `cto-os/modules/{slug}/SKILL.md`** is loaded on demand once the root skill has activated, based on the specific task.
 
 Each `SKILL.md`:
@@ -187,11 +205,11 @@ Rules:
 
 # MCP server
 
-**MCP is Chat-only.** Chat (Desktop) has no direct bash, so the MCP server is the mechanism Claude uses to reach disk and run scripts. Code and Cowork have native bash/file tools — Claude runs scripts directly via `uv run python scripts/scan.py --args '...'` from the repo root. No MCP involved.
+**MCP is an access mechanism, not a host-specific implementation.** Claude Desktop always uses it. Claude Code, Cowork, and Codex may use direct filesystem access on a local/server install; Claude and Codex client installs use remote MCP because the data repo is not local.
 
-You never manually start the MCP server. Claude Desktop launches it via stdio per session based on `claude_desktop_config.json`.
+You never manually start the local MCP server. Claude Desktop or Codex launches it via stdio from its configured MCP entry.
 
-**Scope:** A thin Python MCP server living in `cto-os/mcp-server/`. No auth (local, stdio, single user). No domain logic — the skill owns all judgment; MCP just bridges Claude to the filesystem of `cto-os-data` and to the scripts in `cto-os/scripts/`.
+**Scope:** A thin Python MCP server living in `cto-os/mcp-server/`. Local stdio needs no auth; remote HTTPS uses the existing bearer-token mode documented in [REMOTE_SETUP.md](./REMOTE_SETUP.md). No domain logic—the skill owns all judgment; MCP only bridges a host to the filesystem of `cto-os-data` and to the scripts in `cto-os/scripts/`.
 
 **Tool surface (minimum viable).** Canonical contracts — signatures, response shapes, errors, path handling, whitelist — live in [docs/MCP_TOOLS.md](./MCP_TOOLS.md). Summary below.
 
@@ -210,9 +228,9 @@ All paths passed to these tools are relative to `CTO_OS_DATA` (i.e., relative to
 
 - Semantic / embedding search. Defer to a later phase. Grep over frontmatter + full-text gets ~90% of the way for a personal KB this size.
 - A `get_team_health()`-style domain tool. That's skill logic, not MCP logic — it would force the MCP to know the schema, which couples it to the OS content.
-- Auth. This is single-user, local-disk. If this ever goes multi-user, it gets rewritten.
+- Multi-user authorization. Local stdio is single-user; remote HTTPS only verifies the configured bearer token.
 
-**Lifecycle:** stdio, launched by Claude Desktop per-session. Startup < 200ms. No persistent index to warm up.
+**Lifecycle:** stdio, launched by the configured local host per session. Startup < 200ms. No persistent index to warm up.
 
 **Configuration:**
 
@@ -234,7 +252,7 @@ All paths passed to these tools are relative to `CTO_OS_DATA` (i.e., relative to
 
 # Scripts
 
-All scripts live in `cto-os/scripts/` and are surface-agnostic. In Chat they're invoked via the MCP's `run_script` tool; in Code and Cowork they're invoked directly by Claude via bash. Same script, same contract, different entry point.
+All scripts live in `cto-os/scripts/` and are host-agnostic. MCP-connected hosts invoke them through `run_script`; hosts with local filesystem access may invoke them directly. Same script, same contract, different entry point.
 
 **Scripts:**
 
@@ -471,7 +489,7 @@ When a frontmatter schema changes in `cto-os/meta/schema.md`, existing state fil
 
 # Self-maintenance rules (skill side)
 
-Rules for anyone — including Claude Code — evolving the skill repo:
+Rules for anyone—including Claude Code or Codex—evolving the skill repo:
 
 - After adding a new module directory under `cto-os/modules/`: create its `SKILL.md` + `README.md`, and list it in `cto-os/README.md`.
 - After adding a script to `cto-os/scripts/`: add a one-line entry to `cto-os/README.md`'s script index and a pytest in `tests/`.
