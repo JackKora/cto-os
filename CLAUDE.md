@@ -80,14 +80,15 @@ All scripts live in `scripts/`. The shared contract — every script must satisf
 - Read `CTO_OS_DATA` from the environment.
 - Idempotent where possible (safe to re-run).
 
-Host-agnostic: MCP-connected hosts invoke them via the MCP `run_script` tool; hosts with local filesystem access may invoke them directly via `uv run python scripts/{name}.py --args '{...}'` from the repo root. Same script, same contract. `uv run` handles venv resolution — don't activate `.venv` manually.
+Host-agnostic: MCP-connected hosts invoke whitelisted scripts via the MCP `run_script` tool (and `scan.py` through the first-class `scan` tool); hosts with local filesystem access may invoke any script directly via `uv run python scripts/{name}.py --args '{...}'` from the repo root. Same script, same contract. `uv run` handles venv resolution — don't activate `.venv` manually.
 
 **Deps are managed by uv.** Runtime: `uv add <pkg>`. Dev: `uv add --dev <pkg>`. `uv.lock` is committed; never hand-edit it.
 
 Inventory:
 
 - **`scan.py`** — frontmatter scan + filter over all of `cto-os-data` in one call. Supports `type`, `where`, `module`, `fields`, `include_body`, and opt-in flags for inactive / high-sensitivity modules. Enforces the `MAX_INLINE_MATCHES=5` / `MAX_BODY_BYTES=4096` guardrails. Always prefer `scan` over reading N files in sequence. Tests: `tests/test_scan.py` (fixture at `tests/fixtures/cto-os-data-sample/`).
-- **`validate_deps.py`** — walks `modules/*/SKILL.md`, builds the required-dep graph, fails on cycles or unknown required deps. Called by `hooks/pre-commit` whenever any module `SKILL.md` is staged. Tests: `tests/test_validate_deps.py`.
+- **`validate_deps.py`** — walks `modules/*/SKILL.md`, fails closed on missing or malformed SKILL frontmatter, and builds the required-dep graph to detect cycles or unknown required deps. Called by `hooks/pre-commit` whenever any module `SKILL.md` is staged. Tests: `tests/test_validate_deps.py`.
+- **`validate_state.py`** — read-only structural/baseline validator for candidate state surfaces, with two targeted diagnosed type checks; it is intentionally not a complete per-type schema engine. Tests: `tests/test_validate_state.py`.
 - **`roll_up.py`** — on-demand cross-type aggregations. Three named rollups: `team-health` (all active teams + scores + retro counts), `per-person` (one direct report + 1:1s + coaching + perf record + dev plan + PIP), `goal-progress` (company goals × work-mapping join, flags unmapped goals). Adding a new rollup = adding a function to a dispatch dict. Tests: `tests/test_roll_up.py`.
 - **`pull_linear.py`** — incremental pull of Linear issues → `cto-os-data/integrations-cache/linear/{timestamp}.json`. TTL-aware (configured in `scripts/lib/integrations.yaml`), watermark-based incremental (`updatedAt` minus 5-min buffer), dedups on issue ID. Reads `LINEAR_API_KEY` from env. Uses `urllib.request` (stdlib, no extra dep). Issues only; comments out of scope. Tests: `tests/test_pull_linear.py` (mocks `urlopen`).
 - **`pull_slack.py`** — incremental pull of Slack messages across bot-accessible channels → `cto-os-data/integrations-cache/slack/{timestamp}.json`. TTL-aware (240m default), watermark per-channel on `ts`, dedups on `(channel_id, ts)`. Resolves user + channel IDs to names inline. Polls only channels where `is_member: true`. Reads `SLACK_BOT_TOKEN` from env (bot scopes required: `channels:history`, `groups:history`, `channels:read`, `groups:read`, `users:read`). Messages only. Tests: `tests/test_pull_slack.py` (mocks `urlopen`).
@@ -125,6 +126,7 @@ Coverage:
 - **`tests/test_mcp_*.py`** — the MCP server (path defense, file I/O, directory listing, script invocation with timeouts, whitelist enforcement, helpers).
 - **`tests/test_scan.py`** — the `scan` workhorse (type/where/fields/module filters, `include_body` with cap + truncation, sensitivity and active filtering, query-error envelope, crash paths). Uses the fixture at `tests/fixtures/cto-os-data-sample/`.
 - **`tests/test_validate_deps.py`** — the dep-graph validator (clean graphs, direct/transitive cycles, unknown deps, optional cycles permitted, malformed input crashes).
+- **`tests/test_validate_state.py`** — read-only candidate-state structural/baseline validation and sensitivity behavior.
 - **`tests/test_roll_up.py`** — named rollups (team-health, per-person, goal-progress) against the fixture. Synthesizes additional fixture for goal-progress scenario.
 - **`tests/test_pull_linear.py`** — Linear pull with mocked `urlopen`: TTL skip, force override, watermark incremental, dedup, HTTP errors, GraphQL errors.
 - **`tests/test_pull_slack.py`** — Slack pull with mocked `urlopen`, dispatched across `conversations.list` / `users.list` / `conversations.history`: TTL skip, force override, watermark per-channel, dedup on (channel, ts), `ok: false` errors, HTTP errors, channel filter.

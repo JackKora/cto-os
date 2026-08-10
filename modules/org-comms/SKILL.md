@@ -111,7 +111,7 @@ Each step writes a concrete artifact and appends its step number to `activation_
 - "internal update on the [incident] postmortem"
 
 **Reads:**
-- `cto-os-data/modules/tech-ops/state/incidents/{incident-slug}.md` (facts)
+- `cto-os-data/modules/tech-ops/state/incidents/{YYYY-MM-DD}-{incident-slug}.md` (facts)
 - `cto-os-data/modules/tech-ops/state/postmortems/{postmortem-slug}.md` (optional — if postmortem done)
 - `cto-os-data/modules/org-comms/state/surfaces.md` (which channel, audience)
 - `cto-os-data/modules/org-comms/state/delivered/` (prior incident comms for consistent framing)

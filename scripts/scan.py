@@ -107,21 +107,20 @@ def _resolve_data_root() -> Path:
 _FRONTMATTER_PATTERN = re.compile(r"^---\s*\n(.*?)\n---\s*\n?(.*)$", re.DOTALL)
 
 
-def _parse_frontmatter(raw: str) -> tuple[dict[str, Any] | None, str]:
-    """Split a .md file's raw text into (frontmatter_dict, body_text).
-    Returns (None, raw) if no frontmatter present."""
+def _parse_frontmatter(raw: str) -> tuple[str, dict[str, Any] | None, str, str | None]:
+    """Return (status, frontmatter, body, error) for a Markdown file."""
     match = _FRONTMATTER_PATTERN.match(raw)
     if not match:
-        return None, raw
+        return "missing", None, raw, "missing YAML frontmatter"
     yaml_text = match.group(1)
     body = match.group(2)
     try:
-        frontmatter = yaml.safe_load(yaml_text) or {}
-    except yaml.YAMLError:
-        return None, raw
+        frontmatter = yaml.safe_load(yaml_text)
+    except yaml.YAMLError as e:
+        return "invalid", None, raw, f"malformed YAML frontmatter: {e.problem or 'parse error'}"
     if not isinstance(frontmatter, dict):
-        return None, raw
-    return frontmatter, body
+        return "invalid", None, raw, "YAML frontmatter must be a mapping"
+    return "valid", frontmatter, body, None
 
 
 # ---------- Walking ----------
@@ -131,7 +130,8 @@ def _parse_frontmatter(raw: str) -> tuple[dict[str, Any] | None, str]:
 class _ModuleMeta:
     slug: str
     active: bool
-    sensitivity_high: bool
+    sensitivity_high: bool | None
+    metadata_missing: bool = False
 
 
 def _load_module_metas(data_root: Path) -> dict[str, _ModuleMeta]:
@@ -146,16 +146,24 @@ def _load_module_metas(data_root: Path) -> dict[str, _ModuleMeta]:
         slug = module_dir.name
         module_file = module_dir / "_module.md"
         if not module_file.is_file():
-            metas[slug] = _ModuleMeta(slug=slug, active=True, sensitivity_high=False)
+            metas[slug] = _ModuleMeta(
+                slug=slug,
+                active=True,
+                sensitivity_high=None,
+                metadata_missing=True,
+            )
             continue
         try:
             raw = module_file.read_text(encoding="utf-8")
-        except OSError:
-            metas[slug] = _ModuleMeta(slug=slug, active=True, sensitivity_high=False)
+        except (OSError, UnicodeDecodeError):
+            metas[slug] = _ModuleMeta(slug=slug, active=True, sensitivity_high=None)
             continue
-        fm, _ = _parse_frontmatter(raw)
-        active = bool((fm or {}).get("active", True))
-        sensitivity_high = (fm or {}).get("sensitivity") == "high"
+        status, fm, _, _ = _parse_frontmatter(raw)
+        if status != "valid":
+            metas[slug] = _ModuleMeta(slug=slug, active=True, sensitivity_high=None)
+            continue
+        active = bool(fm.get("active", True))
+        sensitivity_high = fm.get("sensitivity") == "high"
         metas[slug] = _ModuleMeta(slug=slug, active=active, sensitivity_high=sensitivity_high)
     return metas
 
@@ -199,6 +207,50 @@ def _module_slug_for_path(data_root: Path, path: Path) -> str | None:
     if len(parts) < 2 or parts[0] != "modules":
         return None
     return parts[1]
+
+
+def _is_candidate_state_file(data_root: Path, path: Path) -> bool:
+    rel = path.relative_to(data_root)
+    parts = rel.parts
+    if len(parts) >= 3 and parts[0] == "modules":
+        return parts[2] == "_module.md" or (len(parts) >= 4 and parts[2] == "state")
+    return bool(parts and parts[0] == "notes")
+
+
+def _raw_declares_high_sensitivity(raw: str) -> bool:
+    """Conservative pre-parse gate for malformed file-level frontmatter."""
+    header = _raw_frontmatter_header(raw)
+    if header is None:
+        return False
+    return bool(
+        re.search(
+            r"(?m)^[ \t]*sensitivity[ \t]*:[ \t]*(?:high|\"high\"|'high')(?:[ \t]+#[^\r\n]*)?[ \t]*\r?$",
+            header,
+        )
+    )
+
+
+def _raw_frontmatter_header(raw: str) -> str | None:
+    """Return the raw frontmatter header, including an unclosed candidate."""
+    opening = re.match(r"^---[ \t]*\r?\n", raw)
+    if not opening:
+        return None
+    closing = re.search(r"(?m)^---[ \t]*(?:\r?\n|$)", raw[opening.end() :])
+    end = opening.end() + closing.start() if closing else len(raw)
+    return raw[opening.end() : end]
+
+
+def _warning_payload(warnings: list[dict[str, str]], hidden_count: int) -> dict[str, Any] | None:
+    total = len(warnings) + hidden_count
+    if not total:
+        return None
+    payload: dict[str, Any] = {
+        "invalid_frontmatter_count": total,
+        "invalid_frontmatter": warnings,
+    }
+    if hidden_count:
+        payload["hidden_invalid_frontmatter_count"] = hidden_count
+    return payload
 
 
 # ---------- Query application ----------
@@ -317,31 +369,64 @@ def scan(data_root: Path, query: dict[str, Any]) -> dict[str, Any]:
     md_files = _iter_md_files(data_root, module_filter)
 
     matches: list[dict[str, Any]] = []
+    warnings: list[dict[str, str]] = []
+    hidden_warning_count = 0
+
+    # A missing _module.md means the module's sensitivity is unknown. Report
+    # that structural problem once per in-scope module, without revealing the
+    # module identity unless the caller explicitly opts into high sensitivity.
+    for slug, meta in module_metas.items():
+        if not meta.metadata_missing or (module_filter is not None and module_filter != slug):
+            continue
+        if include_high_sensitivity:
+            warnings.append(
+                {
+                    "path": f"modules/{slug}/_module.md",
+                    "error": "required module metadata is missing",
+                }
+            )
+        else:
+            hidden_warning_count += 1
 
     for path in md_files:
         slug = _module_slug_for_path(data_root, path)
+        meta: _ModuleMeta | None = None
+        module_high_hidden = False
         if slug is not None:
             meta = module_metas.get(slug)
             if meta is not None:
                 if not include_inactive and not meta.active:
                     continue
                 # Module-level sensitivity gate
-                if not include_high_sensitivity and meta.sensitivity_high:
-                    continue
+                # Missing or invalid module metadata has unknown sensitivity.
+                # Fail closed unless the metadata definitively says it is standard.
+                module_high_hidden = not include_high_sensitivity and meta.sensitivity_high is not False
 
         try:
             raw = path.read_text(encoding="utf-8")
-        except UnicodeDecodeError:
-            continue
-        except OSError:
+        except (UnicodeDecodeError, OSError) as e:
+            if _is_candidate_state_file(data_root, path):
+                if not include_high_sensitivity and (meta is None or meta.sensitivity_high is not False):
+                    hidden_warning_count += 1
+                else:
+                    warnings.append({"path": str(path.relative_to(data_root)), "error": f"couldn't read file: {e}"})
             continue
 
-        frontmatter, body = _parse_frontmatter(raw)
-        if frontmatter is None:
+        status, frontmatter, body, parse_error = _parse_frontmatter(raw)
+        if status != "valid":
+            if _is_candidate_state_file(data_root, path):
+                hide = not include_high_sensitivity and (
+                    (meta is not None and meta.sensitivity_high is not False)
+                    or _raw_declares_high_sensitivity(raw)
+                )
+                if hide:
+                    hidden_warning_count += 1
+                else:
+                    warnings.append({"path": str(path.relative_to(data_root)), "error": parse_error or "invalid frontmatter"})
             continue
 
         # File-level sensitivity gate (overrides module default).
-        if not include_high_sensitivity and frontmatter.get("sensitivity") == "high":
+        if module_high_hidden or (not include_high_sensitivity and frontmatter.get("sensitivity") == "high"):
             continue
 
         if type_filter is not None:
@@ -368,9 +453,17 @@ def scan(data_root: Path, query: dict[str, Any]) -> dict[str, Any]:
     # Cap check — if include_body was requested but we exceed the cap, strip bodies.
     if include_body and len(matches) > MAX_INLINE_MATCHES:
         stripped = [{"path": m["path"], "frontmatter": m["frontmatter"]} for m in matches]
-        return {"truncated_bodies": True, "matches": stripped}
+        result: dict[str, Any] = {"truncated_bodies": True, "matches": stripped}
+        warning_payload = _warning_payload(warnings, hidden_warning_count)
+        if warning_payload:
+            result["warnings"] = warning_payload
+        return result
 
-    return {"matches": matches}
+    result = {"matches": matches}
+    warning_payload = _warning_payload(warnings, hidden_warning_count)
+    if warning_payload:
+        result["warnings"] = warning_payload
+    return result
 
 
 def _maybe_truncate_body(body: str) -> tuple[str, bool]:

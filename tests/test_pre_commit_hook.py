@@ -46,14 +46,25 @@ def _reviewers(tmp_path: Path, verdict: str = "PASS") -> tuple[Path, Path]:
         #!/usr/bin/env bash
         set -euo pipefail
         printf 'codex\n' >> "$REVIEWER_LOG"
+        output_file=""
+        skip_git_repo_check=false
         while [[ $# -gt 0 ]]; do
-          if [[ "$1" == "-o" ]]; then
-            printf 'REVIEW: {verdict}\n' > "$2"
-            exit 0
-          fi
-          shift
+          case "$1" in
+            --skip-git-repo-check)
+              skip_git_repo_check=true
+              shift
+              ;;
+            -o)
+              output_file="$2"
+              shift 2
+              ;;
+            *)
+              shift
+              ;;
+          esac
         done
-        exit 2
+        [[ "$skip_git_repo_check" == true && -n "$output_file" ]] || exit 2
+        printf 'REVIEW: {verdict}\n' > "$output_file"
         """,
     )
     return bin_dir, log
@@ -61,9 +72,10 @@ def _reviewers(tmp_path: Path, verdict: str = "PASS") -> tuple[Path, Path]:
 
 def _run(repo: Path, bin_dir: Path, log: Path, **extra: str) -> subprocess.CompletedProcess[str]:
     env = os.environ.copy()
+    env.pop("CTO_OS_REVIEWER", None)
     env.update(
         {
-            "PATH": f"{bin_dir}{os.pathsep}{env['PATH']}",
+            "PATH": f"{bin_dir}{os.pathsep}{os.defpath}",
             "REVIEWER_LOG": str(log),
             "TMPDIR": str(repo.parent),
         }
@@ -127,7 +139,10 @@ def test_auto_prefers_claude_for_backward_compatibility(tmp_path: Path) -> None:
     assert log.read_text() == "claude\n"
 
 
-def test_auto_falls_back_to_codex(tmp_path: Path) -> None:
+def test_auto_falls_back_to_codex_when_outer_reviewer_is_set(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setenv("CTO_OS_REVIEWER", "none")
     repo = _repo(tmp_path)
     bin_dir, log = _reviewers(tmp_path)
     (bin_dir / "claude").unlink()

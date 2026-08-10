@@ -252,7 +252,7 @@ All paths passed to these tools are relative to `CTO_OS_DATA` (i.e., relative to
 
 # Scripts
 
-All scripts live in `cto-os/scripts/` and are host-agnostic. MCP-connected hosts invoke them through `run_script`; hosts with local filesystem access may invoke them directly. Same script, same contract, different entry point.
+All scripts live in `cto-os/scripts/` and are host-agnostic. MCP-connected hosts invoke whitelisted scripts through `run_script` (and `scan.py` through the first-class `scan` tool); hosts with local filesystem access may invoke any script directly. Same script, same contract, different entry point.
 
 **Scripts:**
 
@@ -261,6 +261,7 @@ All scripts live in `cto-os/scripts/` and are host-agnostic. MCP-connected hosts
 - `pull_slack.py` — Slack API → `cto-os-data/integrations-cache/slack/`. Handles TTL checks and dedup. See [CTO OS — Data repo](./DATA_REPO.md) for cache semantics.
 - `pull_linear.py` — Linear GraphQL → `cto-os-data/integrations-cache/linear/`.
 - `validate_deps.py` — parses each module's `SKILL.md` frontmatter, builds the required-dependency DAG, fails on cycles.
+- `validate_state.py` — read-only structural/baseline validation for candidate state surfaces, deliberately limited to baseline checks and two diagnosed per-type fields.
 - `rename_module.py` — renames `{slug}` in lockstep across both repos.
 - `migrate_{slug}_v{N}_to_v{N+1}.py` — per-module schema migrations. See Schema evolution below.
 
@@ -447,6 +448,8 @@ Match cap hit (more than `MAX_INLINE_MATCHES` matches, `include_body=true`):
   ]
 }
 ```
+
+When candidate state files have unreadable or invalid frontmatter, scan also adds an optional `warnings` object. Clean responses retain the exact shapes above (no empty `warnings` key). The warning count includes hidden high-sensitivity errors, but their paths and details are omitted unless `include_high_sensitivity=true`.
 
 When `truncated_bodies: true` is set, fall back to the three-turn paths-only flow: read the scan result, decide which files matter, call `read_file` on just those.
 

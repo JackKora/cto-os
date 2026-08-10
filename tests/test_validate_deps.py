@@ -6,7 +6,7 @@ Subprocess-based, same pattern as scan tests. Exercises:
 - Synthetic fake-repo fixture with a direct cycle (exit 1, cycle reported)
 - Transitive cycle across three modules (exit 1, cycle deduplicated across rotations)
 - Unknown required dep (exit 1, listed)
-- Module with no SKILL.md (graceful; counts as empty-deps module)
+- Structural and frontmatter parse failures (exit 2)
 - Module with malformed frontmatter `requires:` (exit 2 — crash)
 - Optional cycles are permitted (exit 0)
 """
@@ -61,12 +61,20 @@ def _write_module(
         body = "---\n"
         body += f"name: {slug}\n"
         body += 'description: "test module"\n'
-        body += "requires:\n"
-        for r in requires or []:
-            body += f"  - {r}\n"
-        body += "optional:\n"
-        for o in optional or []:
-            body += f"  - {o}\n"
+        if requires is not None:
+            if requires:
+                body += "requires:\n"
+                for r in requires:
+                    body += f"  - {r}\n"
+            else:
+                body += "requires: []\n"
+        if optional is not None:
+            if optional:
+                body += "optional:\n"
+                for o in optional:
+                    body += f"  - {o}\n"
+            else:
+                body += "optional: []\n"
         body += "---\n\n# Test\n"
 
     (module_dir / "SKILL.md").write_text(body, encoding="utf-8")
@@ -160,15 +168,45 @@ def test_optional_cycles_are_permitted(tmp_path):
     assert report["unknown_required_deps"] == []
 
 
-def test_module_without_skill_md(tmp_path):
-    """Structurally invalid but not a deps failure — module has empty deps."""
+def test_module_without_skill_md_crashes(tmp_path):
     _write_module(tmp_path, "a")
     (tmp_path / "modules" / "no-skill").mkdir(parents=True)
 
     result = _run(tmp_path)
+    assert result.returncode == 2
+    assert "modules/no-skill/SKILL.md" in result.stderr
+
+
+def test_non_utf8_skill_md_crashes_concisely(tmp_path):
+    module_dir = tmp_path / "modules" / "non-utf8"
+    module_dir.mkdir(parents=True)
+    (module_dir / "SKILL.md").write_bytes(b"\xff\xfe")
+
+    result = _run(tmp_path)
+
+    assert result.returncode == 2
+    assert "modules/non-utf8/SKILL.md" in result.stderr
+    assert "UTF-8" in result.stderr
+    assert "Traceback" not in result.stderr
+
+
+@pytest.mark.parametrize("raw, expected", [
+    ("name: bad\n", "missing YAML frontmatter"),
+    ("---\nname: [unterminated\n---\n", "malformed YAML frontmatter"),
+    ("---\n- not-a-mapping\n---\n", "must be a mapping"),
+])
+def test_invalid_frontmatter_crashes(tmp_path, raw, expected):
+    _write_module(tmp_path, "bad", raw_frontmatter=raw)
+    result = _run(tmp_path)
+    assert result.returncode == 2
+    assert "modules/bad/SKILL.md" in result.stderr
+    assert expected in result.stderr
+
+
+def test_valid_empty_dependency_lists_are_clean(tmp_path):
+    _write_module(tmp_path, "empty", requires=[], optional=[])
+    result = _run(tmp_path)
     assert result.returncode == 0
-    report = _json(result)
-    assert set(report["modules"]) == {"a", "no-skill"}
 
 
 def test_malformed_requires_crashes(tmp_path):
@@ -186,6 +224,39 @@ def test_malformed_requires_crashes(tmp_path):
     result = _run(tmp_path)
     assert result.returncode == 2
     assert "must be a list" in result.stderr
+
+
+@pytest.mark.parametrize(
+    ("field", "yaml_value", "type_name"),
+    [
+        ("requires", "{}", "dict"),
+        ("requires", '""', "str"),
+        ("requires", "null", "NoneType"),
+        ("requires", "false", "bool"),
+        ("requires", "0", "int"),
+        ("optional", "{}", "dict"),
+        ("optional", '""', "str"),
+        ("optional", "null", "NoneType"),
+        ("optional", "false", "bool"),
+        ("optional", "0", "int"),
+    ],
+)
+def test_falsey_non_list_dependency_fields_crash(tmp_path, field, yaml_value, type_name):
+    raw = (
+        "---\n"
+        "name: bad\n"
+        'description: "bad"\n'
+        f"{field}: {yaml_value}\n"
+        "---\n"
+    )
+    _write_module(tmp_path, "bad", raw_frontmatter=raw)
+
+    result = _run(tmp_path)
+
+    assert result.returncode == 2
+    assert "modules/bad/SKILL.md" in result.stderr
+    assert f"`{field}` must be a list, got {type_name}" in result.stderr
+    assert "Traceback" not in result.stderr
 
 
 def test_empty_modules_dir(tmp_path):

@@ -61,15 +61,17 @@ class ValidationCrash(Exception):
 _FRONTMATTER_PATTERN = re.compile(r"^---\s*\n(.*?)\n---\s*\n?(.*)$", re.DOTALL)
 
 
-def _parse_frontmatter(raw: str) -> dict[str, Any] | None:
+def _parse_frontmatter(raw: str, path: Path) -> dict[str, Any]:
     match = _FRONTMATTER_PATTERN.match(raw)
     if not match:
-        return None
+        raise ValidationCrash(f"{path}: missing YAML frontmatter")
     try:
-        fm = yaml.safe_load(match.group(1)) or {}
-    except yaml.YAMLError:
-        return None
-    return fm if isinstance(fm, dict) else None
+        fm = yaml.safe_load(match.group(1))
+    except yaml.YAMLError as e:
+        raise ValidationCrash(f"{path}: malformed YAML frontmatter: {e.problem or 'parse error'}")
+    if not isinstance(fm, dict):
+        raise ValidationCrash(f"{path}: YAML frontmatter must be a mapping")
+    return fm
 
 
 # ---------- Graph construction ----------
@@ -102,27 +104,17 @@ def _collect_modules(
         slug = module_dir.name
         skill_file = module_dir / "SKILL.md"
         if not skill_file.is_file():
-            # A module dir without SKILL.md is a structural issue flagged elsewhere
-            # (checklist item #3). validate_deps just records its existence with empty deps.
-            slugs.append(slug)
-            requires_map[slug] = []
-            optional_map[slug] = []
-            continue
+            raise ValidationCrash(f"{skill_file}: missing required SKILL.md")
 
         try:
             raw = skill_file.read_text(encoding="utf-8")
-        except OSError as e:
-            raise ValidationCrash(f"couldn't read {skill_file}: {e}")
+        except (OSError, UnicodeDecodeError) as e:
+            raise ValidationCrash(f"couldn't read {skill_file}: UTF-8/read error: {e}")
 
-        fm = _parse_frontmatter(raw)
-        if fm is None:
-            slugs.append(slug)
-            requires_map[slug] = []
-            optional_map[slug] = []
-            continue
+        fm = _parse_frontmatter(raw, skill_file)
 
-        requires = fm.get("requires") or []
-        optional = fm.get("optional") or []
+        requires = fm["requires"] if "requires" in fm else []
+        optional = fm["optional"] if "optional" in fm else []
         if not isinstance(requires, list):
             raise ValidationCrash(
                 f"{skill_file}: `requires` must be a list, got {type(requires).__name__}"

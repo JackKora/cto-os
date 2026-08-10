@@ -274,6 +274,176 @@ def test_file_level_sensitivity_gate_applies_outside_modules(tmp_path):
     assert opted_in["matches"][0]["path"] == "notes/2026-04-20-sensitive.md"
 
 
+def _module(tmp_path: Path, slug: str, *, sensitivity: str | None = None) -> Path:
+    state = tmp_path / "modules" / slug / "state"
+    state.mkdir(parents=True)
+    high = f"sensitivity: {sensitivity}\n" if sensitivity else ""
+    (state.parent / "_module.md").write_text(
+        "---\ntype: _module\nslug: " + slug + "\nmodule: " + slug + "\n"
+        "updated: 2026-04-21\nschema_version: 1\nactive: true\n"
+        "activated_at: 2026-04-21\ndeactivated_at: null\n" + high + "---\n",
+        encoding="utf-8",
+    )
+    return state
+
+
+def test_ordinary_markdown_without_frontmatter_is_ignored(tmp_path):
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "readme.md").write_text("ordinary markdown", encoding="utf-8")
+    result = _scan_json({}, data_root=tmp_path)
+    assert result == {"matches": []}
+
+
+@pytest.mark.parametrize("content, error", [
+    ("no frontmatter", "missing YAML frontmatter"),
+    ("---\ntype: [bad\n---\n", "malformed YAML frontmatter"),
+    ("---\n- list\n---\n", "must be a mapping"),
+])
+def test_invalid_candidate_state_frontmatter_warns(tmp_path, content, error):
+    state = _module(tmp_path, "test")
+    (state / "bad.md").write_text(content, encoding="utf-8")
+    result = _scan_json({}, data_root=tmp_path)
+    assert result["warnings"]["invalid_frontmatter_count"] == 1
+    assert result["warnings"]["invalid_frontmatter"][0]["path"] == "modules/test/state/bad.md"
+    assert error in result["warnings"]["invalid_frontmatter"][0]["error"]
+
+
+def test_valid_match_and_warning_coexist(tmp_path):
+    state = _module(tmp_path, "test")
+    (state / "good.md").write_text("---\ntype: team\nslug: good\nupdated: 2026-04-21\n---\n", encoding="utf-8")
+    (state / "bad.md").write_text("bad", encoding="utf-8")
+    result = _scan_json({"type": ["team"]}, data_root=tmp_path)
+    assert [m["path"] for m in result["matches"]] == ["modules/test/state/good.md"]
+    assert result["warnings"]["invalid_frontmatter_count"] == 1
+
+
+def test_high_sensitivity_invalid_details_are_hidden_until_opt_in(tmp_path):
+    state = _module(tmp_path, "secret", sensitivity="high")
+    (state / "bad.md").write_text("bad", encoding="utf-8")
+    hidden = _scan_json({}, data_root=tmp_path)
+    assert hidden["warnings"]["invalid_frontmatter_count"] == 1
+    assert hidden["warnings"]["invalid_frontmatter"] == []
+    assert hidden["warnings"]["hidden_invalid_frontmatter_count"] == 1
+    visible = _scan_json({"include_high_sensitivity": True}, data_root=tmp_path)
+    assert visible["warnings"]["invalid_frontmatter"][0]["path"] == "modules/secret/state/bad.md"
+
+
+@pytest.mark.parametrize(
+    "content",
+    [
+        "---\nsensitivity: high # private\ntype: [bad\n---\n",
+        "---\n  sensitivity  :  high   \ntype: [bad\n---\n",
+        "---\nsensitivity: \"high\"\ntype: [bad\n---\n",
+        "---\nsensitivity: 'high'\ntype: [bad\n---\n",
+        "---\r\nsensitivity: high # private\r\ntype: [bad\r\n",
+    ],
+)
+def test_malformed_high_sensitivity_frontmatter_hides_details_until_opt_in(
+    tmp_path, content
+):
+    state = _module(tmp_path, "standard")
+    filename = "sensitive-frontmatter.md"
+    relative_path = f"modules/standard/state/{filename}"
+    (state / filename).write_text(content, encoding="utf-8", newline="")
+
+    hidden = _scan_json({}, data_root=tmp_path)
+    assert hidden["warnings"]["invalid_frontmatter_count"] == 1
+    assert hidden["warnings"]["hidden_invalid_frontmatter_count"] == 1
+    assert hidden["warnings"]["invalid_frontmatter"] == []
+    assert relative_path not in json.dumps(hidden)
+
+    visible = _scan_json({"include_high_sensitivity": True}, data_root=tmp_path)
+    assert visible["warnings"]["invalid_frontmatter"][0]["path"] == relative_path
+    assert visible["warnings"]["invalid_frontmatter"][0]["error"]
+
+
+def test_sensitivity_line_in_body_does_not_hide_malformed_header(tmp_path):
+    state = _module(tmp_path, "standard")
+    relative_path = "modules/standard/state/body-sensitivity.md"
+    (state / "body-sensitivity.md").write_text(
+        "---\ntype: [bad\n---\nsensitivity: high\n",
+        encoding="utf-8",
+    )
+
+    result = _scan_json({}, data_root=tmp_path)
+    assert result["warnings"]["invalid_frontmatter_count"] == 1
+    assert "hidden_invalid_frontmatter_count" not in result["warnings"]
+    assert result["warnings"]["invalid_frontmatter"][0]["path"] == relative_path
+
+
+def test_unknown_module_sensitivity_hides_valid_records_until_opt_in(tmp_path):
+    """Malformed module metadata must not expose otherwise-valid state by default."""
+    state = tmp_path / "modules" / "secret" / "state"
+    state.mkdir(parents=True)
+    (state.parent / "_module.md").write_text("---\ntype: [bad\n---\n", encoding="utf-8")
+    (state / "secret-name.md").write_text(
+        "---\ntype: secret-record\nslug: secret-name\nupdated: 2026-04-21\n---\nsecret body\n",
+        encoding="utf-8",
+    )
+
+    hidden = _scan_json({"type": ["secret-record"], "include_body": True}, data_root=tmp_path)
+    assert hidden["matches"] == []
+    assert hidden["warnings"] == {
+        "invalid_frontmatter_count": 1,
+        "invalid_frontmatter": [],
+        "hidden_invalid_frontmatter_count": 1,
+    }
+
+    visible = _scan_json(
+        {"type": ["secret-record"], "include_body": True, "include_high_sensitivity": True},
+        data_root=tmp_path,
+    )
+    assert visible["matches"] == [
+        {
+            "path": "modules/secret/state/secret-name.md",
+            "frontmatter": {
+                "type": "secret-record",
+                "slug": "secret-name",
+                "updated": "2026-04-21",
+            },
+            "body": "secret body\n",
+            "body_truncated": False,
+        }
+    ]
+    assert visible["warnings"]["invalid_frontmatter"] == [
+        {
+            "path": "modules/secret/_module.md",
+            "error": "malformed YAML frontmatter: expected ',' or ']', but got '<stream end>'",
+        }
+    ]
+
+
+def test_missing_module_metadata_hides_valid_records_until_opt_in(tmp_path):
+    state = tmp_path / "modules" / "secret" / "state"
+    state.mkdir(parents=True)
+    (state / "secret-name.md").write_text(
+        "---\ntype: secret-record\nslug: secret-name\nupdated: 2026-04-21\n---\nsecret body\n",
+        encoding="utf-8",
+    )
+
+    hidden = _scan_json({"type": ["secret-record"]}, data_root=tmp_path)
+    assert hidden["matches"] == []
+    assert hidden["warnings"] == {
+        "invalid_frontmatter_count": 1,
+        "invalid_frontmatter": [],
+        "hidden_invalid_frontmatter_count": 1,
+    }
+    assert "modules/secret" not in json.dumps(hidden)
+
+    visible = _scan_json(
+        {"type": ["secret-record"], "include_high_sensitivity": True}, data_root=tmp_path
+    )
+    assert [match["path"] for match in visible["matches"]] == [
+        "modules/secret/state/secret-name.md"
+    ]
+    assert visible["warnings"]["invalid_frontmatter"] == [
+        {
+            "path": "modules/secret/_module.md",
+            "error": "required module metadata is missing",
+        }
+    ]
+
+
 # ---------- Query errors (exit 0 with structured error) ----------
 
 
