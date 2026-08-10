@@ -109,9 +109,9 @@ Each step writes a concrete artifact and appends its step number to `activation_
 - "[incident] is mitigated / resolved"
 - "add timeline entry to [incident]"
 
-**Reads:** `cto-os-data/modules/tech-ops/state/incidents/{incident-slug}.md`.
+**Reads:** `cto-os-data/modules/tech-ops/state/incidents/{YYYY-MM-DD}-{incident-slug}.md`.
 
-**Writes:** `cto-os-data/modules/tech-ops/state/incidents/{incident-slug}.md`, overwrite-with-history (status transitions and timeline events preserved in body under `## Timeline` and `## History`).
+**Writes:** `cto-os-data/modules/tech-ops/state/incidents/{YYYY-MM-DD}-{incident-slug}.md`, overwrite-with-history (status transitions and timeline events preserved in body under `## Timeline` and `## History`).
 
 ### `run-postmortem`
 
@@ -123,7 +123,7 @@ Each step writes a concrete artifact and appends its step number to `activation_
 - "write up yesterday's outage"
 
 **Reads:**
-- `cto-os-data/modules/tech-ops/state/incidents/{incident-slug}.md` (the incident being reviewed)
+- `cto-os-data/modules/tech-ops/state/incidents/{YYYY-MM-DD}-{incident-slug}.md` (the incident being reviewed)
 - `cto-os-data/modules/tech-ops/state/postmortems/` (recent postmortems for pattern-spotting)
 
 **Writes:** `cto-os-data/modules/tech-ops/state/postmortems/{YYYY-MM-DD}-{incident-slug}.md`, append-new-file.

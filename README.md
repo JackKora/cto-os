@@ -211,10 +211,11 @@ These don't conflict; you can layer them.
 
 ## Scripts
 
-Deterministic Python helpers under `scripts/`. Same contract everywhere — JSON args via `--args`, JSON on stdout, `CTO_OS_DATA` from env. Invoked through MCP's `run_script` tool or directly via `uv run python scripts/<name>.py --args '{...}'` when the host has local filesystem access. Detailed contracts in [docs/SCRIPTS.md](docs/SCRIPTS.md).
+Deterministic Python helpers under `scripts/`. Same contract everywhere — JSON args via `--args`, JSON on stdout, `CTO_OS_DATA` from env. MCP-connected hosts invoke whitelisted scripts through `run_script` (and `scan.py` through the first-class `scan` tool); hosts with local filesystem access may invoke any script directly via `uv run python scripts/<name>.py --args '{...}'`. Detailed contracts in [docs/SCRIPTS.md](docs/SCRIPTS.md).
 
 - **`scan.py`** — frontmatter scan + filter over all of `cto-os-data` in one call. The workhorse for module reads and rollups.
 - **`validate_deps.py`** — walks module SKILL.md files, builds the required-dep graph, fails on cycles or unknown deps. Pre-commit hook.
+- **`validate_state.py`** — read-only structural/baseline validator for state surfaces, with two targeted diagnosed type checks (not a complete per-type schema engine).
 - **`roll_up.py`** — on-demand cross-type aggregations (team-health, per-person, goal-progress).
 - **`pull_linear.py`** — incremental pull of Linear issues into `cto-os-data/integrations-cache/linear/`. TTL-aware, watermark-based.
 - **`pull_slack.py`** — incremental pull of Slack messages across bot-accessible channels into `cto-os-data/integrations-cache/slack/`. TTL-aware, per-channel watermark.

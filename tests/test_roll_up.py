@@ -202,6 +202,61 @@ def test_goal_progress_with_company_goal_fixture(tmp_path):
 
     # Flagged.
     assert "Grow ARR 30%" in report["goals_with_no_mapping"]
+    assert report["resolved_mapping_count"] + report["unresolved_mapping_count"] == report["total_mappings"]
+
+
+def test_goal_progress_compatibility_id_join_and_errors(tmp_path):
+    ba = tmp_path / "modules" / "business-alignment" / "state"
+    ba.mkdir(parents=True)
+    (ba.parent / "_module.md").write_text("---\ntype: _module\nslug: business-alignment\nmodule: business-alignment\nupdated: 2026-01-01\nschema_version: 1\nactive: true\nactivated_at: 2026-01-01\ndeactivated_at: null\n---\n", encoding="utf-8")
+    (ba / "goals.md").write_text("---\ntype: company-goal-horizon\nslug: annual\nupdated: 2026-01-01\nhorizon: annual\nperiod: '2026'\nitems: ['P1. Long title', 'P1. Duplicate title', 'P2. Second']\n---\n", encoding="utf-8")
+    (ba / "mapping.md").write_text("---\ntype: work-mapping\nslug: current\nupdated: 2026-01-01\nmappings:\n  - initiative: two\n    goal: P2 (short label)\n  - initiative: unknown\n    goal: P3 (missing)\n  - initiative: duplicate\n    goal: P1 (ambiguous)\n---\n", encoding="utf-8")
+    report = _ok({"kind": "goal-progress"}, data_root=tmp_path)
+    assert report["resolved_mapping_count"] == 1
+    assert report["unresolved_mapping_count"] == 2
+    assert report["total_mappings"] == 3
+    assert report["warnings"]
+    assert {m["initiative"] for m in report["unresolved_mappings"]} == {"unknown", "duplicate"}
+    assert report["errors"][0]["code"] == "duplicate_goal_identifier"
+
+
+def test_rollup_fails_closed_for_hidden_invalid_frontmatter(tmp_path):
+    ba = tmp_path / "modules" / "business-alignment"
+    (ba / "state").mkdir(parents=True)
+    (ba / "_module.md").write_text(
+        "---\ntype: _module\nslug: business-alignment\nmodule: business-alignment\n"
+        "updated: 2026-01-01\nschema_version: 1\nactive: true\n"
+        "activated_at: 2026-01-01\ndeactivated_at: null\n---\n",
+        encoding="utf-8",
+    )
+    (ba / "state" / "goals.md").write_text(
+        "---\ntype: company-goal-horizon\nslug: annual\nupdated: 2026-01-01\n"
+        "horizon: annual\nperiod: '2026'\nitems: ['Ship platform v2']\n---\n",
+        encoding="utf-8",
+    )
+
+    sensitive = tmp_path / "modules" / "performance-development"
+    (sensitive / "state").mkdir(parents=True)
+    (sensitive / "_module.md").write_text(
+        "---\ntype: _module\nslug: performance-development\n"
+        "module: performance-development\nupdated: 2026-01-01\nschema_version: 1\n"
+        "active: true\nactivated_at: 2026-01-01\ndeactivated_at: null\n"
+        "sensitivity: high\n---\n",
+        encoding="utf-8",
+    )
+    hidden_filename = "confidential-performance-plan.md"
+    (sensitive / "state" / hidden_filename).write_text(
+        "---\ntype: performance-record\nslug: jane\ninvalid: [\n---\n",
+        encoding="utf-8",
+    )
+
+    report = _ok({"kind": "goal-progress"}, data_root=tmp_path)
+    assert "error" in report
+    assert report["query"] == {"kind": "goal-progress"}
+    assert "1 invalid frontmatter" in report["error"]
+    assert "1 hidden" in report["error"]
+    assert hidden_filename not in report["error"]
+    assert "horizons" not in report
 
 
 # ---------- Error envelopes ----------

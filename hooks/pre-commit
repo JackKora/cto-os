@@ -117,7 +117,7 @@ $prompt"
 else
   output_file="$(mktemp "${TMPDIR:-/tmp}/cto-os-review-output.XXXXXX")"
   log_file="$(mktemp "${TMPDIR:-/tmp}/cto-os-review-log.XXXXXX")"
-  if ! codex exec --ephemeral --sandbox read-only -C "$STAGED_ROOT" -o "$output_file" "$prompt" >"$log_file" 2>&1; then
+  if ! codex exec --ephemeral --sandbox read-only --skip-git-repo-check -C "$STAGED_ROOT" -o "$output_file" "$prompt" >"$log_file" 2>&1; then
     echo "pre-commit: codex invocation failed" >&2
     cat "$log_file" >&2
     exit 1

@@ -52,6 +52,7 @@ import json
 import os
 import subprocess
 import sys
+import re
 from datetime import date, datetime
 from pathlib import Path
 from typing import Any
@@ -92,6 +93,15 @@ def _scan(spec: dict[str, Any]) -> dict[str, Any]:
         raise RollupCrash(f"scan.py returned non-JSON: {e}")
     if "error" in payload:
         raise RollupCrash(f"scan.py query error: {payload['error']}")
+    warnings = payload.get("warnings")
+    if isinstance(warnings, dict):
+        invalid_count = warnings.get("invalid_frontmatter_count")
+        if isinstance(invalid_count, int) and invalid_count > 0:
+            hidden_count = warnings.get("hidden_invalid_frontmatter_count")
+            message = f"scan encountered {invalid_count} invalid frontmatter warning(s)"
+            if isinstance(hidden_count, int) and hidden_count > 0:
+                message += f" ({hidden_count} hidden)"
+            raise RollupError(message)
     return payload
 
 
@@ -273,18 +283,43 @@ def _rollup_goal_progress(_args: dict[str, Any]) -> dict[str, Any]:
     for m in mapping_matches:
         mappings.extend(m.get("frontmatter", {}).get("mappings") or [])
 
-    # Index mappings by goal value (a free-text string matched against the
-    # company-goal items — imperfect but the best we can do without a
-    # structured goal-ID system).
-    per_goal: dict[str, list[dict[str, Any]]] = {}
-    for mapping in mappings:
+    all_items = [item for g in goals for item in (g.get("frontmatter", {}).get("items") or []) if isinstance(item, str)]
+    per_goal: dict[str, list[dict[str, Any]]] = {item: [] for item in all_items}
+    by_identifier: dict[str, str] = {}
+    errors: list[dict[str, str]] = []
+    for item in all_items:
+        identifier = _goal_identifier(item)
+        if identifier:
+            if identifier in by_identifier:
+                errors.append({"code": "duplicate_goal_identifier", "identifier": identifier, "message": "multiple company goals use the same derived identifier"})
+            else:
+                by_identifier[identifier] = item
+    duplicate_ids = {error["identifier"] for error in errors}
+    unresolved_mappings: list[dict[str, Any]] = []
+    compatibility_used = False
+    valid_mappings = [mapping for mapping in mappings if isinstance(mapping, dict)]
+    for mapping in valid_mappings:
         goal_text = mapping.get("goal")
-        if not goal_text:
+        target: str | None = None
+        identifier = _goal_identifier(goal_text) if isinstance(goal_text, str) else None
+        if identifier:
+            compatibility_used = True
+            if identifier in duplicate_ids:
+                unresolved_mappings.append({"initiative": mapping.get("initiative"), "goal": goal_text, "reason": f"duplicate derived goal identifier: {identifier}"})
+                continue
+            target = by_identifier.get(identifier)
+            if target is None:
+                unresolved_mappings.append({"initiative": mapping.get("initiative"), "goal": goal_text, "reason": f"unknown derived goal identifier: {identifier}"})
+                continue
+        elif isinstance(goal_text, str):
+            target = goal_text if goal_text in per_goal else None
+            if target is None:
+                unresolved_mappings.append({"initiative": mapping.get("initiative"), "goal": goal_text, "reason": "no exact company-goal match"})
+                continue
+        else:
+            unresolved_mappings.append({"initiative": mapping.get("initiative"), "goal": goal_text, "reason": "mapping goal must be a string"})
             continue
-        per_goal.setdefault(goal_text, []).append({
-            "initiative": mapping.get("initiative"),
-            "confidence": mapping.get("confidence"),
-        })
+        per_goal[target].append({"initiative": mapping.get("initiative"), "confidence": mapping.get("confidence")})
 
     horizons: list[dict[str, Any]] = []
     for g in goals:
@@ -315,7 +350,12 @@ def _rollup_goal_progress(_args: dict[str, Any]) -> dict[str, Any]:
         "kind": "goal-progress",
         "horizons": horizons,
         "goals_with_no_mapping": goals_with_no_mapping,
-        "total_mappings": len(mappings),
+        "total_mappings": len(valid_mappings),
+        "resolved_mapping_count": len(valid_mappings) - len(unresolved_mappings),
+        "unresolved_mapping_count": len(unresolved_mappings),
+        "unresolved_mappings": unresolved_mappings,
+        "errors": errors,
+        **({"warnings": ["Derived leading goal identifiers are a compatibility join, not a permanent data contract."]} if compatibility_used else {}),
     }
 
 
@@ -332,6 +372,14 @@ def _as_iso_date(value: Any) -> str | None:
     if isinstance(value, (date, datetime)):
         return value.isoformat()
     return None
+
+
+def _goal_identifier(value: Any) -> str | None:
+    """Extract a conservative leading compatibility token such as P1 or OKR12."""
+    if not isinstance(value, str):
+        return None
+    match = re.match(r"^([A-Z]+\d+)\b", value)
+    return match.group(1) if match else None
 
 
 def _max_field(matches: list[dict[str, Any]], field_name: str) -> str | None:

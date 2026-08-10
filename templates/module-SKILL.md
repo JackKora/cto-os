@@ -1,5 +1,5 @@
 ---
-name: {{MODULE_SLUG}}
+name: "{{MODULE_SLUG}}"
 description: "{{Activation trigger paragraph. Specific enough to avoid false matches on unrelated topics, broad enough to catch oblique phrasings users actually say. See docs/SKILL_REPO.md → Trigger specificity.}}"
 requires: []
 optional: []

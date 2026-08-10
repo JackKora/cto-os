@@ -185,7 +185,7 @@ The workhorse. Frontmatter scan + filter over `$CTO_OS_DATA`.
 
 All keys optional; an empty spec returns every file's frontmatter.
 
-**Returns:** full spec (baseline, with-bodies, cap-hit variants) is in [docs/SKILL_REPO.md → Context loading](./SKILL_REPO.md#context-loading-scan-dont-cache). The MCP tool is a thin proxy to `scripts/scan.py` — it passes `query_spec` through as `--args '<json>'` and returns the script's JSON stdout unchanged.
+**Returns:** full spec (baseline, with-bodies, cap-hit variants) is in [docs/SKILL_REPO.md → Context loading](./SKILL_REPO.md#context-loading-scan-dont-cache). Responses may add a `warnings` object for invalid candidate-state frontmatter; clean responses omit it, and high-sensitivity details stay hidden without explicit opt-in. The MCP tool is a thin proxy to `scripts/scan.py` — it passes `query_spec` through as `--args '<json>'` and returns the script's JSON stdout unchanged.
 
 **Exit-code contract for `scan.py`:**
 
@@ -279,6 +279,7 @@ Not whitelisted:
 - `scan` — has its own first-class tool. Always refused.
 - `pull_slack`, `pull_linear` — network I/O, long-running, side-effect-bearing. They are intentionally unavailable through MCP `run_script`; run them directly from any host with local filesystem and process access (for example, Claude Code, Cowork, or Codex locally).
 - `migrate_*` — destructive. Run via the schema evolution flow (skill-initiated, explicit).
+- `validate_state` — local read-only maintenance script in this pass; intentionally not in the MCP whitelist.
 
 Adding a script to the whitelist is a deliberate code change, not a config toggle. The whitelist is the MCP execution/security boundary: it prevents an MCP-connected host from running arbitrary repository scripts.
 
