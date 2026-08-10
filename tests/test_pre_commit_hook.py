@@ -176,7 +176,7 @@ def test_deleted_module_skill_runs_dependency_and_ai_review(tmp_path: Path) -> N
     assert "modules/example/SKILL.md" in result.stdout
 
 
-def test_dependency_validation_uses_staged_snapshot_not_working_tree(tmp_path: Path) -> None:
+def test_dependency_validation_uses_staged_project_and_snapshot(tmp_path: Path) -> None:
     repo = _repo(tmp_path)
     skill = repo / "modules/example/SKILL.md"
     skill.parent.mkdir(parents=True)
@@ -192,10 +192,30 @@ def test_dependency_validation_uses_staged_snapshot_not_working_tree(tmp_path: P
         """
         #!/usr/bin/env bash
         set -euo pipefail
-        args="${!#}"
-        root="${args#*\\\"repo_root\\\":\\\"}"
-        root="${root%%\\\"*}"
-        printf 'uv:%s\\n' "$root" >> "$REVIEWER_LOG"
+        project=""
+        script=""
+        root=""
+        while [[ $# -gt 0 ]]; do
+          case "$1" in
+            --project)
+              project="$2"
+              shift 2
+              ;;
+            python)
+              script="$2"
+              shift 2
+              ;;
+            --args)
+              root="${2#*\\\"repo_root\\\":\\\"}"
+              root="${root%%\\\"*}"
+              shift 2
+              ;;
+            *)
+              shift
+              ;;
+          esac
+        done
+        printf 'project:%s\\nscript:%s\\nroot:%s\\n' "$project" "$script" "$root" >> "$REVIEWER_LOG"
         if grep -q 'bad-dependency' "$root/modules/example/SKILL.md"; then
           printf '{"ok": false, "source": "staged"}\\n'
           exit 1
@@ -207,9 +227,15 @@ def test_dependency_validation_uses_staged_snapshot_not_working_tree(tmp_path: P
     result = _run(repo, bin_dir, log, CTO_OS_REVIEWER="none")
     assert result.returncode == 1
     assert '"source": "staged"' in result.stderr
-    snapshot_root = log.read_text(encoding="utf-8").strip().removeprefix("uv:")
-    assert Path(snapshot_root) != repo
-    assert not Path(snapshot_root).exists()
+    invocation = dict(
+        line.split(":", maxsplit=1)
+        for line in log.read_text(encoding="utf-8").splitlines()
+    )
+    snapshot_root = Path(invocation["root"])
+    assert snapshot_root != repo
+    assert Path(invocation["project"]) == snapshot_root
+    assert Path(invocation["script"]) == snapshot_root / "scripts/validate_deps.py"
+    assert not snapshot_root.exists()
 
 
 def test_claude_reviews_staged_snapshot_not_working_tree(tmp_path: Path) -> None:

@@ -48,7 +48,7 @@ if [[ -n "$staged_skills" ]]; then
     exit 1
   fi
   deps_status=0
-  deps_output="$(cd "$REPO_ROOT" && uv run python "$STAGED_ROOT/scripts/validate_deps.py" --args "{\"repo_root\":\"$STAGED_ROOT\"}" 2>&1)" || deps_status=$?
+  deps_output="$(cd "$REPO_ROOT" && uv run --project "$STAGED_ROOT" python "$STAGED_ROOT/scripts/validate_deps.py" --args "{\"repo_root\":\"$STAGED_ROOT\"}" 2>&1)" || deps_status=$?
   if [[ $deps_status -ne 0 ]]; then
     echo "pre-commit: validate_deps.py failed (exit $deps_status):" >&2
     echo "$deps_output" >&2

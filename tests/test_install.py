@@ -191,6 +191,78 @@ def test_server_install_is_idempotent_and_preserves_other_config(tmp_path: Path)
     assert reviewer == "codex"
 
 
+def test_reviewer_precedence_explicit_argument_ignores_invalid_environment(
+    tmp_path: Path,
+) -> None:
+    repo = _installer_repo(tmp_path)
+    bin_dir = _fake_commands(tmp_path)
+    env = _environment(tmp_path, bin_dir)
+    env["CTO_OS_REVIEWER"] = "invalid"
+
+    result = _run(
+        repo,
+        env,
+        "--server",
+        "--data-dir",
+        str(tmp_path / "cto-os-data"),
+        "--reviewer",
+        "codex",
+        "-y",
+    )
+
+    assert result.returncode == 0, result.stderr
+    reviewer = subprocess.run(
+        ["git", "-C", str(repo), "config", "--local", "--get", "cto-os.reviewer"],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    assert reviewer == "codex"
+
+
+def test_reviewer_precedence_invalid_environment_fails_without_explicit_argument(
+    tmp_path: Path,
+) -> None:
+    repo = _installer_repo(tmp_path)
+    bin_dir = _fake_commands(tmp_path)
+    env = _environment(tmp_path, bin_dir)
+    env["CTO_OS_REVIEWER"] = "invalid"
+    data = tmp_path / "cto-os-data"
+
+    result = _run(repo, env, "--server", "--data-dir", str(data), "-y")
+
+    assert result.returncode == 2
+    assert "CTO_OS_REVIEWER must be auto, claude, codex, or none" in result.stderr
+    assert not data.exists()
+    assert not (repo / ".venv").exists()
+
+
+def test_reviewer_precedence_invalid_explicit_argument_fails_with_valid_environment(
+    tmp_path: Path,
+) -> None:
+    repo = _installer_repo(tmp_path)
+    bin_dir = _fake_commands(tmp_path)
+    env = _environment(tmp_path, bin_dir)
+    env["CTO_OS_REVIEWER"] = "codex"
+    data = tmp_path / "cto-os-data"
+
+    result = _run(
+        repo,
+        env,
+        "--server",
+        "--data-dir",
+        str(data),
+        "--reviewer",
+        "invalid",
+        "-y",
+    )
+
+    assert result.returncode == 2
+    assert "--reviewer must be auto, claude, codex, or none" in result.stderr
+    assert not data.exists()
+    assert not (repo / ".venv").exists()
+
+
 def test_client_install_is_idempotent_and_updates_managed_guidance(tmp_path: Path) -> None:
     repo = _installer_repo(tmp_path)
     bin_dir = _fake_commands(tmp_path)
@@ -446,6 +518,69 @@ def test_client_reports_conflicting_skill_symlinks_as_skipped(tmp_path: Path) ->
         for line in result.stdout.splitlines()
     )
     assert "skill and MCP are configured globally" not in result.stdout
+
+
+def test_client_reports_failed_instruction_link_as_skipped(tmp_path: Path) -> None:
+    repo = _installer_repo(tmp_path)
+    bin_dir = _fake_commands(tmp_path)
+    env = _environment(tmp_path, bin_dir)
+    env.update(
+        {
+            "CTO_OS_REMOTE_URL": "https://cto.example/mcp",
+            "CTO_OS_BEARER_TOKEN": "token",
+            "FAKE_LN_FAIL_TARGET": str(Path(env["HOME"]) / ".claude/CLAUDE.md"),
+        }
+    )
+    _write_executable(
+        bin_dir / "ln",
+        r"""
+        #!/usr/bin/env bash
+        if [[ "${1:-}" == "-s" && "${2:-}" == "$FAKE_LN_FAIL_TARGET" ]]; then
+          echo "simulated link failure" >&2
+          exit 1
+        fi
+        exec /bin/ln "$@"
+        """,
+    )
+
+    result = _run(repo, env, "--client", "-y")
+
+    assert result.returncode == 0, result.stderr
+    assert "could not create symlink" in result.stderr
+    assert "Codex guidance:    [SKIPPED]" in result.stdout
+    assert "Codex guidance:    [ok]" not in result.stdout
+    assert not (Path(env["CODEX_HOME"]) / "AGENTS.md").exists()
+
+
+def test_client_reports_failed_new_instruction_copy_as_skipped(tmp_path: Path) -> None:
+    repo = _installer_repo(tmp_path)
+    bin_dir = _fake_commands(tmp_path)
+    env = _environment(tmp_path, bin_dir)
+    env.update(
+        {
+            "CTO_OS_REMOTE_URL": "https://cto.example/mcp",
+            "CTO_OS_BEARER_TOKEN": "token",
+        }
+    )
+    _write_executable(
+        bin_dir / "cp",
+        r"""
+        #!/usr/bin/env bash
+        if [[ "${1:-}" == */templates/client-CLAUDE.md ]]; then
+          echo "simulated copy failure" >&2
+          exit 1
+        fi
+        exec /bin/cp "$@"
+        """,
+    )
+
+    result = _run(repo, env, "--client", "-y")
+
+    assert result.returncode == 0, result.stderr
+    assert "could not write" in result.stderr
+    assert "Client instructions: [SKIPPED]" in result.stdout
+    assert "Client instructions: [ok]" not in result.stdout
+    assert not (Path(env["HOME"]) / ".claude/CLAUDE.md").exists()
 
 
 def test_malformed_config_stops_before_any_install_write(tmp_path: Path) -> None:

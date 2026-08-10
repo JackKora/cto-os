@@ -69,7 +69,7 @@ if [[ -n "$REVIEWER_ARG" && ! "$REVIEWER_ARG" =~ ^(auto|claude|codex|none)$ ]]; 
   echo "Error: --reviewer must be auto, claude, codex, or none" >&2
   exit 2
 fi
-if [[ -n "${CTO_OS_REVIEWER:-}" && ! "$CTO_OS_REVIEWER" =~ ^(auto|claude|codex|none)$ ]]; then
+if [[ -z "$REVIEWER_ARG" && -n "${CTO_OS_REVIEWER:-}" && ! "$CTO_OS_REVIEWER" =~ ^(auto|claude|codex|none)$ ]]; then
   echo "Error: CTO_OS_REVIEWER must be auto, claude, codex, or none" >&2
   exit 2
 fi
@@ -145,7 +145,10 @@ ensure_symlink() {
   local label="$3"
 
   info "$label: $link_path"
-  mkdir -p "$(dirname "$link_path")"
+  if ! mkdir -p "$(dirname "$link_path")"; then
+    warn "could not create parent directory for $link_path; link was not created"
+    return 1
+  fi
 
   if [[ -L "$link_path" ]]; then
     local current
@@ -163,7 +166,10 @@ ensure_symlink() {
     return 1
   fi
 
-  ln -s "$target" "$link_path"
+  if ! ln -s "$target" "$link_path"; then
+    warn "could not create symlink $link_path -> $target"
+    return 1
+  fi
   info "  created -> $target"
 }
 
@@ -174,7 +180,10 @@ install_managed_file() {
   local label="$4"
 
   info "$label: $destination"
-  mkdir -p "$(dirname "$destination")"
+  if ! mkdir -p "$(dirname "$destination")"; then
+    warn "could not create parent directory for $destination; file was not written"
+    return 1
+  fi
 
   if [[ -L "$destination" ]]; then
     warn "$destination is a symlink not managed by this installer; left unchanged"
@@ -198,16 +207,33 @@ import stat
 print(format(stat.S_IMODE(os.stat(os.environ["DESTINATION_PATH"]).st_mode), "o"))
 PY
 )" || return 1
-    temp_file="$(mktemp "$(dirname "$destination")/.cto-os-managed.XXXXXX")" || return 1
-    if ! cp "$source" "$temp_file" || ! chmod "$destination_mode" "$temp_file" || ! mv -f "$temp_file" "$destination"; then
-      rm -f "$temp_file"
+    if ! temp_file="$(mktemp "$(dirname "$destination")/.cto-os-managed.XXXXXX")"; then
+      warn "could not create a temporary file to update $destination"
+      return 1
+    fi
+    if ! cp "$source" "$temp_file"; then
+      warn "could not copy managed content for $destination"
+      rm -f "$temp_file" || warn "could not remove temporary file $temp_file"
+      return 1
+    fi
+    if ! chmod "$destination_mode" "$temp_file"; then
+      warn "could not preserve permissions while updating $destination"
+      rm -f "$temp_file" || warn "could not remove temporary file $temp_file"
+      return 1
+    fi
+    if ! mv -f "$temp_file" "$destination"; then
+      warn "could not replace $destination with updated managed content"
+      rm -f "$temp_file" || warn "could not remove temporary file $temp_file"
       return 1
     fi
     info "  updated managed content"
     return 0
   fi
 
-  cp "$source" "$destination"
+  if ! cp "$source" "$destination"; then
+    warn "could not write $destination"
+    return 1
+  fi
   info "  written"
 }
 
