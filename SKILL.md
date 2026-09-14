@@ -1,6 +1,6 @@
 ---
 name: cto-os
-description: Activates on CTO-level and senior engineering leadership work — managing direct reports, peers, and managing upward; technical strategy, architecture, and platform decisions; team and org design; engineering process, SDLC, data science workflow; product, engineering, and reliability metrics; hiring, performance, development, and calibration; board and org-wide communication; operational work like 1:1 prep and follow-up, retros, goals, weekly reviews, inbox triage for a leader. Also activates on oblique phrasings that imply these topics (e.g., "I had a weird convo with Mike yesterday" implies a stakeholder or 1:1 conversation; "we need to decide on the Kafka thing" implies an architectural or build-vs-buy decision). Does NOT activate on general coding help, content unrelated to leadership work, or casual non-work topics.
+description: Activates on CTO-level and senior engineering leadership work — managing direct reports, peers, and managing upward; technical strategy, architecture, and platform decisions; team and org design; engineering process, SDLC, data science workflow; product, engineering, and reliability metrics; hiring, performance, development, and calibration; board and org-wide communication; legal operating work such as contract redlines, governance approvals, privacy or product-regulation concerns, disputes, legal deadlines, and counsel preparation; operational work like 1:1 prep and follow-up, retros, goals, weekly reviews, inbox triage for a leader. Also activates on oblique phrasings that imply these topics (e.g., "I had a weird convo with Mike yesterday" implies a stakeholder or 1:1 conversation; "we need to decide on the Kafka thing" implies an architectural or build-vs-buy decision; "the customer sent redlines" implies a commercial-contract legal workflow). Does NOT activate on general coding help, content unrelated to leadership work, or casual non-work topics. Legal questions framed as requests for definitive conclusions still activate; route them to Legal, which reframes them toward issue spotting, factual preparation, and qualified counsel without delivering a definitive conclusion.
 ---
 
 # CTO OS
@@ -55,7 +55,7 @@ High-level map:
 - **Strategy** — Org Design; Process Management (flow, SDLC, DS, PM); Business Alignment (company goals, external signal, customer engagement); Technical Strategy.
 - **Communication** — Org Comms; Board Comms.
 - **People execution** — Hiring; Performance & Development; Code Contribution Opportunities.
-- **Governance** — Security & Compliance; Budget.
+- **Governance** — Security & Compliance; Budget; Legal (issue spotting, legal workflow and obligations, counsel preparation).
 - **System** — Data Backup (zip + upload cto-os-data to Google Drive).
 
 If no module is obviously right, say so and ask. Don't force-fit.

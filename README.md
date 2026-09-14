@@ -90,7 +90,7 @@ Recommended sequence when first adopting.
 
 1. **Foundations.** Personal OS, Process Management, Business Alignment — the three zero-outbound-dependency modules. They don't block on anything and unlock the most downstream capability.
 2. **Daily drivers.** Attention & Operations, Team Management, one or more of Managing Up / Down / Sideways depending on role. High operational value, low dependency cost.
-3. **Role-shape modules.** Match the shape of the specific job — Tech Ops and Technical Strategy for hands-on-tech CTOs, Hiring for growth-phase orgs, Budget for P&L-owning roles, Customer Engagement (under Business Alignment) for customer-facing CTOs.
+3. **Role-shape modules.** Match the shape of the specific job — Tech Ops and Technical Strategy for hands-on-tech CTOs, Hiring for growth-phase orgs, Budget for P&L-owning roles, Legal for CTOs who directly handle contracts, governance, regulated-product questions, disputes, or counsel coordination, Customer Engagement (under Business Alignment) for customer-facing CTOs.
 4. **Strategic and periodic.** Org Design, Performance & Development, Board Comms. Low-frequency, high-leverage. Activate once daily drivers are steady.
 5. **Optional by role.** External Network & Thought Leadership, Code Contribution Opportunities, Security & Compliance.
 
@@ -145,6 +145,7 @@ Recommended sequence when first adopting.
 
 - [Security & Compliance](modules/security-compliance/README.md) — risk register, controls, compliance regime tracking (SOC 2 / ISO 27001), ISO SoA, audit events, risk briefings.
 - [Budget](modules/budget/README.md) — budget structure, plan / actual / forecast per category, variance analysis, budget-narrative authoring.
+- [Legal](modules/legal/README.md) — legal intake and triage, commercial contracts, governance and transactions, IP/licensing/OSS, employment and privacy/product-regulation matters, disputes, obligations, and counsel briefs. Issue spotting and workflow only; not legal advice.
 
 #### System
 

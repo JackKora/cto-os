@@ -1,10 +1,11 @@
 ---
 name: security-compliance
-description: "Activates for security and compliance posture work — the CTO-level view of the security program, what controls are in place, what risks are open, and how the org tracks against the compliance regimes it's committed to (SOC 2, ISO 27001, HIPAA, etc.). Covers: risk register maintenance (ISO-27001-style), control inventory and ownership (CIS-based, mapped to regimes), compliance regime status tracking, ISO 27001 Statement of Applicability, audit event capture (SOC 2 Type 1/2, ISO surveillance, customer assessments, pentests), posture rollup through the NIST CSF lens, risk-briefing authorship (often feeds Board Comms pre-reads). Also activates on oblique phrasings like 'what's our SOC 2 status,' 'log a new risk,' 'update the risk register,' 'we just got the pentest findings,' 'draft the risk briefing for the board,' 'who owns control [X],' 'are we ready for the Type 2 audit.' Does NOT activate on security-incident operational response (Tech Ops runs incidents; this module captures the resulting risk picture); security-adjacent architecture decisions (Technical Strategy owns the call; this module informs it with risk context); policy authoring (policies typically live in legal/HR docs — this module references them); or employee security training execution (operational elsewhere)."
+description: "Activates for security and compliance posture work — the CTO-level view of the security program, what controls are in place, what risks are open, and how the org tracks against the compliance regimes it's committed to (SOC 2, ISO 27001, HIPAA, etc.). Covers: risk register maintenance (ISO-27001-style), control inventory and ownership (CIS-based, mapped to regimes), compliance regime status tracking, ISO 27001 Statement of Applicability, audit event capture (SOC 2 Type 1/2, ISO surveillance, customer assessments, pentests), posture rollup through the NIST CSF lens, and source risk summaries for downstream communications. Also activates on oblique phrasings like 'what's our SOC 2 status,' 'log a new risk,' 'update the risk register,' 'we just got the pentest findings,' 'summarize security risk posture for Board Comms,' 'who owns control [X],' 'are we ready for the Type 2 audit.' Does NOT activate on board-facing narrative or pre-read authorship (Board Comms owns those); security-incident operational response (Tech Ops runs incidents; this module captures the resulting risk picture); security-adjacent architecture decisions (Technical Strategy owns the call; this module informs it with risk context); legal conclusions, notification or contractual obligations, regulator/counsel workflow, or legal deadlines (Legal owns those); policy authoring and document management; or employee security training execution (operational elsewhere)."
 requires: []
 optional:
   - tech-ops
   - technical-strategy
+  - legal
 ---
 
 # Security & Compliance
@@ -17,6 +18,7 @@ Managing the security and compliance posture of the organization. Understanding 
 
 - **Security-incident operational response** — Tech Ops runs incidents (detection through resolution); this module captures the *resulting risk picture* — what got exposed, what control failed, what's the residual risk.
 - **Security-adjacent architecture decisions** — Technical Strategy owns the decision (e.g., "we're adopting a zero-trust network"); this module provides the risk context that informs it.
+- **Legal questions and obligations** — Legal owns legal issue spotting, notification and contractual obligations, regulator or counsel workflow, and legal deadlines. This module owns the controls, audits, compliance-program commitments, and security-risk register, and consumes only confirmed Legal facts when needed.
 - **Policy authoring and document management** — policies typically live in legal/HR document systems; this module references them by name / ID, doesn't author or store them.
 - **Employee security training execution** — operational; lives in an LMS or equivalent.
 - **Threat intelligence and active threat-hunting** — out of scope for a CTO-OS Security & Compliance module; too tactical.
@@ -47,7 +49,7 @@ Four frameworks, each with a distinct purpose. Don't conflate.
 - "update the Statement of Applicability" / "ISO Annex A review"
 - "log an audit event" / "pentest findings came in"
 - "who owns control [X]" / "update control ownership"
-- "draft the risk briefing for the board" / "risk briefing for customer assessment"
+- "summarize security risk posture for Board Comms" / "risk briefing for customer assessment"
 - "show security posture" / "NIST CSF rollup"
 - "update compliance posture" / "we're committing to ISO 27001 next year"
 - Oblique: "customer just asked for our security posture — compile the response"
@@ -86,7 +88,9 @@ Each step writes a concrete artifact and appends its step number to `activation_
 - "we're adding ISO 27001 to our target"
 - "SOC 2 Type 2 audit just finished — update status to certified"
 
-**Reads:** `cto-os-data/modules/security-compliance/state/compliance-posture.md`.
+**Reads:**
+- `cto-os-data/modules/security-compliance/state/compliance-posture.md`
+- `scan(type=["legal-obligation"], module="legal", fields=["slug","domain","status","due_date","confirmation_status"], include_high_sensitivity=true)` only when a confirmed Legal obligation determines the compliance regime's scope or timing
 
 **Writes:** `cto-os-data/modules/security-compliance/state/compliance-posture.md`, overwrite-with-history.
 
@@ -195,10 +199,10 @@ Each step writes a concrete artifact and appends its step number to `activation_
 
 ### `draft-risk-briefing`
 
-**Purpose:** Compose a risk briefing for a specific audience — board, customer assessment response, CEO check-in. Pulls open risks, audit status, and recent events; frames through the audience's lens (board wants material risks and business impact; customer wants implementation evidence for their specific concerns).
+**Purpose:** Compose a source risk summary for an authorized downstream audience. Pulls open risks, audit status, and recent events. Board-facing narrative and pre-read authorship route to Board Comms, which may consume this source summary; customer and CEO summaries remain here.
 
 **Triggers:**
-- "draft the risk briefing for the board"
+- "summarize security risk posture for the board pre-read"
 - "customer just asked for our security posture — compile the response"
 - "write the risk summary for CEO 1:1"
 
@@ -207,9 +211,10 @@ Each step writes a concrete artifact and appends its step number to `activation_
 - `cto-os-data/modules/security-compliance/state/risks/` (open risks, especially high/critical)
 - `cto-os-data/modules/security-compliance/state/audits/` (recent audit outcomes)
 - `cto-os-data/modules/security-compliance/state/controls/` (implementation status for asked-about areas)
+- `scan(type=["legal-matter","legal-obligation"], module="legal", fields=["slug","domain","status","urgency","due_date","confirmation_status"], include_high_sensitivity=true)` only when linked Legal workflow materially affects the briefing; do not inline raw Legal narratives
 - `cto-os-data/modules/personal-os/state/voice/` (optional — tone)
 
-**Writes:** —  (produces a draft for the user; board-facing output flows through Board Comms' `draft-pre-read` skill; customer-facing output is sent externally)
+**Writes:** —  (produces a source summary for the user; board-facing composition flows through Board Comms' `draft-pre-read` skill; customer-facing output is sent externally)
 
 ## Persistence
 

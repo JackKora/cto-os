@@ -49,7 +49,7 @@ The system runs on Claude and Codex hosts with different affordances. The archit
 
 **Cowork permission boundary.** Grant Cowork access to `~/cto-os-data/` specifically, not a parent directory. Everything it needs is inside that folder; anything outside is none of its business. On macOS this works cleanly; on Windows there's currently a known restriction that confines Cowork to the user's home directory — fine as long as the data repo lives under `~/`.
 
-**Concurrent writes.** The only coordination concern is two surfaces writing the same file at the same moment (e.g., hand-editing a journal while Cowork runs an overnight digest that appends to it). In practice: most writes are append-only, collisions are vanishingly rare, and scripts that do non-append writes use a short `fcntl` file lock. Not worth architecting around further until it actually bites.
+**Concurrent writes.** Two surfaces can write the same file at the same moment (e.g., hand-editing a journal while Cowork updates it). There is no general cross-surface file-locking layer today. Treat each file as single-writer while a change is in progress, and use the data repo's git history to inspect or recover from a collision.
 
 **The skill is written once.** It references operations by logical name (`scan`, `write_file`). Each host supplies them through MCP or direct filesystem access. The skill never branches on host.
 
@@ -77,7 +77,7 @@ The system runs on Claude and Codex hosts with different affordances. The archit
 
 **Why not SQLite / Notion DB / Airtable:** Markdown files are diffable, grep-able, editable by hand, and free of vendor lock-in. Structured queries are handled by a Python scan script (see [CTO OS — Skill repo](./SKILL_REPO.md)), not a DB engine. For a single-user knowledge base at this scale (hundreds to low thousands of files), filesystem + grep is faster than any DB round-trip and infinitely more portable.
 
-**Frontmatter baseline:** Every file has YAML frontmatter with at minimum `type`, `slug`, `updated`. Each module defines its own additional fields. The canonical schema lives in `cto-os/meta/schema.md` and is the single source of truth — the pre-commit hook in `cto-os-data` validates against it.
+**Frontmatter baseline:** Every file has YAML frontmatter with at minimum `type`, `slug`, `updated`. Each module defines its own additional fields. The canonical schema lives in `cto-os/meta/schema.md` and is the single source of truth. `scripts/validate_state.py` provides an on-demand structural and baseline check; it is intentionally not a complete per-type schema engine.
 
 **Versioning:** Both repos are git-versioned. `cto-os` is versioned because it's code; `cto-os-data` is versioned for backup and history (pushed periodically to a private remote). Commit cadence is the user's choice.
 
@@ -189,7 +189,7 @@ When and how the skill writes state to `cto-os-data`. One cross-cutting rule for
 
 - **Path.** Derived from the module's convention. The module's `SKILL.md` declares path templates (e.g., `state/people/{person-slug}/{date}.md`).
 - **Semantics.** One of **append** (1:1 notes, journal, retros), **overwrite** (current goals — with history in the body), or **upsert** (stakeholder-profile fields). Declared per-path in each module's `SKILL.md`.
-- **Frontmatter.** Required fields per `meta/schema.md`. Populated before the write; the data-repo pre-commit hook validates on save and rejects incomplete frontmatter.
+- **Frontmatter.** Required fields per `meta/schema.md`, populated before the write. `scripts/validate_state.py` can check candidate state for structural and baseline problems; complete per-type correctness remains part of the module workflow and review discipline.
 
 ## Undo
 
@@ -223,14 +223,14 @@ This is **not** a way to bypass module state. Modules with declared paths still 
 
 - **Local-only by default.** State lives on your laptop and in a private git remote for `cto-os-data`. No cloud DB, no multi-tenant anything.
 - **Secrets never in either repo.** API keys for Slack, Linear, Gmail live in macOS Keychain (accessed via `security` CLI in scripts) or a local `.env` file that's gitignored in both repos. Scripts read from env; they never accept secrets on the command line.
-- **Sensitive modules flagged.** Performance & Development, Board Comms, and Managing Down contain information that could be damaging if leaked. Their state directories are marked in frontmatter (`sensitivity: high`) and the scan tool excludes them from queries unless explicitly included. This is defense-in-depth, not encryption.
+- **Sensitive modules flagged.** Performance & Development, Board Comms, Managing Down, Security & Compliance, and Legal contain information that could be damaging if leaked. Their state directories are marked in frontmatter (`sensitivity: high`) and the scan tool excludes them from queries unless explicitly included. This is defense-in-depth, not encryption.
 - **Git remote considerations.** `cto-os-data` syncs to a **private** repo with 2FA enforced. `cto-os` can be public or private depending on whether you want to share the logic. `integrations-cache/` is gitignored in `cto-os-data` (pullable, not canonical).
 
 ## Testing and code review
 
-Two layers, both enforced via the pre-commit hook (`hooks/pre-commit`, wired up by `install.sh`).
+Two complementary layers. The pre-commit hook (`hooks/pre-commit`, wired up by `install.sh`) runs the dependency and qualitative checks when their relevant files are staged; pytest is run directly during development and review.
 
-**Script and MCP tests.** Standard pytest in `cto-os/tests/` with fixtures in `tests/fixtures/cto-os-data-sample/`. Every script (`scan.py`, `validate_deps.py`, `roll_up.py`, `pull_*.py`, `rename_module.py`) and the MCP server has a test file using the subprocess pattern — tests shell out with real `--args '{...}'` invocations, asserting on exit code and parsed JSON stdout. Run with `uv run pytest tests/ -q`.
+**Script and MCP tests.** Standard pytest in `cto-os/tests/` covers the deterministic scripts, installer, hook, and MCP surface, with fixtures in `tests/fixtures/cto-os-data-sample/`. Script tests exercise the external JSON contract where applicable. Run with `uv run pytest tests/ -q`; the pre-commit hook does not run pytest automatically.
 
 **AI-assisted skill review.** Prose skills have no compiler, so the shared procedure in `meta/skill-reviewer.md` applies the checklist at `tests/claude-review.md`. Thin adapters expose it to Claude (`.claude/agents/skill-reviewer.md`) and Codex (`.codex/agents/skill-reviewer.toml`). The pre-commit hook selects a runner through `CTO_OS_REVIEWER`, repo-local `cto-os.reviewer`, or `auto` (Claude first for backward compatibility, then Codex), and reviews staged skills, project instructions, docs, and reviewer files. The hook also runs `validate_deps.py` on any staged module `SKILL.md` to fail the commit on dep-graph cycles or unknown required deps.
 
