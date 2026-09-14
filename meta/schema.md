@@ -1379,6 +1379,111 @@ Invariants:
 
 ---
 
+## `legal-posture`
+
+The Legal module's operating model: covered entities and jurisdictions, legal ownership, counsel model, approval authority, escalation criteria, and response expectations. Owned by `legal`.
+
+```yaml
+entities: list[string]             # required; entities or operating scopes covered by the posture
+jurisdictions: list[string]        # required; primary jurisdictions, including literal "unknown" when pending counsel
+legal_owner: string                # required; internal role or person accountable for legal workflow
+counsel_model: enum                # required; one of: none, external, in-house, mixed
+counsel_scopes: list               # required; role/scope references for counsel relationships
+approval_authority: string         # required; who may approve legal positions or contract exceptions
+escalation_criteria: list[string]  # required; events that require immediate escalation
+response_expectations: string      # required; response-time expectations for legal workflow
+```
+
+Invariants:
+- Singleton at `state/legal-posture.md` with `slug: current`.
+- Body sections: `## Operating model`, `## Escalation and approvals`, `## Handling notes`, `## Source references`, `## History`.
+- Prior versions are preserved under `## History`.
+
+**Current version:** 1.
+
+---
+
+## `legal-matter`
+
+An independently changing in-scope legal matter. Owned by `legal`. The record tracks issue spotting, preparation, and workflow; its status and urgency do not state a legal conclusion.
+
+```yaml
+title: string                       # required
+domain: enum                        # required; one of: general-intake, commercial-contract, corporate-governance-transaction, ip-licensing-oss, employment, privacy-data-product-regulation, dispute-investigation
+status: enum                        # required; one of: intake, triage, active, waiting-on-counsel, waiting-on-counterparty, resolved, closed
+urgency: enum                       # required; one of: low, medium, high, critical
+owner: string                       # required
+opened: date                        # required
+next_action: string                 # required
+next_action_due: date               # required; nullable
+counsel_involved: bool              # required
+handling: enum                      # required; one of: standard, privilege-sensitive
+related_obligations: list[string]   # required; legal-obligation slugs
+related_records: list[string]       # required; paths to related records
+```
+
+Invariants:
+- Files live at `state/matters/{matter-slug}.md`; `slug` equals the matter slug.
+- Append a new file for a new matter, then overwrite-with-history as that matter changes.
+- Body sections: `## Sourced facts`, `## Assertions and positions`, `## Issue spots`, `## Unknowns`, `## Timeline`, `## Next steps`, `## Source references`, `## History`.
+- `handling: privilege-sensitive` is an access cue, not a determination that the record is privileged.
+
+**Current version:** 1.
+
+---
+
+## `legal-obligation`
+
+An independently tracked legal or contractual obligation and its operational clock. Owned by `legal`. The record tracks workflow and attribution; it is not an independent assertion of what the law requires.
+
+```yaml
+domain: enum                 # required; one of: general-intake, commercial-contract, corporate-governance-transaction, ip-licensing-oss, employment, privacy-data-product-regulation, dispute-investigation
+obligation_kind: enum        # required; one of: filing, notice, consent, approval, renewal, reporting, retention-preservation, restriction, other
+status: enum                 # required; one of: identified, pending, satisfied, waived, superseded, overdue
+owner: string                # required
+source_reference: string     # required
+jurisdiction: string         # required; jurisdiction name or literal "unknown"
+due_date: date               # required; nullable
+recurrence: string           # required; nullable
+confirmation_status: enum    # required; one of: issue-spotted, user-confirmed, counsel-confirmed
+related_matter: string       # required; legal-matter slug or null
+completed_date: date         # required; nullable
+```
+
+Invariants:
+- Files live at `state/obligations/{obligation-slug}.md`; `slug` equals the obligation slug.
+- Append a new file for a new obligation, then overwrite-with-history as it changes.
+- Body sections: `## Operational description`, `## Basis and attribution`, `## Evidence references`, `## History`.
+- Only an explicit user- or counsel-attributed source may set `status` to `satisfied`, `waived`, or `superseded`.
+
+**Current version:** 1.
+
+---
+
+## `counsel-brief`
+
+An immutable factual brief prepared for counsel about one Legal matter. Owned by `legal`.
+
+```yaml
+prepared_on: date            # required
+matter: string               # required; legal-matter slug
+purpose: string              # required
+audience: string             # required; role or counsel reference
+handling: enum               # required; one of: standard, privilege-sensitive
+supersedes: string           # required; counsel-brief slug or null
+source_paths: list[string]   # required
+```
+
+Invariants:
+- Files live at `state/counsel-briefs/{YYYY-MM-DD}-{matter-slug}-{brief-slug}.md`; `slug` equals the filename stem.
+- Append-new-file and immutable after creation. A correction or refresh creates a new file whose `supersedes` points to the prior brief.
+- Body sections: `## Requested outcome`, `## Sourced facts`, `## Assertions and positions`, `## Timeline`, `## Unknowns`, `## Issue spots`, `## Questions for counsel`, `## Sources`.
+- `handling: privilege-sensitive` is an access cue, not a determination that the brief is privileged.
+
+**Current version:** 1.
+
+---
+
 ## `external-contact`
 
 A record of an external-to-the-company person the user maintains a professional relationship with. Owned by `external-network`. Parallel in purpose to `stakeholder-profile` but structurally distinct — different fields, different lifecycle (no tenure, no departure-from-team), different sensitivity defaults.
@@ -2318,6 +2423,10 @@ Current canonical version per type.
 | `control` | 1 | `security-compliance` |
 | `statement-of-applicability` | 1 | `security-compliance` |
 | `audit-event` | 1 | `security-compliance` |
+| `legal-posture` | 1 | `legal` |
+| `legal-matter` | 1 | `legal` |
+| `legal-obligation` | 1 | `legal` |
+| `counsel-brief` | 1 | `legal` |
 | `external-contact` | 1 | `external-network` |
 | `external-touchpoint` | 1 | `external-network` |
 | `public-commitment` | 1 | `external-network` |
@@ -2356,3 +2465,5 @@ Current canonical version per type.
 Version bumps ship with a migration at `scripts/migrate_{type}_v{N}_to_v{N+1}.py`. The migration runs automatically the next time a surface loads and detects drift; it commits a pre-migration snapshot to git so rollback is `git revert`.
 
 > **Note on additions vs. migrations.** The five `conversation-intake` types above (`decision`, `action-item`, `observation`, `quote`, `open-question`) were added as new types at version 1 — no existing records use these types, so no migration is needed. The migration requirement applies when an *existing* type's schema changes in a way that affects records already on disk.
+
+The four `legal` types (`legal-posture`, `legal-matter`, `legal-obligation`, `counsel-brief`) are likewise new at version 1, so they require no migration.

@@ -1,12 +1,13 @@
 ---
 name: budget
-description: "Activates for financial stewardship of the engineering organization — budget planning, budget-to-actual tracking, forecasting, cost-allocation decisions, and compiling budget narratives for leadership or board reporting. Covers: declaring the budget category taxonomy (headcount, vendors/SaaS, cloud infra, tools, professional services, etc.); maintaining plan / actual / forecast amounts per category per period; running variance analyses; authoring budget narratives that explain spend decisions in Core-vs-Context terms. Also activates on oblique phrasings like 'forecast next quarter's eng spend,' 'vendor spend has drifted,' 'why are we over budget on [category],' 'compare capex vs opex for the GPU cluster,' 'draft the budget section of the board update.' Does NOT activate on the actual build-vs-buy architectural decisions (Technical Strategy owns those; this module provides cost context); workforce-level hiring plan (Hiring owns the plan; this module tracks the financial envelope); or non-engineering budget (out of scope)."
+description: "Activates for financial stewardship of the engineering organization — budget planning, budget-to-actual tracking, forecasting, cost-allocation decisions, and compiling budget narratives for leadership or board reporting. Covers: declaring the budget category taxonomy (headcount, vendors/SaaS, cloud infra, tools, professional services, etc.); maintaining plan / actual / forecast amounts per category per period; running variance analyses; authoring budget narratives that explain spend decisions in Core-vs-Context terms. Also activates on oblique phrasings like 'forecast next quarter's eng spend,' 'vendor spend has drifted,' 'why are we over budget on [category],' 'compare capex vs opex for the GPU cluster,' 'draft the budget section of the board update.' Does NOT activate on the actual build-vs-buy architectural decisions (Technical Strategy owns those; this module provides cost context); workforce-level hiring plan (Hiring owns the plan; this module tracks the financial envelope); contract rights, obligations, negotiation, renewal, or termination workflow (Legal owns those); or non-engineering budget (out of scope)."
 requires: []
 optional:
   - hiring
   - tech-ops
   - business-alignment
   - technical-strategy
+  - legal
 ---
 
 # Budget
@@ -21,7 +22,8 @@ Financial stewardship of the engineering organization. Understanding where money
 - **Workforce plan** — Hiring owns the plan; this module tracks the financial envelope that plan operates within.
 - **Non-engineering budget** — the module is scoped to engineering; broader company budgeting lives elsewhere.
 - **Payroll execution** — out of scope; this module tracks *planned and actual* headcount-loaded cost at the aggregate, not individual compensation records (those are Hiring for candidates, HR systems for employees).
-- **Invoice processing and vendor contract management** — assumed to live in a finance or procurement system; this module tracks aggregate spend per vendor or category, not per-invoice detail.
+- **Invoice processing** — lives in a finance or procurement system; this module tracks aggregate spend per vendor or category, not per-invoice detail.
+- **Contract rights and workflow** — Legal owns rights, obligations, negotiation issues, approvals, and renewal or termination terms. This module may consume a confirmed Legal obligation when it materially changes spend or forecast, but does not interpret the contract.
 
 ## Frameworks
 
@@ -143,6 +145,7 @@ Each step writes a concrete artifact and appends its step number to `activation_
 - `cto-os-data/modules/budget/state/budget-structure.md` (framing)
 - `cto-os-data/modules/business-alignment/state/company-goals/` (optional — strategic framing)
 - `cto-os-data/modules/technical-strategy/state/` (optional — if build-vs-buy ADRs exist to cite)
+- `scan(type=["legal-obligation"], module="legal", fields=["slug","obligation_kind","status","due_date","recurrence","confirmation_status"], include_high_sensitivity=true)` (optional — confirmed renewal, termination, notice, or other contractual timing that materially affects forecast)
 - `cto-os-data/modules/personal-os/state/voice/` (optional — tone)
 
 **Writes:** — (narrative produced for user to review; user captures final version elsewhere — typically Board Comms or Org Comms — through those modules' skills)

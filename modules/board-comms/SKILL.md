@@ -1,6 +1,6 @@
 ---
 name: board-comms
-description: "Activates for board-level strategic communication — quarterly board updates, pre-read memos for upcoming meetings, post-meeting capture of decisions and feedback, and the ongoing narrative across meetings. Covers: composing the CTO section of a board update by pulling from Business Alignment (company goals), Process Management (flow KPIs), Tech Ops (material incidents), Security & Compliance (material risks), Hiring (exec-level changes), and Budget (financial posture); authoring topic-specific pre-reads (risk briefing, fundraising narrative, M&A analysis); capturing what happens at the meeting itself (director feedback, decisions, follow-ups). Also activates on oblique phrasings like 'draft the CTO section for Q2 board,' 'write the pre-read on [topic],' 'capture yesterday's board meeting,' 'risk briefing for the board,' 'update board structure — new director joined.' Does NOT activate on operational internal comms (Org Comms); peer CTO or external-investor relationships outside board meetings (External Network & Thought Leadership); or investor day / all-hands-style content for broader audiences (Org Comms)."
+description: "Activates for board-level strategic communication — quarterly board updates, pre-read memos for upcoming meetings, post-meeting capture of decisions and feedback, and the ongoing narrative across meetings. Covers: composing the CTO section of a board update by pulling from Business Alignment (company goals), Process Management (flow KPIs), Tech Ops (material incidents), Security & Compliance (material risks), Hiring (exec-level changes), Budget (financial posture), and Legal (material legal matters, obligations, approvals, and constraints); authoring topic-specific pre-reads (risk briefing, fundraising narrative, M&A analysis); capturing what happens at the meeting itself (director feedback, decisions, follow-ups). Also activates on oblique phrasings like 'draft the CTO section for Q2 board,' 'write the pre-read on [topic],' 'capture yesterday's board meeting,' 'risk briefing for the board,' 'update board structure — new director joined.' Does NOT activate on operational internal comms (Org Comms); legal issue spotting, counsel preparation, or legal workflow (Legal); peer CTO or external-investor relationships outside board meetings (External Network & Thought Leadership); or investor day / all-hands-style content for broader audiences (Org Comms)."
 requires:
   - business-alignment
   - process-management
@@ -10,6 +10,7 @@ optional:
   - hiring
   - budget
   - personal-os
+  - legal
 ---
 
 # Board Comms
@@ -27,6 +28,7 @@ Strategic and periodic module — most of the work is concentrated around meetin
 - **All-hands content for broader internal audiences** — Org Comms.
 - **Peer CTO relationships** — External Network & Thought Leadership.
 - **Day-to-day updates to exec team** — Managing Up (for your direct manager) or Managing Sideways (peers).
+- **Legal issue spotting, counsel preparation, and legal workflow** — Legal owns the underlying matters, obligations, approvals, constraints, and counsel questions. This module uses authorized facts from that state only to compose the board-facing narrative.
 
 ## Frameworks
 
@@ -116,6 +118,7 @@ Historical backfill (prior board meetings and updates) happens post-activation v
 - `cto-os-data/modules/security-compliance/state/` (optional — material risks)
 - `cto-os-data/modules/hiring/state/workforce-plan.md` (optional — exec changes)
 - `cto-os-data/modules/budget/state/` (optional — financial posture)
+- `scan(type=["legal-matter","legal-obligation"], module="legal", fields=["slug","title","domain","status","urgency","next_action_due","due_date","confirmation_status"], include_high_sensitivity=true)` (optional — material legal matters, approvals, constraints, and deadlines; never inline raw Legal narratives)
 - `cto-os-data/modules/personal-os/state/voice/` (optional — tone)
 
 **Writes:** `cto-os-data/modules/board-comms/state/updates/{YYYY-MM-DD}.md`, append-new-file. Saved as a draft (`status: draft`); user revises and flips to `final` before the meeting.
@@ -133,6 +136,7 @@ Historical backfill (prior board meetings and updates) happens post-activation v
 **Reads:**
 - `cto-os-data/modules/board-comms/state/board-structure.md` (audience framing)
 - Relevant source modules depending on topic (security-compliance for risk briefings, budget for fundraising, business-alignment for strategic pivots)
+- `scan(type=["legal-matter","legal-obligation"], module="legal", fields=["slug","title","domain","status","urgency","next_action_due","due_date","confirmation_status"], include_high_sensitivity=true)` (optional — minimum-necessary Legal fields for M&A, governance, or legal-risk pre-reads; never inline raw Legal narratives)
 - `cto-os-data/modules/personal-os/state/voice/` (optional — tone)
 
 **Writes:** `cto-os-data/modules/board-comms/state/pre-reads/{YYYY-MM-DD}-{topic-slug}.md`, append-new-file.
