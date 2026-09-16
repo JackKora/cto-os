@@ -8,7 +8,7 @@
 
 **Depends on:**
 - Required: none
-- Optional: `personal-os`, `managing-up`, `managing-down`, `managing-sideways`, `external-network`, `business-alignment`, `hiring`, `budget`, `legal`
+- Optional: `personal-os`, `managing-up`, `managing-down`, `managing-sideways`, `external-network`, `business-alignment`, `hiring`, `budget`, `legal`, `product`, `tech-ops`, `security-compliance`, `org-design`
 
 **Example tasks:**
 - "Prepare me for the customer renewal negotiation and identify my BATNA and walk-away."

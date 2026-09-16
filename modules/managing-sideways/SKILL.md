@@ -50,20 +50,20 @@ Each step writes a concrete artifact and appends its step number to `activation_
 ### 1. Enumerate key peers
 
 **Ask:** "Who are the peers you work with most? Fellow leaders across functions — your CPO, VPs of Sales / Marketing / Ops / Product / Data, Legal, Finance, Head of People, and so on. Focus on the ones where cross-functional work is regular enough to matter. For each: name, function/title, short slug (kebab-case), and a one-line note on what you work on together."
-**Writes:** one file per peer at `cto-os-data/modules/managing-sideways/state/people/{person-slug}.md` with `type: stakeholder-profile`, `slug: <person-slug>`, `name`, `role`, `function`, `relationship: peer`, `collaboration_area: <string>`.
-**Expects:** at least one peer file exists with all five fields.
+**Writes:** one file per peer at `cto-os-data/modules/managing-sideways/state/people/{person-slug}.md` with `type: stakeholder-profile`, `slug: <person-slug>`, `name`, `role`, `function`, `relationship: peer`, `collaboration_area: <string>`; `cto-os-data/modules/managing-sideways/_module.md` with `1` appended to `activation_completed`.
+**Expects:** at least one peer file exists with all five fields; `_module.md.activation_completed` contains `1` and the module remains inactive.
 
 ### 2. Baseline profile per peer
 
 **Ask:** "For each peer, what do you already know about them — observable only, no inference? (a) communication preferences (channel, cadence, format); (b) what they want first (numbers / stories / risks / options); (c) typical concerns they push on; (d) how much context they want before an ask; (e) known sensitivities and past heated topics; (f) relationship status (trust level, open threads); (g) what currencies they value (from Cohen & Bradford — what do they care about getting). Skip fields you don't have a grounded answer for."
-**Writes:** updates each peer file's frontmatter with the seven profile fields (profile standard six + `currencies`).
-**Expects:** each peer file has at least `communication_preferences` and `what_they_want_first` set.
+**Writes:** updates each peer file's frontmatter with the seven profile fields (profile standard six + `currencies`); `cto-os-data/modules/managing-sideways/_module.md` with `2` appended to `activation_completed`.
+**Expects:** each peer file has at least `communication_preferences` and `what_they_want_first` set; `_module.md.activation_completed` contains `2` and the module remains inactive.
 
 ### 3. Set 1:1 cadence per peer
 
 **Ask:** "What's the cadence with each peer? Weekly for your closest collaborator (often CPO for a CTO); bi-weekly to monthly for most; ad-hoc / quarterly for peripheral peers. For each: cadence + whether it's a scheduled 1:1 or opportunistic."
-**Writes:** updates each peer file with `cadence` and `meeting_style` (scheduled | opportunistic) in frontmatter.
-**Expects:** each peer file has `cadence` set.
+**Writes:** updates each peer file with `cadence` and `meeting_style` (scheduled | opportunistic) in frontmatter; `cto-os-data/modules/managing-sideways/_module.md` with `3` appended to `activation_completed`, `schema_version: 1`, `active: true`, `activated_at: <date>`, `deactivated_at: null`, and `updated: <date>`.
+**Expects:** each peer file has `cadence` set; `_module.md` has `activation_completed: [1, 2, 3]`, `schema_version: 1`, `active: true`, and `deactivated_at: null`.
 
 ## Skills
 

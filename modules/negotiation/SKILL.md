@@ -12,6 +12,10 @@ optional:
   - hiring
   - budget
   - legal
+  - product
+  - tech-ops
+  - security-compliance
+  - org-design
 ---
 
 # Negotiation
@@ -27,7 +31,7 @@ If one of those features is unclear, ask a short routing question before creatin
 - **Ordinary influence, persuasion, disagreement, feedback, or coaching.** Managing Up, Managing Down, or Managing Sideways owns the relationship work. A hard conversation is not automatically a negotiation.
 - **Coalition building and routine stakeholder alignment.** Managing Sideways owns internal peer relationships and currency-of-exchange context; Negotiation takes over only when the four-part scope test is met.
 - **Legal analysis, contract interpretation, and rights or obligations.** Legal owns issue spotting, legal workflow, redlines, and counsel coordination. Negotiation may use counsel-confirmed constraints to plan the interaction but never substitutes for Legal or counsel.
-- **Subject decisions and source facts.** Hiring owns candidate and offer process facts; Budget owns cost envelopes; Business Alignment owns customer and company-goal context; stakeholder modules own relationship profiles; External Network owns external-contact history. Negotiation reads those sources when relevant and does not duplicate them as canonical facts.
+- **Subject decisions and source facts.** Hiring owns candidate and offer process facts; Budget owns cost envelopes; Business Alignment owns customer and company-goal context; Product owns roadmap facts; Tech Ops owns reliability facts; Security & Compliance owns risk and control facts; Org Design owns structural decisions; stakeholder modules own relationship profiles; External Network owns external-contact history. Negotiation reads those sources when relevant and does not duplicate them as canonical facts.
 - **Personal-life negotiation.** Housing, family, divorce, personal purchases, and other non-work negotiations are outside CTO OS.
 
 ## Frameworks
@@ -120,7 +124,7 @@ Users route by natural-language intent. The names below are internal capability 
 - `cto-os-data/modules/negotiation/state/negotiations/{negotiation-slug}.md` and its recent rounds, if it already exists
 - `cto-os-data/modules/personal-os/state/show-up.md` only when leadership posture should shape the interaction
 - relevant stakeholder profile and recent interaction state from Managing Up, Managing Down, Managing Sideways, or External Network only when that module owns a counterparty relationship
-- relevant company-goal, hiring, budget, or legal state only when that module owns a material fact or constraint; Legal remains authoritative for legal interpretation and counsel-confirmed positions
+- relevant Business Alignment, Hiring, Budget, Legal, Product, Tech Ops, Security & Compliance, or Org Design state only when that module owns a material fact or constraint; Legal remains authoritative for legal interpretation and counsel-confirmed positions
 
 **Writes:** `cto-os-data/modules/negotiation/state/negotiations/{negotiation-slug}.md`, append-new-file or overwrite-with-history.
 
@@ -150,7 +154,7 @@ Users route by natural-language intent. The names below are internal capability 
 
 **Reads:**
 - the negotiation record, posture, and playbook
-- Budget, Hiring, Business Alignment, or Legal state only when it supplies an actual package constraint, approval, valuation input, or counsel-confirmed boundary
+- Budget, Hiring, Business Alignment, Legal, Product, Tech Ops, Security & Compliance, or Org Design state only when it supplies an actual package constraint, approval, valuation input, operational boundary, or counsel-confirmed position
 
 **Writes:** `cto-os-data/modules/negotiation/state/negotiations/{negotiation-slug}.md`, overwrite-with-history; updates the options and current-plan sections with package assumptions and equivalence rationale.
 
