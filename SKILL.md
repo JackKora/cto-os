@@ -1,6 +1,6 @@
 ---
 name: cto-os
-description: Activates on CTO-level and senior engineering leadership work — managing direct reports, peers, and managing upward; technical strategy, architecture, and platform decisions; team and org design; engineering process, SDLC, data science workflow; product, engineering, and reliability metrics; hiring, performance, development, and calibration; board and org-wide communication; legal operating work such as contract redlines, governance approvals, privacy or product-regulation concerns, disputes, legal deadlines, and counsel preparation; operational work like 1:1 prep and follow-up, retros, goals, weekly reviews, inbox triage for a leader. Also activates on oblique phrasings that imply these topics (e.g., "I had a weird convo with Mike yesterday" implies a stakeholder or 1:1 conversation; "we need to decide on the Kafka thing" implies an architectural or build-vs-buy decision; "the customer sent redlines" implies a commercial-contract legal workflow). Does NOT activate on general coding help, content unrelated to leadership work, or casual non-work topics. Legal questions framed as requests for definitive conclusions still activate; route them to Legal, which reframes them toward issue spotting, factual preparation, and qualified counsel without delivering a definitive conclusion.
+description: Activates on CTO-level and senior engineering leadership work — managing direct reports, peers, and managing upward; professional negotiation preparation and debriefs; technical strategy, architecture, and platform decisions; team and org design; engineering process, SDLC, data science workflow; product, engineering, and reliability metrics; hiring, performance, development, and calibration; board and org-wide communication; legal operating work such as contract redlines, governance approvals, privacy or product-regulation concerns, disputes, legal deadlines, and counsel preparation; operational work like 1:1 prep and follow-up, retros, goals, weekly reviews, inbox triage for a leader. Also activates on oblique phrasings that imply these topics (e.g., "I had a weird convo with Mike yesterday" implies a stakeholder or 1:1 conversation; "I need to know my walk-away before the renewal call" implies professional negotiation; "we need to decide on the Kafka thing" implies an architectural or build-vs-buy decision; "the customer sent redlines" implies a commercial-contract legal workflow). Does NOT activate on general coding help, personal-life negotiation, content unrelated to leadership work, or casual non-work topics. Legal questions framed as requests for definitive conclusions still activate; route them to Legal, which reframes them toward issue spotting, factual preparation, and qualified counsel without delivering the conclusion.
 ---
 
 # CTO OS
@@ -50,6 +50,7 @@ Don't try to hold all modules in your head. When the user's topic becomes clear,
 High-level map:
 
 - **Stakeholder relationships** — Managing Up / Down / Sideways.
+- **Professional agreements** — Negotiation for consequential work negotiations with real alternatives, meaningful commitments, and deliberate preparation; not ordinary persuasion or relationship maintenance.
 - **Personal thinking and identity** — Personal OS (goals, show-up, voice); External Network & Thought Leadership.
 - **Operations** — Attention & Operations (weekly/daily rhythm, inbox); Team Management (team-aggregate health); Tech Ops (production reliability).
 - **Strategy** — Org Design; Process Management (flow, SDLC, DS, PM); Business Alignment (company goals, external signal, customer engagement); Technical Strategy.
@@ -57,6 +58,8 @@ High-level map:
 - **People execution** — Hiring; Performance & Development; Code Contribution Opportunities.
 - **Governance** — Security & Compliance; Budget; Legal (issue spotting, legal workflow and obligations, counsel preparation).
 - **System** — Data Backup (zip + upload cto-os-data to Google Drive).
+
+For overlap between a relationship module and Negotiation, apply the four-part negotiation test: partly shared and opposed interests; a meaningful agreement, concession, or commitment; a real alternative or walk-away choice; and deliberate preparation warranted. Negotiation owns strategy and rounds when all four are present; the relationship module remains the source of stakeholder context. Legal remains authoritative for legal analysis and counsel workflow even when Negotiation owns interaction strategy.
 
 If no module is obviously right, say so and ask. Don't force-fit.
 

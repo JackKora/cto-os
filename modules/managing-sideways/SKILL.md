@@ -1,18 +1,19 @@
 ---
 name: managing-sideways
-description: "Activates for building and maintaining lateral relationships with peers — cross-functional leaders the user works with but doesn't have reporting authority over (CPO, VP Sales, VP Marketing, Head of Ops, Legal, Finance, etc.). Covers: 1:1 prep and capture with peers, tracking peer stakeholder profiles, negotiation preparation (currency-of-exchange thinking, BATNA), coalition-building for cross-functional initiatives, and handling disputes or misaligned priorities with peers. Also activates on oblique phrasings like 'prep for my 1:1 with [CPO],' 'I need something from [peer team] but they keep deprioritizing,' 'help me build the coalition for [X],' 'negotiate roadmap tradeoffs with [peer],' 'how do I get [peer] on board with [Y].' Does NOT activate on direct reports (Managing Down), upward relationships (Managing Up), external peer CTOs and industry peers (External Network & Thought Leadership), or board-level stakeholders (Board Comms)."
+description: "Activates for building and maintaining lateral relationships with peers — cross-functional leaders the user works with but doesn't have reporting authority over (CPO, VP Sales, VP Marketing, Head of Ops, Legal, Finance, etc.). Covers 1:1 preparation and capture, observable peer profiles, currency-of-exchange context, coalition building, stalled asks, relationship friction, and post-negotiation relationship signals. Also activates on oblique phrasings like 'prep for my 1:1 with [CPO],' 'I need something from [peer team] but they keep deprioritizing,' 'help me build the coalition for [X],' or 'how do I get [peer] on board with [Y].' Does NOT activate for substantive negotiation strategy or BATNA/walk-away preparation (Negotiation); direct reports (Managing Down); upward relationships (Managing Up); external peer CTOs and industry peers (External Network & Thought Leadership); or board-level stakeholders (Board Comms)."
 requires: []
 optional:
   - personal-os
   - business-alignment
   - attention-operations
+  - negotiation
 ---
 
 # Managing Sideways
 
 ## Scope
 
-Building and maintaining the lateral relationships that make cross-functional work possible. Peers in the user's organization — fellow executives and leaders across functions (CPO, VP Sales, VP Marketing, Head of Ops, Legal, Finance, General Counsel, and so on) where the user has to get things done without reporting authority. Tracks peer profiles (observable preferences and concerns), 1:1 cadence, and the running state of negotiations, coalitions, and cross-functional initiatives.
+Building and maintaining the lateral relationships that make cross-functional work possible. Peers in the user's organization — fellow executives and leaders across functions (CPO, VP Sales, VP Marketing, Head of Ops, Legal, Finance, General Counsel, and so on) where the user has to get things done without reporting authority. Tracks observable peer profiles, 1:1 cadence, currency-of-exchange context, coalitions, stalled asks, relationship friction, and relationship signals after a negotiation concludes.
 
 ## Out of scope
 
@@ -21,14 +22,12 @@ Building and maintaining the lateral relationships that make cross-functional wo
 - **External peer CTOs, advisors, industry peers** — External Network & Thought Leadership.
 - **Board-level stakeholders** — Board Comms.
 - **Large-audience internal communication** — Org Comms.
+- **Substantive negotiation strategy** — Negotiation owns the Seven Elements preparation, BATNA and reservation boundaries, offer packages, sequencing, round debriefs, and negotiation-specific lessons. Managing Sideways supplies peer context and receives post-negotiation relationship signals.
 
 ## Frameworks
 
 - [Allan Cohen & David Bradford — *Influence Without Authority*](https://www.amazon.com/Influence-Without-Authority-Allan-Cohen/dp/0471463302) — currency-of-exchange model: identify what your peer values and what you can trade.
-  - *How this module applies it:* peer profiles capture what currencies the peer values — hitting their numbers, political capital, reputation for delivery, protecting their team's focus, career visibility. Negotiation prep uses these explicitly: what's the peer's currency, what can you offer, what can they offer in return. Don't moralize the trade — currencies are legitimate; the mistake is pretending a relationship is currency-free.
-
-- [Roger Fisher & William Ury — *Getting to Yes*](https://www.amazon.com/Getting-Yes-Negotiating-Agreement-Without/dp/0143118757) — principled negotiation: separate people from the problem, focus on interests not positions, invent options for mutual gain, insist on objective criteria. BATNA as the grounding reference.
-  - *How this module applies it:* negotiation prep surfaces each side's underlying interests (not just stated positions) and walks through mutual-gain options. BATNA (best alternative to negotiated agreement) is tracked for high-stakes peer negotiations — knowing yours prevents bad deals; guessing theirs improves offers. Don't apply this to every conversation; reserve for substantial cross-functional negotiations (roadmap tradeoffs, shared-resource disputes, scope boundaries).
+  - *How this module applies it:* peer profiles capture observable evidence about what currencies the peer values — hitting their numbers, political capital, reputation for delivery, protecting their team's focus, or career visibility. Use those currencies for ordinary influence, reciprocal support, and coalition design without inventing motives or treating relationships as purely transactional. When the interaction becomes a substantive negotiation, pass this context to Negotiation rather than extending the framework into BATNA or deal strategy here.
 
 ## Triggers
 
@@ -37,10 +36,10 @@ Building and maintaining the lateral relationships that make cross-functional wo
 - "update [peer]'s profile"
 - "add [person] as a peer" (new hire at peer level, new reorg putting someone adjacent)
 - "[peer] is leaving" / "remove [peer]"
-- "prep for negotiation with [peer] on [topic]"
 - "help me build the coalition for [initiative]"
 - "[peer] is blocking [thing]" / "[peer] keeps deprioritizing [ask]"
 - "how do I get [peer] on board with [Y]"
+- "capture how the relationship changed after the negotiation"
 - Oblique: "I'm frustrated with [peer]"
 - Oblique: "I need something from [team] but it's not moving"
 
@@ -70,7 +69,7 @@ Each step writes a concrete artifact and appends its step number to `activation_
 
 ### `log-1on1-sideways`
 
-**Purpose:** Capture a 1:1 with a peer. Topics, decisions, follow-ups, signals (currency movements, relationship state changes, emerging friction).
+**Purpose:** Capture a 1:1 with a peer. Topics, decisions, follow-ups, and signals such as currency movements, relationship-state changes, emerging friction, or post-negotiation trust effects.
 
 **Triggers:**
 - "log my 1:1 with [peer]"
@@ -79,12 +78,13 @@ Each step writes a concrete artifact and appends its step number to `activation_
 **Reads:**
 - `cto-os-data/modules/managing-sideways/state/people/{person-slug}.md`
 - `cto-os-data/modules/managing-sideways/state/1on1s/{person-slug}/` (recent)
+- `cto-os-data/modules/negotiation/state/negotiations/{negotiation-slug}.md` or its linked round only when the user explicitly asks to capture the negotiation's relationship effect; do not copy BATNA, reservation, leverage, or offer details into peer state
 
 **Writes:** `cto-os-data/modules/managing-sideways/state/1on1s/{person-slug}/{YYYY-MM-DD}.md`, append-new-file.
 
 ### `prep-1on1-sideways`
 
-**Purpose:** Prepare for an upcoming peer 1:1 or cross-functional meeting. Pulls recent notes, open threads (especially live negotiations or stalled asks), profile context, and shared-goal framing from Business Alignment.
+**Purpose:** Prepare for an upcoming peer 1:1 or cross-functional meeting. Pulls recent notes, stalled asks, profile context, and shared-goal framing from Business Alignment. If the agenda is a substantive negotiation, route that portion to Negotiation.
 
 **Triggers:**
 - "prep for my 1:1 with [peer]"
@@ -111,21 +111,21 @@ Each step writes a concrete artifact and appends its step number to `activation_
 
 **Writes:** `cto-os-data/modules/managing-sideways/state/people/{person-slug}.md`, overwrite-with-history.
 
-### `draft-negotiation-prep`
+### `build-coalition`
 
-**Purpose:** Prepare for a substantial cross-functional negotiation with a peer. Walks through the Cohen/Bradford currency analysis + Fisher/Ury BATNA / interests-not-positions discipline. Reserved for real negotiations (roadmap tradeoffs, resource disputes, scope boundaries) — not routine 1:1 prep.
+**Purpose:** Map the peers whose support, neutrality, or input matters to a cross-functional initiative and plan relationship-aware alignment using observable currencies and shared goals. If the plan requires concessions, a reservation boundary, and a walk-away choice, route it to Negotiation.
 
 **Triggers:**
-- "prep for negotiation with [peer] on [topic]"
-- "help me walk through BATNA for [negotiation]"
-- "[peer] wants X and I want Y — help me prep"
+- "help me build the coalition for [initiative]"
+- "who needs to be aligned before I propose this"
+- "map supporters and blockers for [initiative]"
 
 **Reads:**
-- `cto-os-data/modules/managing-sideways/state/people/{person-slug}.md` (currencies, sensitivities, relationship state)
-- Recent 1:1 notes in `cto-os-data/modules/managing-sideways/state/1on1s/{person-slug}/`
-- `cto-os-data/modules/business-alignment/state/company-goals/` (optional — what's the company-level interest)
+- relevant files in `cto-os-data/modules/managing-sideways/state/people/` (currencies, collaboration areas, relationship state)
+- recent 1:1 notes for the peers involved
+- `cto-os-data/modules/business-alignment/state/company-goals/` (optional — shared-goal framing)
 
-**Writes:** — (produces prep notes; captured follow-ups go through `log-1on1-sideways` once the negotiation event happens)
+**Writes:** — (produces an alignment plan; relationship changes and follow-ups are captured through the relevant peer profile or 1:1 record)
 
 ### `add-peer`
 
@@ -155,10 +155,11 @@ Each step writes a concrete artifact and appends its step number to `activation_
 
 ## Persistence
 
+- **`cto-os-data/modules/managing-sideways/_module.md`** — singleton module activation record, overwrite-in-place. Uses the baseline `_module` schema. Activation appends verified step numbers to `activation_completed`; only the final step sets `active: true`, `schema_version: 1`, `activated_at`, and `deactivated_at: null`.
 - **`cto-os-data/modules/managing-sideways/state/people/{person-slug}.md`** — one file per peer, overwrite-with-history. Frontmatter: `type: stakeholder-profile, slug: <person-slug>, updated: <date>, active: <bool>, name: <string>, role: <string>, function: <string>, relationship: peer, collaboration_area: <string>, departed_date: <date, optional>, cadence: <string>, meeting_style: <scheduled|opportunistic>, communication_preferences: <string>, what_they_want_first: <string>, typical_concerns: <list>, context_needs: <string>, known_sensitivities: <list>, relationship_status: <string>, currencies: <list>`. All profile fields optional except `name`, `role`, `function`, `relationship`. Body: relationship notes + `## History`.
 - **`cto-os-data/modules/managing-sideways/state/1on1s/{person-slug}/{YYYY-MM-DD}.md`** — append-new-file per 1:1. Frontmatter: `type: peer-1on1, slug: <person-slug>-<YYYY-MM-DD>, updated: <date>, person: <person-slug>`. Body sections: `## Topics`, `## Decisions`, `## Follow-ups`, `## Signals` (relationship state, currency movements, emerging friction or alignment).
 
-**Overrides to the cross-cutting save rule** ([Persistence model](../../docs/ARCHITECTURE.md#persistence-model)): none — inherits the default. Peer notes are less sensitive by default than Managing Up/Down, but individual 1:1 files can be flagged `sensitivity: high` inline when the content warrants (e.g., a hard negotiation, candid peer-on-peer criticism).
+**Overrides to the cross-cutting save rule** ([Persistence model](../../docs/ARCHITECTURE.md#persistence-model)): none — inherits the default. Peer notes are less sensitive by default than Managing Up/Down, but individual 1:1 files can be flagged `sensitivity: high` inline when the content warrants, such as candid peer-on-peer criticism or a post-negotiation trust signal. Negotiation strategy remains in the high-sensitivity Negotiation module rather than being copied here.
 
 ## State location
 

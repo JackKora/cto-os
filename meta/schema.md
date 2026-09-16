@@ -1379,6 +1379,105 @@ Invariants:
 
 ---
 
+## `negotiation-posture`
+
+The user's durable professional-negotiation defaults and ethical boundaries. Owned by `negotiation`.
+
+```yaml
+structural_baseline: enum                 # required; literal: seven-elements
+conversational_layer: enum                # required; one of: black-swan, plain-direct, custom
+conditional_lenses: list[enum]            # required; zero or more of: three-d, difficult-conversations, meso
+ethical_boundaries: list[string]          # required; user/company boundaries in addition to the module's non-negotiable safety rules
+custom_conversational_guidance: string    # optional; required when conversational_layer is custom
+```
+
+Invariants:
+- Singleton at `state/posture.md` with `slug: current`.
+- `structural_baseline` is always `seven-elements`; configuration changes the conversational layer, not the structural baseline.
+- `black-swan` is the activation default for `conversational_layer` unless the user chooses another allowed value.
+- `custom_conversational_guidance` is present and non-empty when `conversational_layer: custom`.
+- Prior versions are preserved under `## History` in the body.
+
+**Current version:** 1.
+
+---
+
+## `negotiation`
+
+One living record for a consequential professional negotiation. Owned by `negotiation`.
+
+```yaml
+title: string                    # required; concise human-readable name
+kind: enum                       # required; one of: internal-resource, role-and-scope, compensation, hiring-offer, customer-commercial, vendor-commercial, partnership, dispute-resolution, other
+counterparties: list[string]     # required; at least one person, role, organization, or stakeholder slug
+status: enum                     # required; one of: preparing, active, paused, agreement-in-principle, closed-agreed, closed-no-agreement, withdrawn
+opened: date                     # required
+closed: date                     # optional; required for a terminal status
+subject_modules: list[string]    # required; may be empty; modules that remain canonical for source context
+authority_boundary: string       # required; user's actual commitment authority, or explicit unknown pending confirmation
+conversational_layer: enum       # required; one of: black-swan, plain-direct, custom
+conditional_lenses: list[enum]   # required; zero or more of: three-d, difficult-conversations, meso
+next_round_date: date            # optional
+```
+
+Invariants:
+- Files live at `state/negotiations/{negotiation-slug}.md`; `slug` equals the filename stem.
+- The situation passes all four scope tests: partly shared and opposed interests; a meaningful agreement, concession, or commitment; a real alternative or walk-away choice; and deliberate preparation warranted.
+- Body sections are `## Scope test`, `## Sourced facts`, `## User assertions`, `## Counterpart hypotheses`, `## Seven Elements`, `## Lens selection`, `## Current plan`, `## Outcome and handoffs`, and `## History`. `## Seven Elements` covers interests, legitimacy, relationships, alternatives/BATNA, options, commitments, and communication.
+- Counterpart hypotheses remain explicitly tentative and evidence-linked; they are never promoted to sourced facts without evidence.
+- `conditional_lenses` contains only lenses whose routing criteria apply, and `## Lens selection` states why each was selected. The Seven Elements baseline is always applied and is not repeated in this list.
+- `closed` is present only when `status` is `closed-agreed`, `closed-no-agreement`, or `withdrawn`; non-terminal records omit it.
+- Prior state is preserved under `## History`.
+
+**Current version:** 1.
+
+---
+
+## `negotiation-round`
+
+An immutable debrief of one meaningful interaction or internal authority-alignment round within a negotiation. Owned by `negotiation`.
+
+```yaml
+negotiation: string       # required; parent negotiation slug
+sequence: int             # required; positive, unique within the parent negotiation
+occurred: date            # required
+interaction: enum         # required; one of: meeting, call, written-exchange, offer-exchange, internal-alignment
+outcome: enum             # required; one of: advanced, unchanged, set-back, agreement-in-principle, closed-agreed, closed-no-agreement, walked-away
+next_action: string       # optional
+```
+
+Invariants:
+- Files live at `state/rounds/{negotiation-slug}/{YYYY-MM-DD}-{sequence}.md`.
+- `slug` equals `<negotiation-slug>-<sequence>` and `sequence` is unique and monotonically increasing within the parent negotiation.
+- Append-new-file per round. A factual correction is appended to the body with attribution and date; the original debrief is not rewritten.
+- Body sections are `## Observed facts`, `## User actions and assertions`, `## Counterpart statements`, `## Interpretations and hypotheses`, `## Concessions and commitments`, `## Seven Elements changes`, and `## Next round`.
+- `walked-away` is the round outcome; the parent negotiation uses terminal `status: withdrawn`.
+
+**Current version:** 1.
+
+---
+
+## `negotiation-playbook`
+
+The user's evidence-backed professional-negotiation lessons. Owned by `negotiation`.
+
+```yaml
+principles: list[string]           # required; may be empty
+effective_patterns: list[string]   # required; may be empty
+failure_modes: list[string]        # required; may be empty
+last_reviewed: date                # required
+```
+
+Invariants:
+- Singleton at `state/playbook.md` with `slug: current`.
+- The body contains `## Evidence ledger` and `## History`.
+- Every non-empty learned entry cites an explicit user rule or one or more `negotiation` / `negotiation-round` slugs. Do not generalize from an ambiguous interaction or invent a lesson to populate an empty list.
+- Prior versions are preserved under `## History`.
+
+**Current version:** 1.
+
+---
+
 ## `legal-posture`
 
 The Legal module's operating model: covered entities and jurisdictions, legal ownership, counsel model, approval authority, escalation criteria, and response expectations. Owned by `legal`.
@@ -2423,6 +2522,10 @@ Current canonical version per type.
 | `control` | 1 | `security-compliance` |
 | `statement-of-applicability` | 1 | `security-compliance` |
 | `audit-event` | 1 | `security-compliance` |
+| `negotiation-posture` | 1 | `negotiation` |
+| `negotiation` | 1 | `negotiation` |
+| `negotiation-round` | 1 | `negotiation` |
+| `negotiation-playbook` | 1 | `negotiation` |
 | `legal-posture` | 1 | `legal` |
 | `legal-matter` | 1 | `legal` |
 | `legal-obligation` | 1 | `legal` |
@@ -2467,3 +2570,5 @@ Version bumps ship with a migration at `scripts/migrate_{type}_v{N}_to_v{N+1}.py
 > **Note on additions vs. migrations.** The five `conversation-intake` types above (`decision`, `action-item`, `observation`, `quote`, `open-question`) were added as new types at version 1 — no existing records use these types, so no migration is needed. The migration requirement applies when an *existing* type's schema changes in a way that affects records already on disk.
 
 The four `legal` types (`legal-posture`, `legal-matter`, `legal-obligation`, `counsel-brief`) are likewise new at version 1, so they require no migration.
+
+The four `negotiation` types (`negotiation-posture`, `negotiation`, `negotiation-round`, `negotiation-playbook`) are new at version 1, so they require no migration.
