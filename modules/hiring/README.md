@@ -1,14 +1,14 @@
 # Hiring
 
-**Scope:** Full hiring lifecycle — workforce planning, declared interview process, open requisitions with scorecards, candidate pipelines, structured interview debriefs, offer construction, ramp plans for new hires. Covers everything from identifying the need to the new person being productive; handoff to Performance & Development happens at end of ramp. Role-shape module — essential in growth-phase orgs.
+**Scope:** Full hiring lifecycle — workforce planning, declared interview process, open requisitions with scorecards, candidate pipelines, structured interview debriefs, approved compensation bands, offer construction and approvals, accepted or declined outcomes, and ramp plans for new hires. Covers everything from identifying the need to the new person being productive; handoff to Performance & Development happens at end of ramp. Role-shape module — essential in growth-phase orgs.
 
-**Out of scope:** Ongoing performance after ramp (Performance & Development); team-aggregate health (Team Management); strategic team-structure decisions that predate a req (Org Design); pre-req role-need identification (Team Management baseline); 1:1s and coaching of existing reports (Managing Down).
+**Out of scope:** Ongoing performance after ramp (Performance & Development); team-aggregate health (Team Management); strategic team-structure decisions that predate a req (Org Design); pre-req role-need identification (Team Management baseline); 1:1s and coaching of existing reports (Managing Down); bargaining strategy, package sequencing, and live interaction planning for a candidate offer that passes Negotiation's four-part gate. Confirmed results are written back to Hiring without duplicating canonical candidate facts.
 
 **Frameworks:** [Geoff Smart & Randy Street — *Who: The A Method for Hiring*](https://www.amazon.com/Who-Geoff-Smart/dp/0345504194), [Google structured interviewing (re:Work)](https://rework.withgoogle.com/guides/hiring-use-structured-interviewing/).
 
 **Depends on:**
 - Required: none
-- Optional: `business-alignment` (hiring plan ties to company goals), `budget` (headcount cost, comp bands), `team-management` (where new hires land)
+- Optional: `business-alignment` (hiring plan ties to company goals), `budget` (headcount cost, comp bands), `team-management` (where new hires land), `negotiation` (qualifying candidate-offer bargaining and confirmed outcomes)
 
 **Example tasks:**
 - "Open a req for the staff SRE role — walk me through the scorecard."

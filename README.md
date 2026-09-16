@@ -88,7 +88,7 @@ Applied across all modules.
 
 Recommended sequence when first adopting.
 
-1. **Foundations.** Personal OS, Process Management, Business Alignment — the three zero-outbound-dependency modules. They don't block on anything and unlock the most downstream capability.
+1. **Foundations.** Personal OS, Process Management, Business Alignment — the three zero-required-dependency modules. They don't block on anything and unlock the most downstream capability.
 2. **Daily drivers.** Attention & Operations, Team Management, one or more of Managing Up / Down / Sideways depending on role. High operational value, low dependency cost.
 3. **Role-shape modules.** Match the shape of the specific job — Tech Ops and Technical Strategy for hands-on-tech CTOs, Hiring for growth-phase orgs, Budget for P&L-owning roles, Legal for CTOs who directly handle contracts, governance, regulated-product questions, disputes, or counsel coordination, Negotiation for leaders who regularly handle consequential internal or external agreements, and Customer Engagement (under Business Alignment) for customer-facing CTOs.
 4. **Strategic and periodic.** Org Design, Performance & Development, Board Comms. Low-frequency, high-leverage. Activate once daily drivers are steady.

@@ -1,14 +1,14 @@
 # Legal
 
-**Scope:** The CTO's legal operating layer for issue spotting, preparation, workflow, and tracking: general legal intake and triage; commercial contracts; corporate governance and transactions, including M&A; IP and licensing, including OSS; employment legal matters; privacy, data protection, and product regulation; disputes and investigations; legal obligations; counsel briefing; and legal-posture rollup. It does not substitute for qualified legal counsel or make definitive legal conclusions.
+**Scope:** The CTO's legal operating layer for issue spotting, preparation, workflow, and tracking: general legal intake and triage; commercial contracts, including interpretation, redlines, legal positions, approvals, and counsel workflow; corporate governance and transactions, including M&A; IP and licensing, including OSS; employment legal matters; privacy, data protection, and product regulation; disputes and investigations; legal obligations; counsel briefing; and legal-posture rollup. It does not substitute for qualified legal counsel or make definitive legal conclusions.
 
-**Out of scope:** Tax, real estate, antitrust, environmental, export-controls and sanctions, and every other specialty practice not named in scope. Also excluded: security-control operations, commercial economics and customer strategy, ordinary people-management execution, architecture and product decisions, relationship management with legal leaders, board narrative, document storage, e-signature workflow, and definitive legal advice or conclusions.
+**Out of scope:** Tax, real estate, antitrust, environmental, export-controls and sanctions, and every other specialty practice not named in scope. Also excluded: security-control operations, commercial economics and customer strategy, ordinary people-management execution, architecture and product decisions, relationship management with legal leaders, board narrative, document storage, e-signature workflow, and definitive legal advice or conclusions. Negotiation owns counterpart bargaining strategy, concession design, sequencing, questions, and rounds when its four-part gate is met; mixed requests link records without duplicating canonical facts.
 
 **Frameworks:** Module-native operational invariants: route before analysis; separate sourced facts, assertions, unknowns, and issue spots; escalate by consequence and clock; persist the minimum necessary; treat privilege labels as handling cues rather than privilege determinations; and preserve potentially relevant material.
 
 **Depends on:**
 - Required: none
-- Optional: `security-compliance`, `technical-strategy`, `product`, `hiring`, `performance-development`, `tech-ops`
+- Optional: `security-compliance`, `technical-strategy`, `product`, `hiring`, `performance-development`, `tech-ops`, `negotiation` (linked contract bargaining strategy and confirmed outcomes)
 
 **Example tasks:**
 - "The customer sent an MSA with redlines — organize the open points and questions for counsel."

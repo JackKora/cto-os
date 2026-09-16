@@ -1,14 +1,14 @@
 # Budget
 
-**Scope:** Financial stewardship of the engineering org. Declared category taxonomy, plan / actual / forecast tracking per category per period, budget-to-actual variance, budget-narrative authoring for reporting audiences. Role-shape module — essential for P&L-owning roles.
+**Scope:** Financial stewardship of the engineering org. Declared category taxonomy, constraints and spend approvals, plan / actual / forecast tracking per category per period, budget-to-actual variance, budget-narrative authoring for reporting audiences. Role-shape module — essential for P&L-owning roles.
 
-**Out of scope:** Build-vs-buy architectural decisions (Technical Strategy owns those; this module provides cost context); workforce plan (Hiring owns the plan, this module tracks the financial envelope); contract rights, obligations, negotiation, approvals, renewal, and termination workflow (Legal owns those; Budget may consume confirmed timing that materially affects forecast); non-engineering budget; payroll execution; invoice-level AP/procurement.
+**Out of scope:** Build-vs-buy architectural decisions (Technical Strategy owns those; this module provides cost context); workforce plan (Hiring owns the plan, this module tracks the financial envelope); contract interpretation, rights, obligations, redlines, legal approvals, renewal and termination workflow (Legal owns those; Budget may consume confirmed timing that materially affects forecast); vendor price or term bargaining strategy when Negotiation's four-part gate is met; non-engineering budget; payroll execution; invoice-level AP/procurement. Budget remains canonical for cost facts and records the confirmed financial result.
 
 **Frameworks:** [Geoffrey Moore — Core vs Context](https://a16z.com/the-core-vs-context-model/) as the lens for contested spend decisions. Standard financial-planning concepts (capex/opex, unit economics, fully-loaded headcount cost, zero-based budgeting) form the conceptual basis but aren't single-framework-anchored.
 
 **Depends on:**
 - Required: none
-- Optional: `hiring` (open reqs + planned hires drive headcount cost), `tech-ops` (infrastructure spend context), `business-alignment` (financial targets from company goals), `technical-strategy` (build-vs-buy ADRs for category-level spend explanations), `legal` (confirmed contractual timing when it materially affects spend or forecast)
+- Optional: `hiring` (open reqs + planned hires drive headcount cost), `tech-ops` (infrastructure spend context), `business-alignment` (financial targets from company goals), `technical-strategy` (build-vs-buy ADRs for category-level spend explanations), `legal` (confirmed contractual timing when it materially affects spend or forecast), `negotiation` (qualifying vendor bargaining and confirmed financial outcomes)
 
 **Example tasks:**
 - "Forecast Q3 engineering spend given the current hiring plan."

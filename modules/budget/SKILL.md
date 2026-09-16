@@ -1,6 +1,6 @@
 ---
 name: budget
-description: "Activates for financial stewardship of the engineering organization — budget planning, budget-to-actual tracking, forecasting, cost-allocation decisions, and compiling budget narratives for leadership or board reporting. Covers: declaring the budget category taxonomy (headcount, vendors/SaaS, cloud infra, tools, professional services, etc.); maintaining plan / actual / forecast amounts per category per period; running variance analyses; authoring budget narratives that explain spend decisions in Core-vs-Context terms. Also activates on oblique phrasings like 'forecast next quarter's eng spend,' 'vendor spend has drifted,' 'why are we over budget on [category],' 'compare capex vs opex for the GPU cluster,' 'draft the budget section of the board update.' Does NOT activate on the actual build-vs-buy architectural decisions (Technical Strategy owns those; this module provides cost context); workforce-level hiring plan (Hiring owns the plan; this module tracks the financial envelope); contract rights, obligations, negotiation, renewal, or termination workflow (Legal owns those); or non-engineering budget (out of scope)."
+description: "Activates for financial stewardship of the engineering organization — budget planning, budget-to-actual tracking, forecasting, cost-allocation decisions, spend approvals, and compiling budget narratives for leadership or board reporting. Covers: declaring the budget category taxonomy (headcount, vendors/SaaS, cloud infra, tools, professional services, etc.); maintaining plan / actual / forecast amounts per category per period; running variance analyses; authoring budget narratives that explain spend decisions in Core-vs-Context terms. Also activates on oblique phrasings like 'forecast next quarter's eng spend,' 'vendor spend has drifted,' 'why are we over budget on [category],' 'compare capex vs opex for the GPU cluster,' 'draft the budget section of the board update.' Does NOT activate on the actual build-vs-buy architectural decisions (Technical Strategy owns those; this module provides cost context); workforce-level hiring plan (Hiring owns the plan; this module tracks the financial envelope); contract rights, obligations, redlines, or counsel workflow (Legal); vendor price or term bargaining strategy that passes Negotiation's four-part gate; or non-engineering budget (out of scope)."
 requires: []
 optional:
   - hiring
@@ -8,6 +8,7 @@ optional:
   - business-alignment
   - technical-strategy
   - legal
+  - negotiation
 ---
 
 # Budget
@@ -16,6 +17,8 @@ optional:
 
 Financial stewardship of the engineering organization. Understanding where money goes, planning for the future, tracking actuals against plan. Headcount loaded cost, vendor and software spend, capex vs opex decisions, cost allocation across categories, budget-to-actual variance, forecast and planning. Role-shape module — essential for P&L-owning roles, optional for CTOs whose CFO or COO owns eng budget directly.
 
+Budget owns approved spend envelopes, constraints, forecasts, cost facts, and spend approvals. For a vendor price or term negotiation, Negotiation owns bargaining strategy, package design, sequencing, and rounds only when its four-part gate is met; Legal separately owns contract interpretation, redlines, rights and obligations, and counsel workflow. Routine purchasing and ordinary vendor management stay outside Negotiation.
+
 ## Out of scope
 
 - **Build-vs-buy decisions themselves** — Technical Strategy owns the architectural call; this module provides cost context via its reads.
@@ -23,7 +26,8 @@ Financial stewardship of the engineering organization. Understanding where money
 - **Non-engineering budget** — the module is scoped to engineering; broader company budgeting lives elsewhere.
 - **Payroll execution** — out of scope; this module tracks *planned and actual* headcount-loaded cost at the aggregate, not individual compensation records (those are Hiring for candidates, HR systems for employees).
 - **Invoice processing** — lives in a finance or procurement system; this module tracks aggregate spend per vendor or category, not per-invoice detail.
-- **Contract rights and workflow** — Legal owns rights, obligations, negotiation issues, approvals, and renewal or termination terms. This module may consume a confirmed Legal obligation when it materially changes spend or forecast, but does not interpret the contract.
+- **Contract rights and legal workflow** — Legal owns rights, obligations, legal positions, redlines, legal approvals, counsel workflow, and renewal or termination terms. This module may consume a confirmed Legal obligation when it materially changes spend or forecast, but does not interpret the contract.
+- **Vendor bargaining mechanics** — Negotiation owns price or term bargaining strategy, package design, sequencing, and rounds when its four-part gate is met. Budget supplies the approved envelope, constraints, spend approvals, forecast, and cost facts, then records the confirmed financial result.
 
 ## Frameworks
 
@@ -99,7 +103,9 @@ Each step writes a concrete artifact and appends its step number to `activation_
 - "revise forecast on [category]"
 - "[category] just came in at $Z"
 
-**Reads:** `cto-os-data/modules/budget/state/categories/{category-slug}.md`.
+**Reads:**
+- `cto-os-data/modules/budget/state/categories/{category-slug}.md`
+- `cto-os-data/modules/negotiation/state/negotiations/{negotiation-slug}.md` (optional — only when a closed or confirmed vendor negotiation outcome changes the category plan, actual, or forecast; do not copy bargaining hypotheses into Budget)
 
 **Writes:** `cto-os-data/modules/budget/state/categories/{category-slug}.md`, overwrite-with-history (period snapshots accumulate in body under `## Period history`).
 
