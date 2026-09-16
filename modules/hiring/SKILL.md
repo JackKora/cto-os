@@ -1,11 +1,12 @@
 ---
 name: hiring
-description: "Activates for the full hiring lifecycle — workforce planning, requisition opening with scorecards, candidate pipeline tracking, interview debrief capture, offer construction, and ramp planning for new hires. Covers: declaring the interview process playbook, opening and closing reqs, moving candidates through stages, logging interview debriefs in structured scorecard format, constructing offers (pulling cost context from Budget when available), and authoring ramp plans that cover a new hire's first 30 / 60 / 90 days. Also activates on oblique phrasings like 'open a req for [role],' 'prep for today's candidate debrief,' 'draft an offer for [name],' 'plan [name]'s ramp,' 'we need to rebalance the hiring plan,' 'interviewing [candidate] for [role].' Does NOT activate on ongoing performance after ramp (Performance & Development takes over); team-aggregate health (Team Management); or role-definition work that's pre-planning (Org Design)."
+description: "Activates for the full hiring lifecycle — workforce planning, requisition opening with scorecards, candidate pipeline tracking, interview debrief capture, offer construction, and ramp planning for new hires. Covers: declaring the interview process playbook, opening and closing reqs, moving candidates through stages, logging interview debriefs in structured scorecard format, constructing offers from approved bands and approvals, recording accepted or declined outcomes, and authoring ramp plans that cover a new hire's first 30 / 60 / 90 days. Negotiation owns bargaining strategy, package sequencing, and live interaction planning for a candidate offer when its four-part gate is met; confirmed results return to Hiring. Also activates on oblique phrasings like 'open a req for [role],' 'prep for today's candidate debrief,' 'draft an offer for [name],' 'plan [name]'s ramp,' 'we need to rebalance the hiring plan,' 'interviewing [candidate] for [role].' Does NOT activate on ongoing performance after ramp (Performance & Development takes over); team-aggregate health (Team Management); or role-definition work that's pre-planning (Org Design)."
 requires: []
 optional:
   - business-alignment
   - budget
   - team-management
+  - negotiation
 ---
 
 # Hiring
@@ -14,12 +15,15 @@ optional:
 
 Bringing talented people into the organization. Owns the full lifecycle from identifying a hiring need through to the new person being productive on the team. Covers workforce planning (what we need to hire and why), the declared interview process (rounds, scorecards, debrief cadence), active requisitions and their scorecards, candidate pipelines, interview debriefs, offer construction, and ramp-plan authorship for new hires. Role-shape module — essential in growth-phase orgs, less central in steady-state.
 
+Hiring owns the candidate record, approved compensation bands, offer construction and approvals, pipeline stage, and accepted or declined outcome. When a candidate-offer conversation passes Negotiation's four-part gate, Negotiation owns bargaining strategy, package sequencing, and live interaction planning. Link the records rather than copying canonical candidate facts into Negotiation; write the confirmed result back through Hiring.
+
 ## Out of scope
 
 - **Ongoing performance after ramp** — Performance & Development takes over once ramp is complete.
 - **Team-aggregate health and composition** — Team Management (which consumes Hiring's output: "who joined / who left").
 - **Role-need identification that predates the req** — Org Design (strategic team structure decisions) or Team Management (baseline team composition). Hiring picks up once a req is justified and ready to open.
 - **Individual 1:1 and coaching of existing reports** — Managing Down.
+- **Candidate-offer bargaining mechanics** — Negotiation owns strategy, package sequencing, and interaction rounds when its four-part gate is met. Hiring retains offer authority, approved bands, approvals, candidate facts, and the final outcome.
 
 ## Frameworks
 
@@ -164,7 +168,7 @@ Each step writes a concrete artifact and appends its step number to `activation_
 
 ### `construct-offer`
 
-**Purpose:** Build an offer for a candidate. Pulls from workforce-plan (approved band), budget (cost context if available), and the interview debriefs (strengths to emphasize). Does not send the offer — produces a structured proposal the user reviews, edits, and sends externally.
+**Purpose:** Build an offer for a candidate from approved bands, cost context, debrief evidence, and required approvals. Does not send the offer. For a qualifying negotiation, this skill constructs the authorized package while Negotiation plans bargaining strategy, sequencing, and the live interaction.
 
 **Triggers:**
 - "construct an offer for [candidate]"
@@ -175,8 +179,9 @@ Each step writes a concrete artifact and appends its step number to `activation_
 - `cto-os-data/modules/hiring/state/debriefs/{req-slug}/{candidate-slug}/` (all debriefs for that candidate)
 - `cto-os-data/modules/hiring/state/workforce-plan.md` (bands, approved comp)
 - `cto-os-data/modules/budget/state/` (optional — cost envelope)
+- `cto-os-data/modules/negotiation/state/negotiations/{negotiation-slug}.md` (optional — only for the current plan or confirmed outcome of a qualifying candidate-offer negotiation; Hiring remains canonical for candidate and offer facts)
 
-**Writes:** —  (produces proposal for user review; if user captures the final offer, it goes into the candidate file's body under `## Offer`)
+**Writes:** —  (produces proposal for user review; if the user captures the final offer or confirms a negotiated result, it goes into the candidate file's body under `## Offer`, and the candidate stage is updated through `update-candidate`)
 
 ### `log-ramp-plan`
 

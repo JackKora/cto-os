@@ -1,15 +1,18 @@
 ---
 name: business-alignment
-description: "Activates for company-level goal tracking, customer signal capture, CTO customer engagement, and work-to-goals alignment. Covers: setting and updating company goals (annual and quarterly), logging customer signal inbound from sales/marketing/support/onboarding, logging CTO-level customer interactions (advisory boards, sales calls, exec sponsor relationships, customer escalations, industry events), and mapping current engineering initiatives to company goals. Also activates on oblique phrasings like 'how does this ladder up,' 'a customer just told me X,' 'sales keeps hearing,' 'board asked about our goals,' 'are we working on the right things.' Does NOT activate on personal goals (Personal OS), board or internal communication output (Board Comms, Org Comms), team-level goals (Team Management), or individual performance (Performance & Development)."
+description: "Activates for company-level goal tracking, customer and partner signal capture, CTO customer engagement, and work-to-goals alignment. Covers: setting and updating company goals (annual and quarterly), logging customer signal inbound from sales/marketing/support/onboarding, logging CTO-level customer interactions (advisory boards, sales calls, exec sponsor relationships, customer escalations, industry events), and mapping current engineering initiatives to company goals. Ordinary alignment and customer conversations stay here; an actual bargaining process routes to Negotiation only when its four-part gate is met. Also activates on oblique phrasings like 'how does this ladder up,' 'a customer just told me X,' 'sales keeps hearing,' 'board asked about our goals,' 'are we working on the right things.' Does NOT activate on personal goals (Personal OS), board or internal communication output (Board Comms, Org Comms), team-level goals (Team Management), or individual performance (Performance & Development)."
 requires: []
-optional: []
+optional:
+  - negotiation
 ---
 
 # Business Alignment
 
 ## Scope
 
-The connection between what your organization does and what the business needs. Tracks company goals, pulls external signal from customer-facing teams (sales, marketing, support, onboarding), captures CTO-level customer engagements outbound, and makes work-to-goals ties visible across the engineering org. Foundational — no outbound dependencies.
+The connection between what your organization does and what the business needs. Tracks company goals, pulls external signal from customer-facing teams (sales, marketing, support, onboarding), captures CTO-level customer engagements outbound, and makes work-to-goals ties visible across the engineering org. Foundational — no required dependencies.
+
+Business Alignment owns company, customer, and partner goals; customer signal; engagement context; and resulting strategic decisions. Ordinary alignment, discovery, advisory, sales, sponsor, escalation, and partner conversations stay here. Negotiation owns an actual bargaining process only when all four conditions hold: partly shared and opposed interests, a meaningful agreement or concession, a real alternative or walk-away choice, and deliberate preparation warranted. Link the records and keep canonical context in Business Alignment.
 
 ## Out of scope
 
@@ -18,6 +21,7 @@ The connection between what your organization does and what the business needs. 
 - **Personal goals and cascade** — Personal OS.
 - **Team-level goals** — Team Management.
 - **Individual performance tracking** — Performance & Development.
+- **Substantive bargaining mechanics** — Negotiation owns strategy, concessions, sequencing, and rounds when its four-part gate is met. Ordinary customer conversations, partnership exploration, and stakeholder alignment remain here.
 
 ## Frameworks
 
@@ -100,7 +104,7 @@ Each step writes a concrete artifact and appends its step number to `activation_
 
 ### `log-customer-engagement`
 
-**Purpose:** Capture a CTO-level customer engagement event — advisory board, sales call, exec sponsor 1:1, escalation, industry event.
+**Purpose:** Capture a CTO-level customer or partner engagement event — advisory board, sales call, exec sponsor 1:1, escalation, industry event, or ordinary alignment conversation. If the interaction is a round in a qualifying negotiation, Negotiation owns the round debrief while this module captures only the customer or partner context and confirmed business outcome.
 
 **Triggers:**
 - "log a customer call"
@@ -110,6 +114,7 @@ Each step writes a concrete artifact and appends its step number to `activation_
 
 **Reads:**
 - `cto-os-data/modules/business-alignment/state/engagement-cadence.md` (what type is this, does it fit cadence)
+- `cto-os-data/modules/negotiation/state/negotiations/{negotiation-slug}.md` (optional — only when an existing qualifying negotiation supplies relevant interaction context or a confirmed outcome; do not duplicate its plan or rounds)
 - Personal OS (optional) — `cto-os-data/modules/personal-os/state/voice/` to match writing tone for follow-ups
 
 **Writes:** `cto-os-data/modules/business-alignment/state/engagements/{YYYY-MM-DD}-{customer-slug}.md`, append-new-file per engagement.

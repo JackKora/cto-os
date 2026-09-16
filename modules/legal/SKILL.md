@@ -1,6 +1,6 @@
 ---
 name: legal
-description: "Activates for the CTO's legal operating work: triaging a legal concern; reviewing or negotiating customer, vendor, partner, or other commercial contracts; corporate governance, financings, diligence, and M&A; intellectual property, licensing, and open-source software questions; employment legal matters; privacy, data-protection, and product-regulation questions; disputes, demands, investigations, subpoenas, and legal holds; tracking legal obligations and deadlines; preparing a factual brief for counsel; and rolling up legal posture. Also activates on natural phrasings like 'the customer sent redlines,' 'can we use this OSS license,' 'do we need board approval,' 'we got a demand letter,' 'what do I need to ask our lawyer,' or 'what legal deadlines are coming up.' Does NOT activate for tax, real estate, antitrust, environmental, export-controls or sanctions work, other specialty legal practices, security-control operations, or ordinary people management. Requests for a definitive legal conclusion on an in-scope topic still activate; Legal reframes them toward issue spotting, factual preparation, and qualified counsel without delivering the conclusion."
+description: "Activates for the CTO's legal operating work: triaging a legal concern; reviewing customer, vendor, partner, or other commercial contracts and managing their legal positions, redlines, approvals, and counsel workflow; corporate governance, financings, diligence, and M&A; intellectual property, licensing, and open-source software questions; employment legal matters; privacy, data-protection, and product-regulation questions; disputes, demands, investigations, subpoenas, and legal holds; tracking legal obligations and deadlines; preparing a factual brief for counsel; and rolling up legal posture. Also activates on natural phrasings like 'the customer sent redlines,' 'can we use this OSS license,' 'do we need board approval,' 'we got a demand letter,' 'what do I need to ask our lawyer,' or 'what legal deadlines are coming up.' Contract bargaining strategy, concessions, sequencing, and interaction planning route to Negotiation, while Legal remains authoritative for legal analysis and legal positions. Does NOT activate for tax, real estate, antitrust, environmental, export-controls or sanctions work, other specialty legal practices, security-control operations, or ordinary people management. Requests for a definitive legal conclusion on an in-scope topic still activate; Legal reframes them toward issue spotting, factual preparation, and qualified counsel without delivering the conclusion."
 requires: []
 optional:
   - security-compliance
@@ -9,6 +9,7 @@ optional:
   - hiring
   - performance-development
   - tech-ops
+  - negotiation
 ---
 
 # Legal
@@ -18,6 +19,8 @@ optional:
 Run the CTO's legal operating layer: issue spotting, preparation, workflow, and tracking for general legal intake and triage; commercial contracts; corporate governance and transactions, including M&A; intellectual property and licensing, including open-source software; employment legal matters; privacy, data protection, and product regulation; disputes and investigations; independently changing legal obligations; counsel briefings; and a current legal-posture rollup.
 
 This module helps the user organize facts, unknowns, decisions, owners, deadlines, and questions for counsel. It does not substitute for qualified legal counsel, establish an attorney-client relationship, give legal advice, or make definitive legal conclusions. Applicable law and privilege depend on facts, jurisdiction, and counsel's judgment.
+
+Legal owns contract interpretation, rights and obligations, redlines, legal positions, approvals, counsel workflow, and legal records. Negotiation owns counterpart bargaining strategy, concession design, sequencing, questions, and rounds when its four-part gate is met. A mixed contract request may use both modules: link their records, keep each module authoritative for its own facts, and do not duplicate canonical content.
 
 ## Out of scope
 
@@ -29,7 +32,7 @@ This module helps the user organize facts, unknowns, decisions, owners, deadline
 - **Other specialty practices.** Any legal practice not named in Scope is outside this module. Recognize only enough to decline the work and direct the user to appropriately qualified specialist counsel; do not create a Legal module record for the substance.
 - **Security operations and controls.** Security & Compliance owns controls, audits, and the security-risk register. Legal owns the legal questions, notification or contractual obligations, regulator/counsel workflow, and related deadlines.
 - **Architecture and product decisions.** Technical Strategy and Product own the implementation or product decision. Legal supplies issue spots, constraints, and counsel-confirmed inputs.
-- **Commercial economics and customer strategy.** Budget owns spend and forecast; Business Alignment owns the customer or partner strategy. Legal owns rights, obligations, negotiation issues, approvals, renewal/termination terms, and counsel workflow.
+- **Commercial economics, customer strategy, and bargaining mechanics.** Budget owns spend, constraints, approvals, forecast, and cost facts; Business Alignment owns the customer or partner strategy; Negotiation owns counterpart bargaining strategy, concessions, sequencing, questions, and rounds when its four-part gate is met. Legal owns rights, obligations, legal positions, redlines, approvals, renewal/termination terms, counsel workflow, and legal records.
 - **Ordinary hiring, performance, or people-management execution.** Hiring and Performance & Development own the operating process. Legal owns employment-law issue spotting and counsel coordination when a legal issue exists.
 - **Relationship management with legal leaders.** Managing Sideways owns the user's working relationship with a General Counsel, Head of Legal, or peer legal leader. This module owns the substance and workflow of legal matters.
 - **Board narrative and meeting materials.** Board Comms owns the board-facing narrative. Legal owns the legal facts, approvals, constraints, and counsel questions that may feed it.
@@ -108,6 +111,8 @@ The user never needs to invoke these internal names. Route from natural language
 5. A request about the whole docket routes to `show-legal-posture`; a change to the operating model routes to `update-legal-posture`.
 6. An out-of-scope specialty stops at the boundary in **Out of scope**. Do not force-fit it into `general-intake`.
 
+For a mixed contract request, route the legal analysis and position workflow here and the bargaining process to Negotiation only when the four-part gate is met. Cross-link the `legal-matter` and `negotiation` records using their existing related-record and subject-module references; do not copy canonical facts between them. Ordinary redline review or approval routing does not activate Negotiation.
+
 For every route, distinguish sourced fact, user assertion, counsel-attributed guidance, unknown, and model-generated issue spot. Never convert an issue spot into an asserted obligation or legal conclusion.
 
 ### `intake-and-triage`
@@ -129,7 +134,7 @@ For every route, distinguish sourced fact, user assertion, counsel-attributed gu
 
 ### `commercial-contracts`
 
-**Purpose:** Prepare and track an in-scope customer, vendor, partner, licensing-commercial, or other operating agreement review or negotiation without presenting issue spots as legal advice.
+**Purpose:** Prepare and track an in-scope customer, vendor, partner, licensing-commercial, or other operating agreement review, including contract interpretation, redlines, legal positions, approvals, and counsel workflow, without presenting issue spots as legal advice. When substantive bargaining passes the four-part gate, Negotiation owns the counterpart interaction strategy and rounds.
 
 **Triggers:**
 - "the customer sent redlines"
@@ -142,8 +147,9 @@ For every route, distinguish sourced fact, user assertion, counsel-attributed gu
 - `cto-os-data/modules/legal/state/matters/{matter-slug}.md` when one exists
 - User-supplied agreement or redline source, held outside module state
 - Relevant Product or Security & Compliance state only when the user's question requires factual product, data, or control context
+- `cto-os-data/modules/negotiation/state/negotiations/{negotiation-slug}.md` (optional — only when a linked qualifying negotiation supplies a confirmed bargaining status, commitment, or outcome relevant to the legal workflow)
 
-**Writes:** `cto-os-data/modules/legal/state/matters/{matter-slug}.md`, append-new-file or overwrite-with-history. Record positions, owners, open questions, approval exceptions, and source links; do not store the agreement or redline itself.
+**Writes:** `cto-os-data/modules/legal/state/matters/{matter-slug}.md`, append-new-file or overwrite-with-history. Record legal positions, owners, open questions, approval exceptions, source links, and the linked negotiation path when applicable; do not store the agreement or redline itself or duplicate the negotiation plan.
 
 ### `corporate-governance-and-transactions`
 

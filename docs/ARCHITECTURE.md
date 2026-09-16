@@ -223,7 +223,7 @@ This is **not** a way to bypass module state. Modules with declared paths still 
 
 - **Local-only by default.** State lives on your laptop and in a private git remote for `cto-os-data`. No cloud DB, no multi-tenant anything.
 - **Secrets never in either repo.** API keys for Slack, Linear, Gmail live in macOS Keychain (accessed via `security` CLI in scripts) or a local `.env` file that's gitignored in both repos. Scripts read from env; they never accept secrets on the command line.
-- **Sensitive modules flagged.** Performance & Development, Board Comms, Managing Down, Security & Compliance, and Legal contain information that could be damaging if leaked. Their state directories are marked in frontmatter (`sensitivity: high`) and the scan tool excludes them from queries unless explicitly included. This is defense-in-depth, not encryption.
+- **Sensitive modules flagged.** Performance & Development, Board Comms, Managing Down, Security & Compliance, Legal, and Negotiation contain information that could be damaging if leaked. Their state directories are marked in frontmatter (`sensitivity: high`) and the scan tool excludes them from queries unless explicitly included. This is defense-in-depth, not encryption.
 - **Git remote considerations.** `cto-os-data` syncs to a **private** repo with 2FA enforced. `cto-os` can be public or private depending on whether you want to share the logic. `integrations-cache/` is gitignored in `cto-os-data` (pullable, not canonical).
 
 ## Testing and code review

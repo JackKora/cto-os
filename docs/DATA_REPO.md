@@ -134,7 +134,7 @@ Examples of unit choices across modules:
 
 ## Sensitive modules
 
-Performance & Development, Board Comms, Managing Down, Security & Compliance, and Legal contain information that could be damaging if leaked. Their state directories are marked in frontmatter (`sensitivity: high`) and the scan tool excludes them from queries unless explicitly included. This is defense-in-depth, not encryption.
+Performance & Development, Board Comms, Managing Down, Security & Compliance, Legal, and Negotiation contain information that could be damaging if leaked. Their state directories are marked in frontmatter (`sensitivity: high`) and the scan tool excludes them from queries unless explicitly included. This is defense-in-depth, not encryption.
 
 ---
 

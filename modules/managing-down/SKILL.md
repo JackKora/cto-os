@@ -1,12 +1,13 @@
 ---
 name: managing-down
-description: "Activates for leading and developing the people who report to the user directly. Covers: 1:1 prep and capture with direct reports, coaching conversations and feedback moments outside 1:1s, team-wide communication drafts in the user's voice, stakeholder profiles of reports (observable preferences and concerns), delegation decisions, and leadership-presence work. Also activates on oblique phrasings like 'prep for my 1:1 with Jane,' 'Mike has been drifting,' 'I need to give [report] feedback,' 'draft team-wide comms,' 'coach [report] on [topic],' 'delegate [task] to [report].' Does NOT activate on individual-level performance tracking, calibration, promotions, or PIPs (Performance & Development); team-aggregate health (Team Management); peer relationships (Managing Sideways); or upward relationships (Managing Up)."
+description: "Activates for leading and developing the people who report to the user directly. Covers: 1:1 prep and capture with direct reports, coaching conversations and feedback moments outside 1:1s, team-wide communication drafts in the user's voice, stakeholder profiles of reports (observable preferences and concerns), delegation decisions, and leadership-presence work. Also activates on oblique phrasings like 'prep for my 1:1 with Jane,' 'Mike has been drifting,' 'I need to give [report] feedback,' 'draft team-wide comms,' 'coach [report] on [topic],' 'delegate [task] to [report].' Feedback, coaching, delegation, performance conversations, and ordinary role clarity stay here; only a substantive agreement with real alternatives and deliberate bargaining routes to Negotiation. Does NOT activate on individual-level performance tracking, calibration, promotions, or PIPs (Performance & Development); team-aggregate health (Team Management); peer relationships (Managing Sideways); or upward relationships (Managing Up)."
 requires: []
 optional:
   - team-management
   - performance-development
   - personal-os
   - attention-operations
+  - negotiation
 ---
 
 # Managing Down
@@ -15,6 +16,8 @@ optional:
 
 Leading and developing the people who report to the user directly. The leadership relationship — 1:1s, coaching, feedback in the moment, delegation, team-wide communication, maintaining presence. Tracks lightweight profiles of direct reports (observable preferences and behaviors only) and captures the ongoing cadence of interactions that build trust and deliver growth.
 
+Feedback, coaching, delegation, underperformance conversations, and normal role clarity remain here even when they are difficult. Use Negotiation only for a substantive agreement that passes all four conditions: partly shared and opposed interests, a meaningful agreement or concession, a real alternative or walk-away choice, and deliberate preparation warranted. Managing Down remains the source of the direct-report relationship context.
+
 ## Out of scope
 
 - **Individual-level performance tracking, calibration, promotions, PIPs** — Performance & Development. This module is about the leadership *relationship*; Performance & Development owns the administrative arc.
@@ -22,6 +25,7 @@ Leading and developing the people who report to the user directly. The leadershi
 - **Peer relationships and cross-functional influence** — Managing Sideways.
 - **Upward relationships** — Managing Up.
 - **Hiring pipeline and onboarding ramp** — Hiring owns pre-ramp; this module picks up once the report is productive.
+- **Substantive bargaining mechanics** — Negotiation owns strategy, concessions, sequencing, and rounds when its four-part gate is met. Do not route routine feedback, coaching, role clarification, or underperformance management there.
 
 ## Frameworks
 
@@ -96,6 +100,7 @@ Each step writes a concrete artifact and appends its step number to `activation_
 - `cto-os-data/modules/managing-down/state/people/{person-slug}.md`
 - `cto-os-data/modules/managing-down/state/1on1s/{person-slug}/` (last 3)
 - `cto-os-data/modules/managing-down/state/coaching/{person-slug}/` (recent coaching events)
+- `cto-os-data/modules/negotiation/state/negotiations/{negotiation-slug}.md` (optional — only when the 1:1 relates to an existing qualifying negotiation; do not treat ordinary feedback or performance discussion as a negotiation)
 - `cto-os-data/modules/team-management/state/teams/` (optional — their team's current health)
 - `cto-os-data/modules/performance-development/state/` (optional — any active development threads)
 - `cto-os-data/modules/personal-os/state/show-up.md` (optional — framing)

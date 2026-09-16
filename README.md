@@ -88,9 +88,9 @@ Applied across all modules.
 
 Recommended sequence when first adopting.
 
-1. **Foundations.** Personal OS, Process Management, Business Alignment — the three zero-outbound-dependency modules. They don't block on anything and unlock the most downstream capability.
+1. **Foundations.** Personal OS, Process Management, Business Alignment — the three zero-required-dependency modules. They don't block on anything and unlock the most downstream capability.
 2. **Daily drivers.** Attention & Operations, Team Management, one or more of Managing Up / Down / Sideways depending on role. High operational value, low dependency cost.
-3. **Role-shape modules.** Match the shape of the specific job — Tech Ops and Technical Strategy for hands-on-tech CTOs, Hiring for growth-phase orgs, Budget for P&L-owning roles, Legal for CTOs who directly handle contracts, governance, regulated-product questions, disputes, or counsel coordination, Customer Engagement (under Business Alignment) for customer-facing CTOs.
+3. **Role-shape modules.** Match the shape of the specific job — Tech Ops and Technical Strategy for hands-on-tech CTOs, Hiring for growth-phase orgs, Budget for P&L-owning roles, Legal for CTOs who directly handle contracts, governance, regulated-product questions, disputes, or counsel coordination, Negotiation for leaders who regularly handle consequential internal or external agreements, and Customer Engagement (under Business Alignment) for customer-facing CTOs.
 4. **Strategic and periodic.** Org Design, Performance & Development, Board Comms. Low-frequency, high-leverage. Activate once daily drivers are steady.
 5. **Optional by role.** External Network & Thought Leadership, Code Contribution Opportunities, Security & Compliance.
 
@@ -104,7 +104,11 @@ Recommended sequence when first adopting.
 
 - [Managing Up](modules/managing-up/README.md) — upward relationships; 1:1 prep/capture with boss and skip-levels, exec-summary translation, perception management.
 - [Managing Down](modules/managing-down/README.md) — direct reports; 1:1s, coaching moments outside 1:1s, team-wide comms, delegation.
-- [Managing Sideways](modules/managing-sideways/README.md) — peers and cross-functional leaders; 1:1s, negotiation prep, coalition-building.
+- [Managing Sideways](modules/managing-sideways/README.md) — peers and cross-functional leaders; 1:1s, observable currency context, coalition building, and relationship work.
+
+#### Professional agreements
+
+- [Negotiation](modules/negotiation/README.md) — consequential professional agreements with real alternatives; Seven Elements preparation, interaction planning, offer packages, round debriefs, closure, and evidence-backed lessons.
 
 #### Personal
 

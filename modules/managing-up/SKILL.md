@@ -1,12 +1,13 @@
 ---
 name: managing-up
-description: "Activates for managing the relationship, narrative, and perception upward with whoever the user reports to (and skip-levels where relevant). Covers: 1:1 prep and capture with your boss, executive summaries translating team-level work to higher altitude, selling ideas upward, managing perceptions through periodic touchpoints, tracking stakeholder profiles (what your boss wants first, typical concerns, known sensitivities). Also activates on oblique phrasings like 'prep for my 1:1 with my boss,' 'draft an exec summary,' 'help me sell the X proposal upward,' 'my boss pushed back,' 'I need to manage [exec] better.' Does NOT activate on direct-report relationships (Managing Down), peer relationships (Managing Sideways), external peer/mentor relationships (External Network & Thought Leadership), or board-level communication (Board Comms)."
+description: "Activates for managing the relationship, narrative, and perception upward with whoever the user reports to (and skip-levels where relevant). Covers: 1:1 prep and capture with your boss, executive summaries translating team-level work to higher altitude, selling ideas upward, managing perceptions through periodic touchpoints, tracking stakeholder profiles (what your boss wants first, typical concerns, known sensitivities). Also activates on oblique phrasings like 'prep for my 1:1 with my boss,' 'draft an exec summary,' 'help me sell the X proposal upward,' 'my boss pushed back,' 'I need to manage [exec] better.' Routine influence and executive framing stay here; bargaining over authority, resources, compensation, scope, or commitments routes to Negotiation only when its four-part gate is met. Does NOT activate on direct-report relationships (Managing Down), peer relationships (Managing Sideways), external peer/mentor relationships (External Network & Thought Leadership), or board-level communication (Board Comms)."
 requires: []
 optional:
   - personal-os
   - business-alignment
   - team-management
   - attention-operations
+  - negotiation
 ---
 
 # Managing Up
@@ -15,6 +16,8 @@ optional:
 
 Managing the relationship, narrative, and perception upward with whoever the user reports to. Translating team-level work into a story that resonates at higher altitude. Tracks a lightweight profile of upward stakeholders (boss, skip-level, dotted-line) and captures the 1:1 cadence and follow-up threads that accrue between them.
 
+Routine influence, executive framing, 1:1s, and perception management stay here. When the interaction concerns authority, resources, compensation, scope, or commitments, route the bargaining mechanics to Negotiation only if all four conditions hold: partly shared and opposed interests, a meaningful agreement or concession, a real alternative or walk-away choice, and deliberate preparation warranted. Managing Up remains the source of boss and skip-level relationship context and may capture relationship signals returned from the negotiation.
+
 ## Out of scope
 
 - **Direct reports and coaching** — Managing Down.
@@ -22,6 +25,7 @@ Managing the relationship, narrative, and perception upward with whoever the use
 - **External advisors, mentors, peer CTOs** — External Network & Thought Leadership.
 - **Board-level strategic communication** — Board Comms.
 - **Organization-wide internal communication** — Org Comms.
+- **Substantive bargaining mechanics** — Negotiation owns strategy, concessions, sequencing, and rounds when its four-part gate is met. Ordinary persuasion, selling an idea upward, executive framing, and pushback remain here.
 
 ## Frameworks
 
@@ -92,6 +96,7 @@ Each step writes a concrete artifact and appends its step number to `activation_
 **Reads:**
 - `cto-os-data/modules/managing-up/state/people/{person-slug}.md`
 - `cto-os-data/modules/managing-up/state/1on1s/{person-slug}/` (last 3 most recent)
+- `cto-os-data/modules/negotiation/state/negotiations/{negotiation-slug}.md` (optional — only when the 1:1 is related to an existing qualifying negotiation; use it for the current bargaining context, not as a substitute for the stakeholder profile)
 - `cto-os-data/modules/team-management/state/teams/` (optional — team-level summaries)
 - `cto-os-data/modules/business-alignment/state/work-mapping.md` (optional — what ladders up)
 - `cto-os-data/modules/personal-os/state/show-up.md` (optional — framing)
