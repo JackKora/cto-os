@@ -4,7 +4,7 @@
 
 **Out of scope:** Individual performance tracking, calibration, promotions, PIPs (Performance & Development); team-aggregate health (Team Management); peer relationships (Managing Sideways); upward relationships (Managing Up); pre-ramp hiring (Hiring); bargaining mechanics for a substantive agreement that passes Negotiation's four-part gate. Difficult feedback is not itself a negotiation.
 
-**Frameworks:** [Kim Scott — *Radical Candor*](https://www.radicalcandor.com/), [Andy Grove — *High Output Management*](https://www.amazon.com/High-Output-Management-Andrew-Grove/dp/0679762884).
+**Frameworks:** [Kim Scott — *Radical Candor*](https://www.radicalcandor.com/), [Andy Grove — *High Output Management*](https://www.amazon.com/High-Output-Management-Andrew-Grove/dp/0679762884), [Nancy Duarte — *Resonate*](https://www.duarte.com/blog/overcome-sales-objections-with-the-power-of-story/) for team announcements and changes in direction.
 
 **Depends on:**
 - Required: none
@@ -14,7 +14,7 @@
 - "Prep for my 1:1 with Jane tomorrow."
 - "Log today's 1:1 with Mike — topics, decisions, follow-ups, and what I noticed."
 - "I just gave [report] feedback on yesterday's review — log it as a coaching event."
-- "Draft team-wide comms announcing the reorg to my team."
+- "Draft a reorg announcement explaining why it matters and what changes for my team."
 - "Mike has been drifting — help me think through how to re-engage him."
 
 **State location:** `cto-os-data/modules/managing-down/state/`

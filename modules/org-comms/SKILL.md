@@ -26,11 +26,19 @@ How the user communicates to internal audiences at scale — eng org, cross-func
 
 ## Frameworks
 
+For audience-facing drafts, read the root [Communication drafting](../../SKILL.md#communication-drafting) guidance if not already loaded. Choose one primary communication structure for the purpose. Recurring updates and announcements retain Minto's answer-first organization; other narrative techniques support that structure rather than replacing it. Honor declared cadence and surface constraints.
+
 - [Amazon narrative format / 6-pager](https://www.amazon.com/Working-Backwards-Insights-Stories-Secrets/dp/1250267595) — prose over bullets; memo as argument structure.
-  - *How this module applies it:* recurring updates and all-hands prose follow the narrative discipline — open with the answer, then context, then detail. Don't bullet-dump. For all-hands content that includes slides, slides exist to support the narrative, not replace it. Every draft starts with "what do I want the audience to know, decide, or feel" before any structure.
+  - *How this module applies it:* use coherent reasoning rather than disconnected updates: answer, context, then detail. This is memo discipline, not a requirement for six pages or prose-only messages. Use bullets and slides where the requested format or audience calls for them. Before choosing a structure, identify what the audience should know, decide, or feel as composition planning, not as a required preamble in the draft.
 
 - [Barbara Minto — *The Pyramid Principle*](https://www.amazon.com/Pyramid-Principle-Logic-Writing-Thinking/dp/0273710516) — top-down reasoning; lead with the main point; structured argument hierarchy.
-  - *How this module applies it:* every delivered comm has one pyramid top — the single thing the audience should remember. Supporting points ladder under it. Incident comms especially benefit from Minto discipline: the top is "what happened, who's affected, what we're doing"; detail lives below.
+  - *How this module applies it:* every delivered comm has one main takeaway with supporting points below it. Use Situation–Complication–Question to establish why an explanation or recommendation matters, then lead with the answer. Incident comms lead with "what happened, who's affected, what we're doing"; detail lives below. See [Minto's explanation](https://www.barbaraminto.com/).
+
+- [Nancy Duarte — *Resonate*](https://www.duarte.com/blog/overcome-sales-objections-with-the-power-of-story/) — connect current reality, a credible possible future, and audience action.
+  - *How this module applies it:* use for strategy and change messages, especially all-hands. Show the gap that matters to this audience and the path forward. In recurring updates and announcements, keep the answer first and use this contrast within the supporting explanation. Do not manufacture tension or stretch a short announcement into a speech.
+
+- [Marshall Ganz — Public Narrative](https://www.hks.harvard.edu/publications/crafting-public-narrative-enable-collective-action-pedagogy-leadership-development) — connect a story of self, us, and now to shared values and collective action.
+  - *How this module applies it:* select only when shared purpose, identity, and collective action are central, such as a mission-focused all-hands. Ground personal commitment and shared experience in sourced moments; do not invent autobiography or assume the audience shares a value. This is not the default for operational updates.
 
 ## Triggers
 
@@ -67,6 +75,8 @@ Each step writes a concrete artifact and appends its step number to `activation_
 
 **Purpose:** Compose a recurring update (monthly eng, quarterly, etc.) by pulling from Team Management, Business Alignment, Process Management, and Tech Ops. Structures per the Amazon narrative format — lead with the "what should you take away," then context, then detail.
 
+**Framing:** Keep Minto's answer-first organization and the declared cadence structure. Connect material progress, setbacks, learning, and implications rather than listing activity. When prior updates are available, explain what changed since the last message and why; do not invent a prior commitment or imply intended outcomes have already occurred. Choose direct facts when the update is purely operational.
+
 **Triggers:**
 - "draft the monthly eng update"
 - "write the [cadence] update"
@@ -88,6 +98,8 @@ Each step writes a concrete artifact and appends its step number to `activation_
 
 **Purpose:** Compose content for an upcoming all-hands — either the eng section of a company all-hands, or eng-specific all-hands material. Can produce narrative prose, slide-deck outline, or hybrid.
 
+**Framing:** Choose Minto for a decision or explanation, Duarte for strategy and change, or Ganz when shared purpose and collective action are central. Use a developed story only when the topic and allotted time warrant it; otherwise use brief narrative or direct facts. Make the audience's role and next step explicit where action is needed, and preserve the requested prose, slide, or hybrid format.
+
 **Triggers:**
 - "write the eng section for next all-hands"
 - "all-hands content for [date]"
@@ -105,6 +117,8 @@ Each step writes a concrete artifact and appends its step number to `activation_
 
 **Purpose:** Compose internal communications for an active or recently-resolved incident. Pairs with Tech Ops postmortems — the incident-comms are the *announcement*, the postmortem is the *learning document*. Minto discipline especially important here: top = what happened, who's affected, what we're doing.
 
+**Framing:** For active operational updates, deliberately choose direct facts: current impact, known status, response owner where known, actions, and next update when available. Preserve unknowns and avoid speculative causes. For a later learning message, a brief account of events, response, and lessons may help, but retain the factual opening and derive causes only from sourced investigation. The postmortem itself stays in Tech Ops with its prescribed structure.
+
 **Triggers:**
 - "draft incident comms for [incident]"
 - "announcement for yesterday's outage"
@@ -121,6 +135,8 @@ Each step writes a concrete artifact and appends its step number to `activation_
 ### `draft-announcement`
 
 **Purpose:** Ad-hoc cross-functional announcement — reorg, policy change, new hire at exec level, a win worth celebrating, a cross-functional launch.
+
+**Framing:** Lead with the announcement, then explain what changed, why now, effects on the audience, and next steps. Use a brief narrative by default within this Minto organization; use Duarte's current/future contrast when change needs explanation. Put difficult news and practical consequences first. Retain uncertainty and tradeoffs; a purely factual notice can remain direct. Original decisions and facts remain owned by their source modules.
 
 **Triggers:**
 - "announce the reorg to the eng org"

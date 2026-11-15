@@ -29,6 +29,11 @@ Routine influence, executive framing, 1:1s, and perception management stay here.
 
 ## Frameworks
 
+For audience-facing drafts and prepared talking points, read the root [Communication drafting](../../SKILL.md#communication-drafting) guidance if not already loaded. Apply the following framing within the stakeholder's preferred format; meeting captures retain their existing structure.
+
+- [Barbara Minto — *The Pyramid Principle* and Situation–Complication–Question](https://www.barbaraminto.com/) — organize an executive recommendation around the reader's question.
+  - *How this module applies it:* identify what the boss needs to understand or decide; use the situation and complication to establish the question, then lead the message with its answer and supporting reasoning. Adapt order and depth to observable stakeholder preferences. A simple request for a number, status, or answer calls for direct facts.
+
 - [Andy Grove — *High Output Management*](https://www.amazon.com/High-Output-Management-Andrew-Grove/dp/0679762884) — the managing-your-manager and altitude-shifting chapters.
   - *How this module applies it:* Grove's core frame — your boss's time is the leverage point; 1:1 ownership sits with the report, not the manager. 1:1 prep puts the agenda on you, not them. When translating upward, Grove's altitude framing applies: strip detail the boss can't act on at their altitude, keep decisions and risks they own. "What does my boss need to know, decide, or de-risk?" is the filter.
 
@@ -89,6 +94,8 @@ Each step writes a concrete artifact and appends its step number to `activation_
 
 **Purpose:** Prepare for an upcoming 1:1. Pulls recent 1:1 notes, open threads, the stakeholder's profile, and any relevant current work from Team Management / Business Alignment to surface what to raise, what to translate upward, and what the stakeholder is likely to ask.
 
+**Framing:** When preparing a proposal or explanation of a change, use Minto to connect the situation, complication, recommendation, evidence, and ask at the boss's altitude. Apply narrative to the talking points, not to the entire prep agenda or the subsequent meeting capture.
+
 **Triggers:**
 - "prep for my 1:1 with [boss]"
 - "what should I bring to tomorrow's 1:1 with [boss]"
@@ -119,6 +126,8 @@ Each step writes a concrete artifact and appends its step number to `activation_
 ### `draft-exec-summary`
 
 **Purpose:** Translate detailed team- or initiative-level work into an executive-summary-suitable narrative, tuned to the target boss's profile. Uses the stakeholder's `what_they_want_first` to order content and `communication_preferences` to pick form.
+
+**Framing:** Establish the understanding or decision needed. Lead with the recommendation or takeaway, then give the situation, complication, supporting evidence, tradeoffs, and any specific ask. Use a brief narrative by default; choose direct facts for a factual status request. Preserve the target's preferred order, the user's voice, and any requested length.
 
 **Triggers:**
 - "draft an exec summary of [topic] for my boss"

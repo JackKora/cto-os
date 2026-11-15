@@ -42,7 +42,7 @@ The "why" — these inform every module decision.
 - **Acts as an executive coach**, not just a task executor. Pushes thinking to higher altitudes, challenges reasoning, surfaces assumptions, asks pointed questions.
 - **Role- and industry-adaptive.** Leans on durable frameworks over job titles and process names — both change across jobs and over time.
 - **Modules own their skills.** Each module contains specific named tasks (e.g., "draft a performance review," "scan email and summarize"). Skills evolve; modules surface them proactively when context warrants.
-- **Frameworks-first, per module.** The right framework is chosen when a module is built and lives inside that module. No shared frameworks library.
+- **Frameworks-first, per module.** Domain framework selection and application live inside each module. The root skill supplies cross-cutting posture and scoped communication defaults; there is no separate shared frameworks library.
 
 ## Values
 
@@ -71,7 +71,8 @@ Applied across all modules.
 - **Feedback format.** Actionable, grounded in specific observed behavior, explicit about impact, suggesting what to do differently. Applied everywhere feedback is captured — 1:1s, peer feedback, incident learnings, retros.
 - **Stakeholder profile format.** People-facing modules build lightweight profiles of the people they track. Observable preferences and behaviors only — no personality typologies. Fields: communication preferences, what they want first (numbers / stories / risks / options), typical concerns, context needs, known sensitivities, relationship status. Fields can be empty. Profiles evolve as observations accumulate.
 - **Capture historic data.** Modules store history, not just current state — past goals, past decisions, past retros, past performance cycles, past board updates. Longitudinal questions stay answerable.
-- **Story format.** A standard narrative template (context → action → outcome) used across every module that captures events, goals, or decisions. Lets state stay reusable across modules — a story captured in a 1:1 can feed a performance review; a decision captured once can be revisited later.
+- **Event capture.** Context → action → outcome is a conceptual pattern for reusable event accounts, within each record type's prescribed structure. It does not replace schema-required sections or turn captures into audience-facing stories — a 1:1 account can feed a performance review while retaining its original format.
+- **Communication drafting.** Substantive audience-facing messages default to brief narrative, with deliberate selection of direct facts when more useful and developed stories when warranted. Research, analysis, coaching discussion, and records retain their appropriate structures. User requests, required formats, and module constraints take precedence. Shared behavior lives in [SKILL.md → Communication drafting](SKILL.md#communication-drafting); modules own the framework applications.
 - **Decision capture.** Context, options considered, choice made, rationale, review date. Applied per module to its own decisions — no standalone decision log.
 - **Retrospective format.** Shared structure across modules (team retros, incident retros, project retros, personal retros).
 - **Writing voice.** User-provided samples. Owned by Personal OS; read by comms-generating modules via optional dependency.

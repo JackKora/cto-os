@@ -4,7 +4,7 @@
 
 **Out of scope:** Direct reports (Managing Down); peers and cross-functional relationships (Managing Sideways); external peer CTOs or advisors (External Network & Thought Leadership); board-level communication (Board Comms); organization-wide comms (Org Comms); bargaining over authority, resources, compensation, scope, or commitments when Negotiation's four-part gate is met. Managing Up still supplies the boss or skip-level context and receives relationship signals.
 
-**Frameworks:** [Andy Grove — *High Output Management*](https://www.amazon.com/High-Output-Management-Andrew-Grove/dp/0679762884), stakeholder-needs analysis (cross-cutting profile format).
+**Frameworks:** [Andy Grove — *High Output Management*](https://www.amazon.com/High-Output-Management-Andrew-Grove/dp/0679762884), stakeholder-needs analysis (cross-cutting profile format), [Barbara Minto — *The Pyramid Principle* and Situation–Complication–Question](https://www.barbaraminto.com/).
 
 **Depends on:**
 - Required: none
@@ -13,7 +13,7 @@
 **Example tasks:**
 - "Prep for my 1:1 with my boss tomorrow."
 - "Log today's 1:1 — topics, decisions, follow-ups, and what I noticed."
-- "Draft an exec summary of this quarter's platform work for my boss."
+- "Draft a short exec summary of this quarter's platform work for my boss, with a clear recommendation and supporting evidence."
 - "Help me sell the reorg proposal upward before I pitch it formally."
 - "My boss pushed back on the hiring ask — help me reframe."
 

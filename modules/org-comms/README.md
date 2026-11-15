@@ -4,7 +4,7 @@
 
 **Out of scope:** Board-level communication (Board Comms); external audiences and thought leadership (External Network & Thought Leadership); single-team comms to your direct reports (Managing Down); 1:1 or small-group comms (Managing Up / Down / Sideways).
 
-**Frameworks:** [Amazon narrative format / 6-pager](https://www.amazon.com/Working-Backwards-Insights-Stories-Secrets/dp/1250267595), [Barbara Minto — *The Pyramid Principle*](https://www.amazon.com/Pyramid-Principle-Logic-Writing-Thinking/dp/0273710516).
+**Frameworks:** [Amazon narrative format / 6-pager](https://www.amazon.com/Working-Backwards-Insights-Stories-Secrets/dp/1250267595), [Barbara Minto — *The Pyramid Principle* and Situation–Complication–Question](https://www.barbaraminto.com/), [Nancy Duarte — *Resonate*](https://www.duarte.com/blog/overcome-sales-objections-with-the-power-of-story/), [Marshall Ganz — Public Narrative](https://www.hks.harvard.edu/publications/crafting-public-narrative-enable-collective-action-pedagogy-leadership-development) selectively for shared purpose and collective action.
 
 **Depends on:**
 - Required: none
@@ -12,9 +12,9 @@
 
 **Example tasks:**
 - "Draft the monthly engineering update."
-- "Write the eng section for next week's all-hands."
-- "Draft internal incident comms for yesterday's outage."
-- "Announce the reorg to the whole eng org."
+- "Write an all-hands section connecting our shared purpose to the action we need now."
+- "Draft a factual incident update with current impact, response, and next update."
+- "Announce the reorg to the whole eng org, explaining why now and what changes for people."
 - "What comms do I owe this month?"
 
 **State location:** `cto-os-data/modules/org-comms/state/`
