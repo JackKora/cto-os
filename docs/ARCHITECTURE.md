@@ -131,6 +131,8 @@ Each file has one job and one canonical home.
 - `SKILL.md` in `cto-os` (root + per-module) — the shared skill body and activation description, loaded through each host's global skill registry.
 - `README.md` in both repos — for humans and general orientation.
 
+The root skill owns the scoped [Communication drafting](../SKILL.md#communication-drafting) preference; module skills own audience-specific framework applications and reference the shared section when needed, including when selected directly. This is presentation guidance within existing workflow contracts, not a new module or storage layer. Required record structures, source-module ownership, sensitivity, and persistence rules retain precedence.
+
 Why not consolidate? `CLAUDE.md` can't be `SKILL.md` because they have different loading semantics (cwd-scoped always-on context vs. registry-scoped description-matched activation) and different audiences. `README.md` can't be `CLAUDE.md` because READMEs are for humans skimming, and `CLAUDE.md` has instruction-prose that would confuse readers.
 
 ---

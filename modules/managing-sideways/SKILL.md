@@ -26,6 +26,14 @@ Building and maintaining the lateral relationships that make cross-functional wo
 
 ## Frameworks
 
+For audience-facing drafts and prepared talking points, read the root [Communication drafting](../../SKILL.md#communication-drafting) guidance if not already loaded. Choose one primary structure for the communication; coalition analysis and meeting captures retain their existing purpose and format.
+
+- [Barbara Minto — *The Pyramid Principle* and Situation–Complication–Question](https://www.barbaraminto.com/) — frame a peer recommendation around a shared problem and decision.
+  - *How this module applies it:* for a decision or recommendation, identify the shared objective and complication, lead with the proposed answer, and support it with evidence, tradeoffs, and a specific request. Tailor relevance to observed peer priorities without inventing agreement or motives.
+
+- [Nancy Duarte — *Resonate*](https://www.duarte.com/blog/overcome-sales-objections-with-the-power-of-story/) — contrast current experience with a credible future that needs joint action.
+  - *How this module applies it:* select when inviting a peer to support a different direction or approach. Connect today's obstacle to a possible joint outcome and each party's contribution. Acknowledge objections and costs; do not present the proposal as inevitable or substitute storytelling for negotiation strategy.
+
 - [Allan Cohen & David Bradford — *Influence Without Authority*](https://www.amazon.com/Influence-Without-Authority-Allan-Cohen/dp/0471463302) — currency-of-exchange model: identify what your peer values and what you can trade.
   - *How this module applies it:* peer profiles capture observable evidence about what currencies the peer values — hitting their numbers, political capital, reputation for delivery, protecting their team's focus, or career visibility. Use those currencies for ordinary influence, reciprocal support, and coalition design without inventing motives or treating relationships as purely transactional. When the interaction becomes a substantive negotiation, pass this context to Negotiation rather than extending the framework into BATNA or deal strategy here.
 
@@ -86,6 +94,8 @@ Each step writes a concrete artifact and appends its step number to `activation_
 
 **Purpose:** Prepare for an upcoming peer 1:1 or cross-functional meeting. Pulls recent notes, stalled asks, profile context, and shared-goal framing from Business Alignment. If the agenda is a substantive negotiation, route that portion to Negotiation.
 
+**Framing:** For proposal talking points, establish the shared objective, obstacle, consequences, proposed path, and specific request. Use Minto for a decision or recommendation, or Duarte when support for a different future is the main need. Use direct facts for routine coordination; keep the rest of the prep agenda concise.
+
 **Triggers:**
 - "prep for my 1:1 with [peer]"
 - "what should I bring to tomorrow's 1:1 with [peer]"
@@ -114,6 +124,8 @@ Each step writes a concrete artifact and appends its step number to `activation_
 ### `build-coalition`
 
 **Purpose:** Map the peers whose support, neutrality, or input matters to a cross-functional initiative and plan relationship-aware alignment using observable currencies and shared goals. If the plan requires concessions, a reservation boundary, and a walk-away choice, route it to Negotiation.
+
+**Framing:** Keep the coalition map analytical. For the proposed messages to peers, choose Minto or Duarte according to the purpose and connect shared goals to the obstacle, joint path, and request. Use observable currencies to tune emphasis; retain tradeoffs and likely objections as hypotheses unless sourced.
 
 **Triggers:**
 - "help me build the coalition for [initiative]"

@@ -1,6 +1,6 @@
 ---
 name: board-comms
-description: "Activates for board-level strategic communication — quarterly board updates, pre-read memos for upcoming meetings, post-meeting capture of decisions and feedback, and the ongoing narrative across meetings. Covers: composing the CTO section of a board update by pulling from Business Alignment (company goals), Process Management (flow KPIs), Tech Ops (material incidents), Security & Compliance (material risks), Hiring (exec-level changes), Budget (financial posture), and Legal (material legal matters, obligations, approvals, and constraints); authoring topic-specific pre-reads (risk briefing, fundraising narrative, M&A analysis); capturing what happens at the meeting itself (director feedback, decisions, follow-ups). Also activates on oblique phrasings like 'draft the CTO section for Q2 board,' 'write the pre-read on [topic],' 'capture yesterday's board meeting,' 'risk briefing for the board,' 'update board structure — new director joined.' Does NOT activate on operational internal comms (Org Comms); legal issue spotting, counsel preparation, or legal workflow (Legal); peer CTO or external-investor relationships outside board meetings (External Network & Thought Leadership); or investor day / all-hands-style content for broader audiences (Org Comms)."
+description: "Activates for board-level strategic communication — quarterly board updates, pre-read memos for upcoming meetings, post-meeting capture of decisions and feedback, and the ongoing narrative across meetings. Covers: composing the CTO section of a board update by pulling from Business Alignment (company goals), Process Management (flow KPIs), Tech Ops (material incidents), Security & Compliance (material risks), Hiring (exec-level changes), Budget (financial posture), and Legal (material legal matters, obligations, approvals, and constraints); authoring topic-specific pre-reads (risk briefing, fundraising narrative, M&A analysis); capturing what happens at the meeting itself (director feedback, decisions, follow-ups). Also activates on oblique phrasings like 'draft the CTO section for Q2 board,' 'write the pre-read on [topic],' 'capture yesterday's board meeting,' 'risk briefing for the board,' 'update board structure — new director joined.' Does NOT activate on standalone budget narratives or budget sections (Budget supplies those source materials); operational internal comms (Org Comms); legal issue spotting, counsel preparation, or legal workflow (Legal); peer CTO or external-investor relationships outside board meetings (External Network & Thought Leadership); or investor day / all-hands-style content for broader audiences (Org Comms)."
 requires:
   - business-alignment
   - process-management
@@ -23,6 +23,7 @@ Strategic and periodic module — most of the work is concentrated around meetin
 
 ## Out of scope
 
+- **Standalone budget narratives or budget sections** — Budget owns these source materials; Board Comms incorporates them when assembling the broader update or pre-read.
 - **Operational internal communications** — Org Comms.
 - **External investor relationships outside board meetings** — External Network & Thought Leadership.
 - **All-hands content for broader internal audiences** — Org Comms.
@@ -31,6 +32,11 @@ Strategic and periodic module — most of the work is concentrated around meetin
 - **Legal issue spotting, counsel preparation, and legal workflow** — Legal owns the underlying matters, obligations, approvals, constraints, and counsel questions. This module uses authorized facts from that state only to compose the board-facing narrative.
 
 ## Frameworks
+
+For audience-facing drafts, read the root [Communication drafting](../../SKILL.md#communication-drafting) guidance if not already loaded. Narrative works within the declared board template and pre-read contract; it does not change source-module ownership or sensitive-data handling.
+
+- [Barbara Minto — *The Pyramid Principle* and Situation–Complication–Question](https://www.barbaraminto.com/) — frame board explanations and recommendations around the question directors need answered.
+  - *How this module applies it:* lead each section with its answer, then provide the situation, complication, evidence, alternatives, and implications needed to assess it. Make any decision or support requested explicit. Preserve the declared update template and argument-first pre-read format; routine factual sections can remain direct.
 
 - [Brad Feld & Mahendra Ramsinghani — *Startup Boards*](https://feld.com/category/books/startup-boards/) — board-director perspective on what directors actually want from a functional CTO update.
   - *How this module applies it:* Feld's frame anchors what a board update is *for* — helping directors fulfill their fiduciary duty, spotting risks early, supporting the CEO strategically. Not a status report. Draft updates here de-emphasize "what we shipped" and emphasize "what's changed, what's at risk, what's the ask." Directors want context for hard questions; this module's output is shaped to give them that.
@@ -102,6 +108,8 @@ Historical backfill (prior board meetings and updates) happens post-activation v
 
 **Purpose:** Compose a board update for an upcoming meeting. Pulls from the required and optional dependencies — Business Alignment (company goals + progress), Process Management (flow KPIs), Tech Ops (material reliability events), Security & Compliance (material risks), Hiring (exec-level changes), Budget (financial posture). Follows the declared update template. Respects sensitivity — this module has `sensitivity: high`, and cross-module reads are allowed here because the board is authorized to see sensitive material.
 
+**Framing:** Within the declared sections, connect prior expectations or commitments to observed outcomes, what changed or was learned, and the implications, risks, and current ask. Use recent updates and meeting feedback for continuity when available; identify missing history rather than fabricate it. Keep evidence and uncertainty visible and give the answer before the supporting narrative. Preserve the template's order and length constraints.
+
 **Triggers:**
 - "draft the [Q#] board update"
 - "write the CTO section for next board"
@@ -126,6 +134,8 @@ Historical backfill (prior board meetings and updates) happens post-activation v
 ### `draft-pre-read`
 
 **Purpose:** Compose a topic-specific pre-read memo for a board meeting. Covers risk briefings, fundraising narratives, M&A analysis, strategic-pivot pre-reads — anything meeting-adjacent but not part of the regular update. Amazon 6-pager structure.
+
+**Framing:** Establish the central question and lead with the recommendation or takeaway. Develop the situation, complication, alternatives, evidence, tradeoffs, and uncertainty in argument-first prose, ending with a decision or support request when one is needed. Use narrative to explain the reasoning without replacing the pre-read format or overstating confidence.
 
 **Triggers:**
 - "write the pre-read on [topic]"

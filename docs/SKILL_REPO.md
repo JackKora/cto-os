@@ -37,7 +37,6 @@ cto-os/                          # git repo — installed once, updated via git 
 ├── .codex/agents/                     # thin Codex agent adapters
 ├── tests/
 │   ├── fixtures/cto-os-data-sample/   # fixture data repo for script tests
-│   ├── scenarios/                     # expected-behavior traces for skill review
 │   ├── claude-review.md               # AI skill review checklist
 │   └── test_*.py                      # pytest suites
 └── modules/                           # one directory per PRD module
@@ -100,8 +99,10 @@ Notion is the discussion surface; the repo files are canonical for implementatio
 
 Two layers:
 
-- **Root `cto-os/SKILL.md`** is what each host's skill router reads to decide whether to activate the system at all. Required, not optional.
-- **Per-module `cto-os/modules/{slug}/SKILL.md`** is loaded on demand once the root skill has activated, based on the specific task.
+- **Root `cto-os/SKILL.md`** supplies the discovery description for selecting CTO OS and the shared instruction body read when selected. Required, not optional.
+- **Per-module `cto-os/modules/{slug}/SKILL.md`** is loaded on demand for the specific task, normally through root routing; hosts may also expose modules for direct selection.
+
+The root [Communication drafting](../SKILL.md#communication-drafting) section owns the conditional presentation preference for audience-facing drafts. Modules own framework selection and application in their drafting workflows; affected modules link to the root section so it can also be read when a host selects a module directly. This reference does not add an activation dependency. Required schema structures, declared templates, ownership, sensitivity, and persistence contracts still govern. Event captures keep their prescribed record formats. The root section is authoritative for execution details; documentation only describes its placement and scope.
 
 Each `SKILL.md`:
 
@@ -302,7 +303,7 @@ The MCP's `run_script` tool is whitelisted — only names present in `cto-os/scr
 
 # Canonical schema
 
-`cto-os/meta/schema.md` is the single source of truth for all frontmatter schemas used across the system. Every file in `cto-os-data` validates against it on write (enforced by a pre-commit hook in the data repo that reads the schema directly from the installed skill path).
+`cto-os/meta/schema.md` is the single source of truth for all frontmatter schemas used across the system. Module workflows are responsible for producing conforming state. `scripts/validate_state.py` provides on-demand structural and baseline checks, not complete per-type schema validation or an automatic write-time gate.
 
 The schema changes only via intentional updates to `cto-os`. Migrations for existing state are handled by the Schema evolution pattern below.
 

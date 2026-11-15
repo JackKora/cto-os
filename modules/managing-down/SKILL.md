@@ -29,6 +29,11 @@ Feedback, coaching, delegation, underperformance conversations, and normal role 
 
 ## Frameworks
 
+For audience-facing drafts and prepared talking points, read the root [Communication drafting](../../SKILL.md#communication-drafting) guidance if not already loaded. Feedback and delegation retain their specific, behavior-based guidance; 1:1 and coaching captures keep their prescribed formats.
+
+- [Nancy Duarte — *Resonate*](https://www.duarte.com/blog/overcome-sales-objections-with-the-power-of-story/) — connect the audience's current experience with a credible possible future and action.
+  - *How this module applies it:* use for team announcements and changes in direction: what the team experiences today, why change matters, what could improve, and the team's role. For recognition, use a real action and its observed impact. Do not force a visionary arc onto instructions, feedback, or difficult news.
+
 - [Kim Scott — *Radical Candor*](https://www.radicalcandor.com/) — care personally, challenge directly; feedback grounded in specific observed behavior.
   - *How this module applies it:* every coaching event and feedback moment captured here follows the Radical Candor frame — what specifically happened (observation), what impact it had (consequence), what to do differently (ask). No inference of motive, no character judgments. The 1:1 `## Signals` section uses the same lens: what did I observe, what might it mean, what will I do with it.
 
@@ -136,6 +141,8 @@ Each step writes a concrete artifact and appends its step number to `activation_
 ### `draft-team-comms`
 
 **Purpose:** Draft team-wide communication in the user's voice — reorg announcement, priority shift, praise for a shipped thing, a hard message about a miss.
+
+**Framing:** Default to a brief narrative connecting current experience, the reason for change, intended outcomes, and next steps. State practical implications for the team and use sourced examples for recognition or learning. Put difficult news and its consequences up front; distinguish decisions from open questions. Choose direct facts for instructions or factual updates when that better serves the audience. Preserve the user's voice and audience sensitivities.
 
 **Triggers:**
 - "draft team-wide comms"

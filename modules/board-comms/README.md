@@ -2,16 +2,16 @@
 
 **Scope:** Board-level strategic communication. Composes quarterly board updates and topic-specific pre-reads (risk briefings, fundraising narratives, M&A analysis) by pulling from Business Alignment, Process Management, Tech Ops, Security & Compliance, Hiring, Budget, and minimum-necessary Legal facts. Captures what happens at the meeting itself — director feedback, decisions, follow-ups — so narrative continuity holds across quarters. Strategic and periodic module.
 
-**Out of scope:** Operational internal comms (Org Comms); legal issue spotting, counsel preparation, and legal workflow (Legal); external investor or peer relationships outside board meetings (External Network & Thought Leadership); all-hands content for broader audiences (Org Comms); day-to-day exec comms (Managing Up or Managing Sideways).
+**Out of scope:** Standalone budget narratives or budget sections (Budget supplies these for the assembled update); operational internal comms (Org Comms); legal issue spotting, counsel preparation, and legal workflow (Legal); external investor or peer relationships outside board meetings (External Network & Thought Leadership); all-hands content for broader audiences (Org Comms); day-to-day exec comms (Managing Up or Managing Sideways).
 
-**Frameworks:** [Brad Feld & Mahendra Ramsinghani — *Startup Boards*](https://feld.com/category/books/startup-boards/), [Amazon narrative format / 6-pager](https://www.amazon.com/Working-Backwards-Insights-Stories-Secrets/dp/1250267595).
+**Frameworks:** [Brad Feld & Mahendra Ramsinghani — *Startup Boards*](https://feld.com/category/books/startup-boards/), [Amazon narrative format / 6-pager](https://www.amazon.com/Working-Backwards-Insights-Stories-Secrets/dp/1250267595), [Barbara Minto — *The Pyramid Principle* and Situation–Complication–Question](https://www.barbaraminto.com/).
 
 **Depends on:**
 - Required: `business-alignment`, `process-management`
 - Optional: `tech-ops`, `security-compliance`, `hiring`, `budget`, `personal-os`, `legal`
 
 **Example tasks:**
-- "Draft the CTO section for the Q2 board update."
+- "Draft the CTO section for the Q2 board update, connecting prior expectations, outcomes, learning, and the current ask within our template."
 - "Write the pre-read on the Kafka migration for next board."
 - "Log yesterday's board meeting — here's what directors pushed on."
 - "Risk briefing for the board on the SOC 2 audit findings."
