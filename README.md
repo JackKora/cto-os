@@ -148,7 +148,7 @@ Recommended sequence when first adopting.
 
 #### Governance
 
-- [Security & Compliance](modules/security-compliance/README.md) — risk register, controls, compliance regime tracking (SOC 2 / ISO 27001), ISO SoA, audit events, risk briefings.
+- [Security & Compliance](modules/security-compliance/README.md) — risk register, controls, compliance regime tracking (SOC 2 / ISO 27001), ISO SoA, audit events, auditor response drafting, risk briefings.
 - [Budget](modules/budget/README.md) — budget structure, plan / actual / forecast per category, variance analysis, budget-narrative authoring.
 - [Legal](modules/legal/README.md) — legal intake and triage, commercial contracts, governance and transactions, IP/licensing/OSS, employment and privacy/product-regulation matters, disputes, obligations, and counsel briefs. Issue spotting and workflow only; not legal advice.
 

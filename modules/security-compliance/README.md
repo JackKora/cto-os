@@ -1,6 +1,6 @@
 # Security & Compliance
 
-**Scope:** The CTO-level view of the security program and compliance obligations. Risk register maintenance, control inventory with ownership and regime mapping, compliance regime status tracking (SOC 2, ISO 27001, HIPAA, etc.), ISO 27001 Statement of Applicability, audit event capture (SOC 2 Type 1/2, ISO surveillance, customer assessments, pentests), posture rollup, and source risk summaries for downstream communications.
+**Scope:** The CTO-level view of the security program and compliance obligations. Risk register maintenance, control inventory with ownership and regime mapping, compliance regime status tracking (SOC 2, ISO 27001, HIPAA, etc.), ISO 27001 Statement of Applicability, audit event capture (SOC 2 Type 1/2, ISO surveillance, customer assessments, pentests), auditor response drafting across audit types, posture rollup, and source risk summaries for downstream communications.
 
 **Out of scope:** Board-facing narrative and pre-read authorship (Board Comms owns those and may consume a source risk summary from this module); security-incident operational response (Tech Ops runs incidents; this module captures the resulting risk picture); security-adjacent architecture decisions (Technical Strategy makes those; this module informs them); legal conclusions, notification or contractual obligations, regulator/counsel workflow, and legal deadlines (Legal owns those); policy authoring and document management (legal/HR systems); employee security training execution; threat intelligence and active threat-hunting; vulnerability scanner infrastructure (this module tracks findings, not the scanner).
 
@@ -19,7 +19,7 @@
 - "We just completed SOC 2 Type 2 — update posture and log the audit event."
 - "Summarize security risk posture for the next board pre-read."
 - "Update the Statement of Applicability — we're scoping out Annex A.5.3."
-- "Customer sent a security questionnaire — compile the response from current posture."
+- "Draft answers to this audit questionnaire and check related rows for consistency."
 
 **State location:** `cto-os-data/modules/security-compliance/state/`
 

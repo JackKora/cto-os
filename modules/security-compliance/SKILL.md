@@ -1,6 +1,6 @@
 ---
 name: security-compliance
-description: "Activates for security and compliance posture work — the CTO-level view of the security program, what controls are in place, what risks are open, and how the org tracks against the compliance regimes it's committed to (SOC 2, ISO 27001, HIPAA, etc.). Covers: risk register maintenance (ISO-27001-style), control inventory and ownership (CIS-based, mapped to regimes), compliance regime status tracking, ISO 27001 Statement of Applicability, audit event capture (SOC 2 Type 1/2, ISO surveillance, customer assessments, pentests), posture rollup through the NIST CSF lens, and source risk summaries for downstream communications. Also activates on oblique phrasings like 'what's our SOC 2 status,' 'log a new risk,' 'update the risk register,' 'we just got the pentest findings,' 'summarize security risk posture for Board Comms,' 'who owns control [X],' 'are we ready for the Type 2 audit.' Does NOT activate on board-facing narrative or pre-read authorship (Board Comms owns those); security-incident operational response (Tech Ops runs incidents; this module captures the resulting risk picture); security-adjacent architecture decisions (Technical Strategy owns the call; this module informs it with risk context); legal conclusions, notification or contractual obligations, regulator/counsel workflow, or legal deadlines (Legal owns those); policy authoring and document management; or employee security training execution (operational elsewhere)."
+description: "Activates for security and compliance posture work — the CTO-level view of the security program, what controls are in place, what risks are open, and how the org tracks against the compliance regimes it's committed to (SOC 2, ISO 27001, HIPAA, etc.). Covers: risk register maintenance (ISO-27001-style), control inventory and ownership (CIS-based, mapped to regimes), compliance regime status tracking, ISO 27001 Statement of Applicability, audit event capture (SOC 2 Type 1/2, ISO surveillance, customer assessments, pentests), drafting responses to audit questionnaires and auditor follow-ups, posture rollup through the NIST CSF lens, and source risk summaries for downstream communications. Also activates on oblique phrasings like 'what's our SOC 2 status,' 'log a new risk,' 'update the risk register,' 'we just got the pentest findings,' 'summarize security risk posture for Board Comms,' 'who owns control [X],' 'are we ready for the Type 2 audit.' Does NOT activate on board-facing narrative or pre-read authorship (Board Comms owns those); security-incident operational response (Tech Ops runs incidents; this module captures the resulting risk picture); security-adjacent architecture decisions (Technical Strategy owns the call; this module informs it with risk context); legal conclusions, notification or contractual obligations, regulator/counsel workflow, or legal deadlines (Legal owns those); policy authoring and document management; or employee security training execution (operational elsewhere)."
 requires: []
 optional:
   - tech-ops
@@ -12,7 +12,7 @@ optional:
 
 ## Scope
 
-Managing the security and compliance posture of the organization. Understanding risk, ensuring controls are working, meeting obligations to customers and regulators. Risk register maintenance, control inventory and ownership, compliance regime status tracking (SOC 2, ISO 27001, HIPAA, whatever the org is committed to), ISO-27001-specific artifacts (Statement of Applicability), audit event capture, posture rollup. Role-shape / optional-by-role module — critical for orgs with enterprise customers, less central for early-stage consumer.
+Managing the security and compliance posture of the organization. Understanding risk, ensuring controls are working, meeting obligations to customers and regulators. Risk register maintenance, control inventory and ownership, compliance regime status tracking (SOC 2, ISO 27001, HIPAA, whatever the org is committed to), ISO-27001-specific artifacts (Statement of Applicability), audit event capture, auditor response drafting across audit types, posture rollup. Role-shape / optional-by-role module — critical for orgs with enterprise customers, less central for early-stage consumer.
 
 ## Out of scope
 
@@ -48,6 +48,7 @@ Four frameworks, each with a distinct purpose. Don't conflate.
 - "what's our SOC 2 status" / "are we ready for the Type 2 audit"
 - "update the Statement of Applicability" / "ISO Annex A review"
 - "log an audit event" / "pentest findings came in"
+- "help fill out this audit questionnaire" / "draft a reply to the auditor"
 - "who owns control [X]" / "update control ownership"
 - "summarize security risk posture for Board Comms" / "risk briefing for customer assessment"
 - "show security posture" / "NIST CSF rollup"
@@ -156,7 +157,7 @@ Each step writes a concrete artifact and appends its step number to `activation_
 **Triggers:**
 - "log the SOC 2 Type 2 audit"
 - "pentest findings just came in"
-- "[customer] sent us a security questionnaire"
+- "log the customer security assessment"
 - "ISO surveillance audit scheduled"
 
 **Reads:**
@@ -164,6 +165,28 @@ Each step writes a concrete artifact and appends its step number to `activation_
 - `cto-os-data/modules/security-compliance/state/risks/` (findings may map to existing risks)
 
 **Writes:** `cto-os-data/modules/security-compliance/state/audits/{YYYY-MM-DD}-{audit-slug}.md`, append-new-file.
+
+### `draft-auditor-response`
+
+**Purpose:** Draft answers to audit questionnaires, auditor emails, and follow-up questions across audit types.
+
+**Triggers:**
+- "help fill out this audit questionnaire"
+- "draft a reply to the auditor"
+- "check these questionnaire answers for consistency"
+- "help answer this customer security questionnaire"
+
+**Reads:**
+- The current questionnaire or auditor message, any draft answers, and the audit scope and period.
+- Available evidence for the question or facts confirmed by the responsible owner. When relevant, consult `cto-os-data/modules/security-compliance/state/controls/` for control descriptions and evidence references.
+
+**Writes:** —
+
+1. **Answer only what was asked.** Lead with the answer. Use plain, direct, matter-of-fact language. Match the technical detail to the question and the auditor's needs. Keep any qualification needed for accuracy. For spreadsheet cells, aim for one or two sentences.
+2. **Check consistency within the current questionnaire.** Review related questions together, including across tabs. Answers about the same control or practice should agree on scope, timing, and exceptions. When questions cover different systems, entities, or periods, make the relevant difference explicit.
+3. **Flag uncertainty for internal review.** If a question is ambiguous, evidence is incomplete, or related answers conflict, flag the specific issue for the user or responsible owner. Get clarification or confirmation before drafting a definitive answer. Keep review notes outside the text intended for the auditor.
+
+Return paste-ready wording for each question that can be answered. Drafting does not authorize sending or submitting the response.
 
 ### `update-soa`
 
